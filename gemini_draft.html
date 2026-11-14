@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>BYD Dolphin Surf Comfort (2025 EU) — 15-Year Preservation Tracker</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- html2canvas for 1-Tap PNG Gallery Card Export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            cockpit: {
+              950: '#070b12',
+              900: '#0d1421',
+              800: '#162032',
+              700: '#22314a',
+              accent: '#06b6d4', // BYD Cyan
+              emerald: '#10b981',
+              amber: '#f59e0b',
+              rose: '#f43f5e'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #070b12;
+      color: #f1f5f9;
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0d1421;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #22314a;
+      border-radius: 9999px;
+    }
+    .glass-card {
+      background: rgba(13, 20, 33, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(34, 49, 74, 0.7);
+    }
+    .poster-gradient {
+      background: linear-gradient(145deg, #0b111e 0%, #0f172a 50%, #091526 100%);
+    }
+  </style>
+</head>
+<body class="min-h-screen font-sans antialiased selection:bg-cyan-500 selection:text-slate-950 pb-20">
+
+  <!-- Toast Notification Banner (No alert() used) -->
+  <div id="toast" class="fixed top-4 right-4 left-4 sm:left-auto sm:w-96 z-50 transform transition-all duration-300 -translate-y-24 opacity-0 pointer-events-none">
+    <div id="toastContent" class="glass-card border-l-4 border-cyan-400 px-4 py-3 rounded-xl shadow-2xl flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <span id="toastIcon" class="text-cyan-400 text-lg">✓</span>
+        <p id="toastMessage" class="text-sm font-medium text-slate-100">Saved to LocalStorage</p>
+      </div>
+      <span class="text-[11px] font-mono text-slate-400 uppercase">Auto-Saved</span>
+    </div>
+  </div>
+
+  <!-- Top Cockpit Header -->
+  <header class="sticky top-0 z-30 glass-card border-b border-slate-800/80 shadow-lg">
+    <div class="max-w-5xl mx-auto px-3 sm:px-6 py-3">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <!-- Brand & Vehicle Title -->
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-emerald-500 flex items-center justify-center shadow-md shadow-cyan-500/20 font-mono font-bold text-slate-950 text-sm">
+              BYD
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h1 class="text-base sm:text-lg font-extrabold tracking-tight text-white">Dolphin Surf Comfort</h1>
+                <span class="px-2 py-0.5 text-[10px] font-mono uppercase font-bold rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">2025 EU • 43.2 kWh</span>
+              </div>
+              <p class="text-xs text-slate-400">15-Year / 300,000 km Preservation • N. Italy Salt & 10% Pothole Spec</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Primary View Switcher -->
+        <div class="flex bg-slate-900/90 p-1 rounded-xl border border-slate-800 self-start sm:self-auto w-full sm:w-auto">
+          <button id="btnViewTracker" onclick="switchMainView('tracker')" class="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-cyan-500 text-slate-950 shadow">
+            🛠️ Interactive Tracker
+          </button>
+          <button id="btnViewPoster" onclick="switchMainView('poster')" class="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-300 hover:text-white">
+            📸 Gallery Poster Card
+          </button>
+          <button id="btnViewLogs" onclick="switchMainView('logs')" class="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-300 hover:text-white">
+            📋 History (<span id="logCountBadge">0</span>)
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-3 sm:px-6 pt-4 space-y-5">
+
+    <!-- Vehicle Telemetry & Odometer Bar -->
+    <section class="glass-card rounded-2xl p-4 shadow-lg">
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 items-end">
+        <div>
+          <label for="inputOdometer" class="block text-[11px] font-mono uppercase text-slate-400 mb-1">Current Odometer (km)</label>
+          <div class="relative">
+            <input id="inputOdometer" type="number" min="0" max="999999" step="100"
+              onchange="updateVehicleStats()"
+              class="w-full bg-slate-900/90 border border-slate-700 focus:border-cyan-400 rounded-xl px-3 py-2 text-sm font-mono font-bold text-white focus:outline-none"
+              placeholder="e.g. 4500" />
+            <span class="absolute right-3 top-2 text-xs font-mono text-slate-400">km</span>
+          </div>
+        </div>
+
+        <div>
+          <label for="inputStartDate" class="block text-[11px] font-mono uppercase text-slate-400 mb-1">Delivery / Start Date</label>
+          <input id="inputStartDate" type="date"
+            onchange="updateVehicleStats()"
+            class="w-full bg-slate-900/90 border border-slate-700 focus:border-cyan-400 rounded-xl px-3 py-2 text-sm font-mono text-white focus:outline-none" />
+        </div>
+
+        <div>
+          <div class="flex justify-between text-[11px] font-mono uppercase text-slate-400 mb-1">
+            <span>15-Yr Horizon</span>
+            <span id="horizonPct" class="text-cyan-400 font-bold">0%</span>
+          </div>
+          <div class="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+            <div id="horizonBar" class="h-full bg-gradient-to-r from-cyan-500 to-emerald-400 transition-all duration-500" style="width: 1%"></div>
+          </div>
+          <p id="estCyclesText" class="text-[11px] text-slate-400 mt-1 font-mono">Est. 0 / 5,000 LFP cycles</p>
+        </div>
+
+        <div class="flex items-center justify-end gap-2">
+          <button onclick="exportBackupJSON()" title="Download JSON Backup" class="flex-1 sm:flex-initial px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-slate-200 transition">
+            ⬇️ Backup
+          </button>
+          <label class="flex-1 sm:flex-initial px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-slate-200 transition cursor-pointer text-center">
+            ⬆️ Restore
+            <input type="file" id="importFileInput" accept=".json" class="hidden" onchange="importBackupJSON(event)" />
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- VIEW 1: INTERACTIVE TRACKER VIEW                         -->
+    <!-- ======================================================== -->
+    <div id="viewTracker" class="space-y-5">
+
+      <!-- Category Filter Pills & Completion Progress -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex flex-wrap gap-1.5" id="categoryFilterBar">
+          <button onclick="setCategoryFilter('ALL')" data-cat="ALL" class="cat-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+            All Tasks (11)
+          </button>
+          <button onclick="setCategoryFilter('Immediate Setup')" data-cat="Immediate Setup" class="cat-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-400 border border-slate-800 hover:text-slate-200">
+            🟢 1. Immediate Setup (4)
+          </button>
+          <button onclick="setCategoryFilter('Routine & Annual')" data-cat="Routine & Annual" class="cat-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-400 border border-slate-800 hover:text-slate-200">
+            🔵 2. Routine & Severe Annual (4)
+          </button>
+          <button onclick="setCategoryFilter('Fluid Milestones')" data-cat="Fluid Milestones" class="cat-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-400 border border-slate-800 hover:text-slate-200">
+            🟠 3. Workshop Fluids (3)
+          </button>
+        </div>
+
+        <div class="flex items-center space-x-2 text-xs font-mono text-slate-400 self-end sm:self-auto">
+          <span>Completed / Active:</span>
+          <span id="taskCompletionBadge" class="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold">0 / 11</span>
+        </div>
+      </div>
+
+      <!-- Task Cards Container -->
+      <div id="tasksContainer" class="space-y-3"></div>
+
+      <!-- Approved Zero-Damage Chemicals Cheat-Sheet Banner -->
+      <section class="glass-card rounded-2xl p-4 sm:p-5 border border-emerald-500/30 relative overflow-hidden">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center space-x-2">
+            <span class="text-lg">🧪</span>
+            <h2 class="text-sm sm:text-base font-bold text-white uppercase tracking-wider font-mono">
+              Approved Zero-Damage Chemicals Cheat-Sheet
+            </h2>
+          </div>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+            ASTM D471 Verified
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <!-- Rubber Care -->
+          <div class="bg-slate-900/90 rounded-xl p-3.5 border border-slate-800">
+            <h3 class="font-bold text-cyan-300 mb-1.5 flex items-center justify-between">
+              <span>1. Directly ON Non-Oil-Resistant EPDM Rubber</span>
+              <span class="font-mono text-[10px] text-emerald-400">&lt;1–2% Swell</span>
+            </h3>
+            <ul class="space-y-1.5 text-slate-300">
+              <li>✅ <strong class="text-white">DuPont Krytox GPL 205 (PFPE):</strong> 100% inert fluorinated grease (&lt;1% swell on all rubbers).</li>
+              <li>✅ <strong class="text-white">DuPont Molykote 111 Silicone Paste:</strong> Pure PDMS paste in a tube (&lt;2% EPDM swell; blocks winter ice).</li>
+              <li>✅ <strong class="text-white">Pure Ph. Eur. Vegetable Glycerine / Sonax GummiPfleger:</strong> Polar alcohol; zero EPDM swell, pharmacy-grade.</li>
+              <li class="text-rose-400 pt-1 border-t border-slate-800/80">
+                ❌ <strong>NEVER USE:</strong> WD-40, Vaseline (petroleum jelly), mineral oil, or cheap aerosol silicone sprays (solvent carriers cause 30–80% EPDM swelling).
+              </li>
+            </ul>
+          </div>
+
+          <!-- Underbody Metal Rustproofing -->
+          <div class="bg-slate-900/90 rounded-xl p-3.5 border border-slate-800">
+            <h3 class="font-bold text-amber-300 mb-1.5 flex items-center justify-between">
+              <span>2. Underbody & Sill Rustproofers (Rubber-Safe)</span>
+              <span class="font-mono text-[10px] text-amber-400">70kV Dielectric</span>
+            </h3>
+            <ul class="space-y-1.5 text-slate-300">
+              <li>✅ <strong class="text-white">Lanoguard (Zero-Petroleum Lanolin):</strong> Solvent-free wool grease; safe on all rubbers, plastics &amp; HV wiring.</li>
+              <li>✅ <strong class="text-white">Dinitrol 3125 / ML (Cavities) &amp; 4941 (Underbody):</strong> Curing elastic synthetic wax; harms zero rubber/plastics once dry.</li>
+              <li class="text-rose-400 pt-1 border-t border-slate-800/80">
+                ⚠️ <strong>EV BOUNDARY RULES:</strong> Avoid <em>Fluid Film</em> or thin petroleum-carrier oils near soft EPDM seals. <strong>Never</strong> coat brake discs, orange HV connectors, or the flat aluminum Blade Battery bottom plate (acts as thermal blanket).
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- VIEW 2: COMPACT GALLERY POSTER VIEW (1-SCREEN EXPORT)    -->
+    <!-- ======================================================== -->
+    <div id="viewPoster" class="hidden space-y-4">
+      <!-- Action Bar for Poster -->
+      <div class="glass-card rounded-2xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 class="text-sm font-bold text-white">📱 Single-Screen Gallery Reference Card</h2>
+          <p class="text-xs text-slate-400">Designed to fit every interval, spec, conflict, and chemical rule into one clean image for your phone's photo gallery.</p>
+        </div>
+        <button id="btnDownloadPNG" onclick="downloadPosterPNG()" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 text-slate-950 font-bold text-xs shadow-lg shadow-cyan-500/20 flex items-center justify-center gap-2 shrink-0">
+          <span>📸 Download High-Res PNG for Gallery</span>
+        </button>
+      </div>
+
+      <!-- The Capturable Poster Card -->
+      <div id="posterCaptureArea" class="poster-gradient rounded-2xl p-4 sm:p-6 border border-slate-700/80 shadow-2xl space-y-4">
+        <!-- Poster Header -->
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 text-[10px] font-mono font-extrabold bg-cyan-500 text-slate-950 rounded">BYD EU</span>
+              <h2 class="text-base sm:text-lg font-extrabold text-white tracking-tight">
+                DOLPHIN SURF COMFORT (2025) — 15-YR / 300k KM CHEAT-SHEET
+              </h2>
+            </div>
+            <p class="text-[11px] text-slate-400 font-mono mt-0.5">
+              43.2 kWh Blade LFP • 115 kW / 220 Nm • N. Italy Outdoor Salt &amp; 10% Pothole Spec
+            </p>
+          </div>
+          <div class="text-right font-mono text-[11px] text-slate-300 hidden sm:block">
+            <div id="posterOdoText">ODO: 0 km</div>
+            <div class="text-cyan-400">Severe Schedule Active</div>
+          </div>
+        </div>
+
+        <!-- 3-Section Dense Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+
+          <!-- Col 1: Immediate Setup -->
+          <div class="bg-slate-900/90 rounded-xl p-3 border border-emerald-500/30 space-y-2">
+            <div class="text-[11px] font-mono font-bold uppercase text-emerald-400 border-b border-slate-800 pb-1">
+              🟢 1. Do Once When New (Pre-Winter)
+            </div>
+            <div>
+              <p class="font-bold text-white">1. Front &amp; Rear Mud Flaps</p>
+              <p class="text-[11px] text-slate-400">Clip-on flaps; stops winter salt/gravel sandblasting lower sills.</p>
+            </div>
+            <div>
+              <p class="font-bold text-white">2. Underbody &amp; Sill Cavity Wax</p>
+              <p class="text-[11px] text-slate-400"><strong class="text-emerald-300">Lanoguard</strong> or <strong class="text-emerald-300">Dinitrol 3125/4941</strong> inside sill bungs &amp; steel subframes/arms. <em>Mask brakes, HV plugs &amp; flat aluminum battery belly plate.</em></p>
+            </div>
+            <div>
+              <p class="font-bold text-white">3. Condition All EPDM Seals</p>
+              <p class="text-[11px] text-slate-400">Coat charge flap ring, door &amp; frunk rubbers with <strong class="text-cyan-300">Molykote 111</strong>, <strong class="text-cyan-300">Krytox GPL 205</strong>, or <strong class="text-cyan-300">Pure Glycerine</strong>.</p>
+            </div>
+            <div>
+              <p class="font-bold text-white">4. 3m / 5,000 km Check</p>
+              <p class="text-[11px] text-slate-400">Official BYD initial chassis bolt &amp; HV shield settling check.</p>
+            </div>
+          </div>
+
+          <!-- Col 2: Routine & Severe Annual -->
+          <div class="bg-slate-900/90 rounded-xl p-3 border border-cyan-500/30 space-y-2">
+            <div class="text-[11px] font-mono font-bold uppercase text-cyan-400 border-b border-slate-800 pb-1">
+              🔵 2. Routine DIY &amp; Severe Annual
+            </div>
+            <div>
+              <p class="font-bold text-white">5. Monthly: 100% LFP Balance + PSI</p>
+              <p class="text-[11px] text-slate-400">Charge to 100% AC + leave plugged in 1–2 hrs to top-balance LFP cells.</p>
+            </div>
+            <div>
+              <p class="font-bold text-white">6. Every 6m: Charge Port &amp; Flap Ring</p>
+              <p class="text-[11px] text-slate-400">Wipe pins w/ <strong class="text-cyan-300">99% IPA</strong>; re-lube outer flap seal w/ Molykote 111 / Glycerine (stops green oxide &amp; compression set).</p>
+            </div>
+            <div>
+              <p class="font-bold text-white">7. Every 10,000 km: Tire Rotation</p>
+              <p class="text-[11px] text-slate-400">Front-to-back + annual alignment check after winter potholes.</p>
+            </div>
+            <div>
+              <p class="font-bold text-white">8. Every 12m / 15,000 km (Severe Rule)</p>
+              <p class="text-[11px] text-slate-400"><span class="text-amber-300">Overrides 24m/30k standard EU rule.</span> Lube caliper guide pins + weekly firm braking; inspect drop links, tie rods &amp; plastic aero shield; touch up Lanoguard.</p>
+            </div>
+          </div>
+
+          <!-- Col 3: Hard Workshop Fluid Milestones -->
+          <div class="bg-slate-900/90 rounded-xl p-3 border border-amber-500/30 space-y-2">
+            <div class="text-[11px] font-mono font-bold uppercase text-amber-400 border-b border-slate-800 pb-1">
+              🟠 3. Hard Workshop Fluid Milestones
+            </div>
+            <div>
+              <p class="font-bold text-white">9. 24m / 40k km: Gearbox Oil Flush</p>
+              <p class="text-[11px] text-slate-400">Spec: <strong class="text-amber-300">Castrol BOT384 (450–600 ml)</strong>. Repeat every <strong>24m / 48,000 km</strong>. Flushes break-in metal shavings to save 8-in-1 bearings.</p>
+            </div>
+            <div>
+              <p class="font-bold text-white">10. Every 24m: Brake Fluid Flush</p>
+              <p class="text-[11px] text-slate-400">Spec: <strong class="text-amber-300">HZY6 / DOT 4 (~1,100 ml)</strong>. Strictly time-based to prevent moisture corrosion inside ABS/regen valves.</p>
+            </div>
+            <div>
+              <p class="font-bold text-white">11. Every 36m / 60–80k km: Coolant &amp; 12V</p>
+              <p class="text-[11px] text-slate-400">Spec: <strong class="text-amber-300">BYD Glycol OAT -40°C (3.1–3.3 L)</strong>. <span class="text-amber-300">Earlier than 4yr/100k manual limit</span> to protect electric pumps. Test/replace 12V battery every 3–4 yrs.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Chemical Bar inside Poster -->
+        <div class="bg-slate-950/90 rounded-xl p-3 border border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+          <div>
+            <span class="font-mono font-bold text-emerald-400">🧪 SAFE ON EPDM RUBBER (&lt;1–2% Swell):</span>
+            <span class="text-slate-300"> 1) DuPont Krytox GPL 205 (PFPE) • 2) DuPont Molykote 111 Paste (tube) • 3) Pure Ph. Eur. Glycerine / Sonax GummiPfleger. </span>
+            <span class="text-rose-400 font-semibold">(❌ NO WD-40, Vaseline, or solvent sprays).</span>
+          </div>
+          <div>
+            <span class="font-mono font-bold text-cyan-400">🛡️ SAFE UNDERBODY RUSTPROOFERS:</span>
+            <span class="text-slate-300"> 1) Lanoguard (solvent-free lanolin, 70kV safe) • 2) Dinitrol 3125 / 4941. </span>
+            <span class="text-rose-400 font-semibold">(❌ NO Fluid Film on EPDM; NEVER coat flat battery heat-sink plate).</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- VIEW 3: SERVICE HISTORY LOGBOOK                          -->
+    <!-- ======================================================== -->
+    <div id="viewLogs" class="hidden space-y-4">
+      <div class="glass-card rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 class="text-sm font-bold text-white">📋 15-Year Service &amp; DIY History Logbook</h2>
+          <p class="text-xs text-slate-400">Every time you tap "Log Now" on a maintenance task, a permanent timestamp and odometer record is stored here.</p>
+        </div>
+        <button onclick="clearAllHistoryConfirm()" class="px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-xs font-semibold self-start sm:self-auto">
+          🗑️ Reset All Data
+        </button>
+      </div>
+
+      <!-- Custom Confirmation Box (replaces confirm()) -->
+      <div id="resetConfirmBox" class="hidden glass-card rounded-2xl p-4 border border-rose-500/50 bg-rose-950/20 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <p class="text-xs text-rose-200 font-medium">Are you sure you want to reset all logged dates, odometer readings, and custom notes back to factory defaults?</p>
+        <div class="flex gap-2 shrink-0">
+          <button onclick="executeFactoryReset()" class="px-3 py-1.5 rounded-lg bg-rose-500 text-slate-950 font-bold text-xs">Yes, Reset Everything</button>
+          <button onclick="hideResetConfirm()" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 text-xs">Cancel</button>
+        </div>
+      </div>
+
+      <div id="historyListContainer" class="space-y-2.5"></div>
+    </div>
+
+  </main>
+
+  <script>
+    // ============================================================================
+    // STORAGE KEY & DEFAULT VERIFIED 15-YEAR DATASET
+    // ============================================================================
+    const STORAGE_KEY = 'byd_dolphin_surf_15yr_tracker_v1';
+
+    const DEFAULT_TASKS = [
+      // Category 1: Immediate Setup
+      {
+        id: 'setup_mudflaps',
+        num: 1,
+        category: 'Immediate Setup',
+        title: 'Fit Front & Rear Mud Flaps',
+        intervalLabel: 'Once (When New / Pre-Winter)',
+        intervalMonths: null,
+        intervalKm: null,
+        spec: 'Clip-on OEM / Aftermarket Molded Flaps',
+        conflictBadge: 'DIY Add-On',
+        conflictType: 'addon',
+        description: 'Stops front and rear tires from sandblasting the lower rocker panel sills and rear wheel arch lips with winter road salt and gravel.',
+        checked: false,
+        lastDate: '',
+        lastKm: '',
+        notes: ''
+      },
+      {
+        id: 'setup_rustproofing',
+        num: 2,
+        category: 'Immediate Setup',
+        title: 'Underbody & Sill Cavity Rustproofing',
+        intervalLabel: 'Once When New (+12–18m Touch-Up)',
+        intervalMonths: 18,
+        intervalKm: null,
+        spec: 'Lanoguard (Zero-Petroleum Lanolin) or Dinitrol 3125 / 4941',
+        conflictBadge: 'Critical N. Italy Defense',
+        conflictType: 'critical',
+        description: 'Spray inside rocker panel sill bungs using a 360° wand and coat steel subframes, suspension arms, and jack points. MASK brake discs, orange HV plugs, and the flat aluminum Blade Battery bottom plate (heat sink).',
+        checked: false,
+        lastDate: '',
+        lastKm: '',
+        notes: ''
+      },
+      {
+        id: 'setup_epdm_seals',
+        num: 3,
+        category: 'Immediate Setup',
+        title: 'Condition All EPDM Rubber Seals',
+        intervalLabel: 'When New (Then Every 6 Months)',
+        intervalMonths: 6,
+        intervalKm: null,
+        spec: 'DuPont Molykote 111 Paste, Krytox GPL 205, or Pure Glycerine',
+        conflictBadge: 'Zero EPDM Swell (<1–2%)',
+        conflictType: 'addon',
+        description: 'Coat the charging flap rubber ring, door weatherstripping, and frunk seals. Prevents winter freezing and compression-set flattening. Never use WD-40, Vaseline, or solvent-carrier silicone aerosols.',
+        checked: false,
+        lastDate: '',
+        lastKm: '',
+        notes: ''
+      },
+      {
+        id: 'setup_3m_check',
+        num: 4,
+        category: 'Immediate Setup',
+        title: '3-Month / 5,000 km Initial BYD Foundation Check',
+        intervalLabel: '3 Months or 5,000 km (Once)',
+        intervalMonths: 3,
+        intervalKm: 5000,
+        spec: 'Official BYD Chassis & Fastener Inspection',
+        conflictBadge: 'Matches Manual',
+        conflictType: 'official',
+        description: 'Verify torque on chassis suspension bolts, high-voltage underbody shield fasteners, brake lines, and initial factory settling.',
+        checked: false,
+        lastDate: '',
+        lastKm: '',
+        notes: ''
+      },
+
+      // Category 2: Routine DIY & Annual (Severe Winter / Pothole Schedule)
+      {
+        id: 'routine_lfp_balance',
+        num: 5,
+        category: 'Routine & Annual',
+        title: 'Monthly: 100% AC LFP Top-Balance + Tire PSI Check',
+        intervalLabel: 'Every 1 Month',
+        intervalMonths: 1,
+        intervalKm: 1500,
+        spec: '100% AC Charge + Leave Plugged In 1–2 Hours',
+        conflictBadge: 'Survival Rule vs. 6m Manual',
+        conflictType: 'conflict',
+        description: 'LFP cells have a flat voltage curve. Charging to 100% on AC once a month and letting the car sit plugged in allows the BMS to top-balance cell voltages and prevent winter range drop.',
+        checked: false,
+        lastDate: '',
+        lastKm: '',
+        notes: ''
+      },
+      {
+        id: 'routine_charge_port',
+        num: 6,
+        category: 'Routine & Annual',
+        title: 'Every 6 Months: Charge Port Pins & Flap Seal Care',
+        intervalLabel: 'Every 6 Months (Spring & Autumn)',
+        intervalMonths: 6,
+        intervalKm: 7500,
+        spec: 'Pins: 99% Isopropyl Alcohol | Seal: Molykote 111 / Glycerine',
+        conflictBadge: 'DIY Add-On (Years 8–15 Guard)',
+        conflictType: 'addon',
+        description: 'Wipe metal Type-2 / CCS pins with 99% IPA (never 70%) to remove winter condensation dust before green copper-oxide forms. Re-grease the outer flap rubber ring to prevent compression set.',
+        checked: false,
+        lastDate: '',
+        lastKm: '',
+        notes: ''
+      },
+      {
+        id: 'routine_tire_rotation',
+        num: 7,
+        category: 'Routine & Annual',
+        title: 'Every 10,000 km: Tire Rotation & Alignment Check',
+        intervalLabel: 'Every 10,000 km',
+        intervalMonths: 9,
+        intervalKm: 10000,
+        spec: 'Front-to-Back Rotation + Annual Post-Winter Alignment',
+        conflictBadge: 'Matches Manual',
+        conflictType: 'official',
+        description: 'The Comfort trim puts 220 Nm of instant torque and 1,390 kg curb weight through the front axle. Rotate every 10k km and check toe alignment after winter pothole season.',
+        checked: false,
+        lastDate: '',
+        lastKm: '',
+        notes: ''
+      },
+      {
+        id: 'routine_severe_12m',
+        num: 8,
+        category: 'Routine & Annual',
+        title: 'Every 12m / 15,000 km: Severe Chassis, Caliper Pin Lube & Lanolin Touch-Up',
+        intervalLabel: 'Every 12 Months or 15,000 km',
+        intervalMonths: 12,
+        intervalKm: 15000,
+        spec: 'Caliper Guide Pin Grease + Drop Links/Aero Shield + Lanoguard',
+        conflictBadge: 'CONFLICT: Overrides 24m/30k EU Rule',
+        conflictType: 'conflict',
+        description: 'Per BYD Severe Driving Conditions clause (salted roads + 10% potholes): 1) Clean & lube brake caliper sliding pins (+ do 1–2 firm mechanical brakings weekly to stop disc glazing), 2) Check stabilizer drop links, tie-rod ends, and low-hanging plastic aero shield (135–154 mm clearance), 3) Touch up Lanoguard on wheel arches before winter.',
+        checked: false,
+        lastDate: '',
+        lastKm: '',
+        notes: ''
+      },
+
+      // Category 3: Hard Workshop Fluid Milestones
+      {
+        id: 'fluid_gearbox_oil',
+        num: 9,
+        category: 'Fluid Milestones',
+        title: '24 Months / 40,000 km: Reduction Gearbox Oil Flush',
+        intervalLabel: 'First at 24m / 40k km, then every 24m / 48k km',
+        intervalMonths: 24,
+        intervalKm: 40000,
+        spec: 'Castrol BOT384 (~450–600 ml)',
+        conflictBadge: 'Mandatory 8-in-1 Bearing Saver',
+        conflictType: 'critical',
+        description: 'Never believe "lifetime fluid" myths. Initial gear break-in sheds fine metallic particles into the 8-in-1 drive unit housing. Flushing at 40k km (and every 48k km after) prevents high-mileage bearing whine.',
+        checked: false,
+        lastDate: '',
+        lastKm: '',
+        notes: ''
+      },
+      {
+        id: 'fluid_brake_dot4',
+        num: 10,
+        category: 'Fluid Milestones',
+        title: 'Strictly Every 24 Months: Brake Fluid Flush',
+        intervalLabel: 'Every 24 Months / 40,000 km (Hard Clock)',
+        intervalMonths: 24,
+        intervalKm: 40000,
+        spec: 'HZY6 / DOT 4 (~1,100 ml)',
+        conflictBadge: 'Matches Manual (Time-Critical)',
+        conflictType: 'official',
+        description: 'DOT 4 fluid absorbs moisture from humid Northern Italian winters. Flushing strictly every 24 months prevents internal corrosion of the ABS and regenerative braking blending actuator valves.',
+        checked: false,
+        lastDate: '',
+        lastKm: '',
+        notes: ''
+      },
+      {
+        id: 'fluid_coolant_12v',
+        num: 11,
+        category: 'Fluid Milestones',
+        title: 'Every 36 Months / 60k–80k km: Motor & Battery Coolant Flush + 12V Test',
+        intervalLabel: 'Every 36 Months or 60,000–80,000 km',
+        intervalMonths: 36,
+        intervalKm: 70000,
+        spec: 'BYD Glycol Organic Acid OAT -40°C (3.1–3.3 L) + 12V Load Test',
+        conflictBadge: 'CONFLICT: Earlier than 4yr/100k Manual',
+        conflictType: 'conflict',
+        description: 'Flushing low-conductivity EV coolant at 3 years / 60–80k km (instead of waiting 4 yrs / 100k km) prevents anti-corrosion inhibitor depletion and protects the electric coolant pumps and 8-in-1 heat exchanger. Preemptively replace the 12V auxiliary battery every 3–4 years.',
+        checked: false,
+        lastDate: '',
+        lastKm: '',
+        notes: ''
+      }
+    ];
+
+    // Application State
+    let appState = {
+      odometerKm: 500,
+      startDate: new Date().toISOString().split('T')[0],
+      currentCategory: 'ALL',
+      tasks: JSON.parse(JSON.stringify(DEFAULT_TASKS)),
+      historyLogs: []
+    };
+
+    // ============================================================================
+    // INITIALIZATION & LOCALSTORAGE PERSISTENCE
+    // ============================================================================
+    function loadStateFromStorage() {
+      try {
+        const raw = window.localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          appState.odometerKm = typeof parsed.odometerKm === 'number' ? parsed.odometerKm : 500;
+          appState.startDate = parsed.startDate || new Date().toISOString().split('T')[0];
+          appState.historyLogs = Array.isArray(parsed.historyLogs) ? parsed.historyLogs : [];
+
+          // Merge saved task states onto DEFAULT_TASKS so new properties never break
+          if (Array.isArray(parsed.tasks)) {
+            appState.tasks = DEFAULT_TASKS.map(defTask => {
+              const saved = parsed.tasks.find(t => t.id === defTask.id);
+              return saved ? { ...defTask, checked: !!saved.checked, lastDate: saved.lastDate || '', lastKm: saved.lastKm ?? '', notes: saved.notes || '' } : defTask;
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Failed to read localStorage:', err);
+      }
+    }
+
+    function saveStateToStorage(toastText = 'Saved to LocalStorage') {
+      try {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+        if (toastText) showToast(toastText);
+      } catch (err) {
+        console.error('Failed to save to localStorage:', err);
+        showToast('Storage Error: Check browser permissions', true);
+      }
+    }
+
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toast');
+      const msgEl = document.getElementById('toastMessage');
+      const iconEl = document.getElementById('toastIcon');
+      const contentEl = document.getElementById('toastContent');
+
+      msgEl.textContent = message;
+      iconEl.textContent = isError ? '⚠️' : '✓';
+      contentEl.className = `glass-card border-l-4 ${isError ? 'border-rose-500' : 'border-cyan-400'} px-4 py-3 rounded-xl shadow-2xl flex items-center justify-between`;
+
+      toast.classList.remove('-translate-y-24', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => {
+        toast.classList.add('-translate-y-24', 'opacity-0');
+        toast.classList.remove('translate-y-0', 'opacity-100');
+      }, 2400);
+    }
+
+    // ============================================================================
+    // VEHICLE STATS & DUE STATUS CALCULATIONS
+    // ============================================================================
+    function updateVehicleStats() {
+      const odoInput = document.getElementById('inputOdometer');
+      const dateInput = document.getElementById('inputStartDate');
+
+      const newOdo = Math.max(0, parseInt(odoInput.value, 10) || 0);
+      appState.odometerKm = newOdo;
+      appState.startDate = dateInput.value || new Date().toISOString().split('T')[0];
+
+      saveStateToStorage('Odometer & Start Date Updated');
+      renderAll();
+    }
+
+    function computeDueStatus(task) {
+      // One-time tasks
+      if (!task.intervalMonths && !task.intervalKm) {
+        return task.checked
+          ? { label: 'Completed', color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' }
+          : { label: 'Action Needed (Pre-Winter)', color: 'bg-amber-500/20 text-amber-300 border-amber-500/40' };
+      }
+
+      // If one-time 3m/5000km check is done
+      if (task.id === 'setup_3m_check' && task.checked) {
+        return { label: 'Completed', color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' };
+      }
+
+      const refKm = task.lastKm !== '' && task.lastKm !== null ? Number(task.lastKm) : 0;
+      const refDateStr = task.lastDate || appState.startDate;
+      const kmElapsed = Math.max(0, appState.odometerKm - refKm);
+
+      let monthsElapsed = 0;
+      if (refDateStr) {
+        const refDate = new Date(refDateStr);
+        const now = new Date();
+        monthsElapsed = (now.getFullYear() - refDate.getFullYear()) * 12 + (now.getMonth() - refDate.getMonth());
+      }
+
+      const kmDueRatio = task.intervalKm ? kmElapsed / task.intervalKm : 0;
+      const monthDueRatio = task.intervalMonths ? monthsElapsed / task.intervalMonths : 0;
+      const maxRatio = Math.max(kmDueRatio, monthDueRatio);
+
+      const nextKm = task.intervalKm ? refKm + task.intervalKm : null;
+
+      if (maxRatio >= 1) {
+        return {
+          label: `Due Now (${nextKm ? 'at ' + nextKm.toLocaleString() + ' km' : 'Time Interval'})`,
+          color: 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+        };
+      } else if (maxRatio >= 0.8) {
+        return {
+          label: `Due Soon (${nextKm ? nextKm.toLocaleString() + ' km' : 'Upcoming'})`,
+          color: 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+        };
+      } else {
+        return {
+          label: nextKm ? `Next: ${nextKm.toLocaleString()} km` : `Every ${task.intervalMonths}m`,
+          color: 'bg-slate-800 text-slate-300 border-slate-700'
+        };
+      }
+    }
+
+    // ============================================================================
+    // TASK ACTIONS (CHECK, LOG NOW, MANUAL EDIT)
+    // ============================================================================
+    function toggleTaskCheck(taskId) {
+      const task = appState.tasks.find(t => t.id === taskId);
+      if (!task) return;
+      task.checked = !task.checked;
+
+      // If checking for the first time and no lastDate/lastKm is set, populate them
+      if (task.checked && !task.lastDate) {
+        task.lastDate = new Date().toISOString().split('T')[0];
+        task.lastKm = appState.odometerKm;
+      }
+      saveStateToStorage(`${task.title} ${task.checked ? 'marked done' : 'unmarked'}`);
+      renderAll();
+    }
+
+    function logTaskNow(taskId) {
+      const task = appState.tasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      const todayStr = new Date().toISOString().split('T')[0];
+      task.checked = true;
+      task.lastDate = todayStr;
+      task.lastKm = appState.odometerKm;
+
+      appState.historyLogs.unshift({
+        id: 'log_' + Date.now(),
+        taskId: task.id,
+        taskTitle: task.title,
+        date: todayStr,
+        km: appState.odometerKm,
+        spec: task.spec,
+        notes: task.notes || 'Logged via 1-Tap Complete'
+      });
+
+      saveStateToStorage(`Logged "${task.title}" at ${appState.odometerKm.toLocaleString()} km`);
+      renderAll();
+    }
+
+    function updateTaskField(taskId, field, value) {
+      const task = appState.tasks.find(t => t.id === taskId);
+      if (!task) return;
+      task[field] = value;
+      saveStateToStorage('Task details saved');
+      renderAll();
+    }
+
+    function deleteHistoryLog(logId) {
+      appState.historyLogs = appState.historyLogs.filter(item => item.id !== logId);
+      saveStateToStorage('Log entry removed');
+      renderAll();
+    }
+
+    // ============================================================================
+    // VIEW SWITCHING & FILTERING
+    // ============================================================================
+    function switchMainView(viewName) {
+      const views = {
+        tracker: document.getElementById('viewTracker'),
+        poster: document.getElementById('viewPoster'),
+        logs: document.getElementById('viewLogs')
+      };
+      const btns = {
+        tracker: document.getElementById('btnViewTracker'),
+        poster: document.getElementById('btnViewPoster'),
+        logs: document.getElementById('btnViewLogs')
+      };
+
+      Object.keys(views).forEach(k => {
+        if (k === viewName) {
+          views[k].classList.remove('hidden');
+          btns[k].className = 'flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-cyan-500 text-slate-950 shadow';
+        } else {
+          views[k].classList.add('hidden');
+          btns[k].className = 'flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-300 hover:text-white';
+        }
+      });
+    }
+
+    function setCategoryFilter(cat) {
+      appState.currentCategory = cat;
+      document.querySelectorAll('.cat-btn').forEach(btn => {
+        if (btn.getAttribute('data-cat') === cat) {
+          btn.className = 'cat-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40';
+        } else {
+          btn.className = 'cat-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-400 border border-slate-800 hover:text-slate-200';
+        }
+      });
+      renderTasks();
+    }
+
+    // ============================================================================
+    // RENDERING ENGINE
+    // ============================================================================
+    function renderAll() {
+      // Top telemetry bar
+      document.getElementById('inputOdometer').value = appState.odometerKm;
+      document.getElementById('inputStartDate').value = appState.startDate;
+      document.getElementById('posterOdoText').textContent = `ODO: ${appState.odometerKm.toLocaleString()} km`;
+
+      // 300,000 km 15-Year Horizon Bar & LFP cycle calculator (16.5 kWh/100km & 43.2 kWh usable)
+      const pct = Math.min(100, ((appState.odometerKm / 300000) * 100)).toFixed(1);
+      document.getElementById('horizonPct').textContent = `${pct}% (${(appState.odometerKm / 1000).toFixed(1)}k / 300k km)`;
+      document.getElementById('horizonBar').style.width = `${Math.max(1, pct)}%`;
+
+      const estKwh = (appState.odometerKm / 100) * 16.5;
+      const estCycles = Math.round(estKwh / 43.2);
+      document.getElementById('estCyclesText').textContent = `Est. ${estCycles.toLocaleString()} / 5,000 LFP cycles (${Math.round(estKwh).toLocaleString()} kWh)`;
+
+      // Completion counter
+      const doneCount = appState.tasks.filter(t => t.checked).length;
+      document.getElementById('taskCompletionBadge').textContent = `${doneCount} / ${appState.tasks.length}`;
+      document.getElementById('logCountBadge').textContent = appState.historyLogs.length;
+
+      renderTasks();
+      renderHistoryLogs();
+    }
+
+    function getBadgeStyle(conflictType) {
+      if (conflictType === 'conflict') return 'bg-amber-500/15 text-amber-300 border-amber-500/40';
+      if (conflictType === 'critical') return 'bg-rose-500/15 text-rose-300 border-rose-500/40';
+      if (conflictType === 'addon') return 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40';
+      return 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40';
+    }
+
+    function renderTasks() {
+      const container = document.getElementById('tasksContainer');
+      const filtered = appState.currentCategory === 'ALL'
+        ? appState.tasks
+        : appState.tasks.filter(t => t.category === appState.currentCategory);
+
+      container.innerHTML = filtered.map(task => {
+        const due = computeDueStatus(task);
+        const badgeStyle = getBadgeStyle(task.conflictType);
+
+        return `
+          <article class="glass-card rounded-2xl p-4 transition-all border ${task.checked ? 'border-emerald-500/40 bg-emerald-950/10' : 'border-slate-800'}">
+            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+              <!-- Left Checkbox & Content -->
+              <div class="flex items-start space-x-3.5 flex-1">
+                <button onclick="toggleTaskCheck('${task.id}')"
+                  aria-label="Toggle completed"
+                  class="mt-0.5 w-6 h-6 rounded-lg flex items-center justify-center border transition-all shrink-0 ${
+                    task.checked
+                      ? 'bg-emerald-500 border-emerald-400 text-slate-950 font-extrabold shadow-md shadow-emerald-500/20'
+                      : 'bg-slate-900 border-slate-600 hover:border-cyan-400 text-transparent'
+                  }">
+                  ✓
+                </button>
+
+                <div class="space-y-1.5 flex-1">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-xs font-mono font-bold text-cyan-400">#${task.num}</span>
+                    <h3 class="text-sm sm:text-base font-bold ${task.checked ? 'line-through text-slate-400' : 'text-white'}">
+                      ${task.title}
+                    </h3>
+                    <span class="px-2 py-0.5 text-[10px] font-mono font-semibold rounded-md border ${badgeStyle}">
+                      ${task.conflictBadge}
+                    </span>
+                    <span class="px-2 py-0.5 text-[10px] font-mono font-semibold rounded-md border ${due.color}">
+                      ${due.label}
+                    </span>
+                  </div>
+
+                  <p class="text-xs text-slate-300 leading-relaxed">
+                    ${task.description}
+                  </p>
+
+                  <!-- Interval & Spec Pill Bar -->
+                  <div class="flex flex-wrap items-center gap-2 pt-1 text-[11px] font-mono">
+                    <span class="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300">
+                      ⏱️ <strong class="text-white">Interval:</strong> ${task.intervalLabel}
+                    </span>
+                    <span class="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-cyan-300">
+                      🔧 <strong class="text-white">Spec:</strong> ${task.spec}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Quick-Log Button -->
+              <div class="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-800/80 shrink-0">
+                <button onclick="logTaskNow('${task.id}')"
+                  class="px-3 py-1.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 text-xs font-semibold transition flex items-center space-x-1.5">
+                  <span>⚡ Log Done Now</span>
+                </button>
+                <span class="text-[10px] font-mono text-slate-400">
+                  ${task.lastDate ? `Last: ${task.lastDate} (${Number(task.lastKm).toLocaleString()} km)` : 'Not logged yet'}
+                </span>
+              </div>
+            </div>
+
+            <!-- Collapsible / Inline Tracking Inputs (Last Date, Last KM, Custom Notes) -->
+            <div class="mt-3 pt-3 border-t border-slate-800/80 grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+              <div>
+                <label class="block text-[10px] font-mono uppercase text-slate-400 mb-1">Last Done Date</label>
+                <input type="date" value="${task.lastDate}"
+                  onchange="updateTaskField('${task.id}', 'lastDate', this.value)"
+                  class="w-full bg-slate-900/90 border border-slate-800 focus:border-cyan-400 rounded-lg px-2.5 py-1.5 text-xs font-mono text-slate-200 focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-[10px] font-mono uppercase text-slate-400 mb-1">Last Done Odometer (km)</label>
+                <input type="number" min="0" step="100" value="${task.lastKm}" placeholder="e.g. 15000"
+                  onchange="updateTaskField('${task.id}', 'lastKm', this.value)"
+                  class="w-full bg-slate-900/90 border border-slate-800 focus:border-cyan-400 rounded-lg px-2.5 py-1.5 text-xs font-mono text-slate-200 focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-[10px] font-mono uppercase text-slate-400 mb-1">Workshop / DIY Notes (Brand, Batch, Cost)</label>
+                <input type="text" value="${task.notes.replace(/"/g, '&quot;')}" placeholder="e.g. Applied 2L Lanoguard + Molykote 111"
+                  onchange="updateTaskField('${task.id}', 'notes', this.value)"
+                  class="w-full bg-slate-900/90 border border-slate-800 focus:border-cyan-400 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none" />
+              </div>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    function renderHistoryLogs() {
+      const container = document.getElementById('historyListContainer');
+      if (!appState.historyLogs.length) {
+        container.innerHTML = `
+          <div class="glass-card rounded-2xl p-8 text-center text-slate-400 text-xs">
+            No maintenance events logged yet. Tap <strong class="text-cyan-300">"⚡ Log Done Now"</strong> on any task to record a timestamped service entry.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = appState.historyLogs.map(entry => `
+        <div class="glass-card rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 border border-slate-800">
+          <div class="space-y-0.5">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 text-[10px] font-mono font-bold rounded bg-cyan-500/20 text-cyan-300">${entry.date}</span>
+              <span class="px-2 py-0.5 text-[10px] font-mono font-bold rounded bg-emerald-500/20 text-emerald-300">${Number(entry.km).toLocaleString()} km</span>
+              <h4 class="text-xs sm:text-sm font-bold text-white">${entry.taskTitle}</h4>
+            </div>
+            <p class="text-[11px] text-slate-400 font-mono">Spec: ${entry.spec} ${entry.notes ? `• Note: ${entry.notes}` : ''}</p>
+          </div>
+          <button onclick="deleteHistoryLog('${entry.id}')" class="text-[11px] text-slate-400 hover:text-rose-400 self-end sm:self-center px-2 py-1">
+            ✕ Remove
+          </button>
+        </div>
+      `).join('');
+    }
+
+    // ============================================================================
+    // 1-TAP GALLERY PNG GENERATOR & JSON BACKUP / RESTORE
+    // ============================================================================
+    async function downloadPosterPNG() {
+      const btn = document.getElementById('btnDownloadPNG');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<span>⏳ Rendering High-Res PNG...</span>';
+      btn.disabled = true;
+
+      try {
+        const posterEl = document.getElementById('posterCaptureArea');
+        const canvas = await html2canvas(posterEl, {
+          backgroundColor: '#070b12',
+          scale: 2, // Retina 2x sharpness for mobile gallery zoom
+          useCORS: true,
+          logging: false
+        });
+
+        const dataUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.download = `BYD-Dolphin-Surf-15Yr-Guide-${appState.odometerKm}km.png`;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        showToast('PNG Poster downloaded to your device!');
+      } catch (err) {
+        console.error('PNG generation error:', err);
+        showToast('Could not render PNG; use phone screenshot instead.', true);
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    }
+
+    function exportBackupJSON() {
+      const dataStr = JSON.stringify(appState, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.download = `byd_dolphin_surf_backup_${new Date().toISOString().split('T')[0]}.json`;
+      link.href = url;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      showToast('JSON Backup file downloaded');
+    }
+
+    function importBackupJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (imported && Array.isArray(imported.tasks)) {
+            window.localStorage.setItem(STORAGE_KEY, JSON.stringify(imported));
+            loadStateFromStorage();
+            renderAll();
+            showToast('Backup restored to LocalStorage!');
+          } else {
+            showToast('Invalid JSON backup file format', true);
+          }
+        } catch (err) {
+          showToast('Failed to parse JSON file', true);
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    }
+
+    function clearAllHistoryConfirm() {
+      document.getElementById('resetConfirmBox').classList.remove('hidden');
+    }
+
+    function hideResetConfirm() {
+      document.getElementById('resetConfirmBox').classList.add('hidden');
+    }
+
+    function executeFactoryReset() {
+      window.localStorage.removeItem(STORAGE_KEY);
+      appState = {
+        odometerKm: 500,
+        startDate: new Date().toISOString().split('T')[0],
+        currentCategory: 'ALL',
+        tasks: JSON.parse(JSON.stringify(DEFAULT_TASKS)),
+        historyLogs: []
+      };
+      hideResetConfirm();
+      saveStateToStorage('Reset to factory defaults');
+      renderAll();
+    }
+
+    // Initialize on load
+    window.addEventListener('DOMContentLoaded', () => {
+      loadStateFromStorage();
+      renderAll();
+    });
+  </script>
+</body>
+</html>

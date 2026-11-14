@@ -1,0 +1,880 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>BYD · Cruscotto — bozza d2 morfosi</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..1000&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['"Roboto Flex"', 'Roboto', 'system-ui', 'sans-serif'] },
+          colors: {
+            prim: '#e3a89b', onPrim: '#402010',
+            primC: '#55291d', onPrimC: '#f3d4c8',
+            secC: '#3d3431', onSecC: '#eadcd5',
+            terC: '#463818', onTerC: '#e6cd96',
+            err: '#d98a80', onErr: '#441411',
+            errC: '#3e1d1c', onErrC: '#f2c1ba',
+            surf: '#000000', surfLox: '#0e0d0d', surfC: '#1e1c1d', surfHi: '#2a2728', surfHiX: '#353132',
+            onSurf: '#eae4e2', onSurfV: '#b9aca8', mut: '#8d817d', outline: '#463f3d',
+            okC: '#1d3326', onOkC: '#9cc7a8',
+            waC: '#363020', onWaC: '#d9c084',
+          },
+          boxShadow: {
+            fab: '0 4px 10px rgba(0,0,0,0.5), 0 14px 32px rgba(0,0,0,0.55)',
+            hero: '0 6px 24px rgba(0,0,0,0.35)',
+            nav: '0 8px 28px rgba(0,0,0,0.55)',
+            sheet: '0 -8px 32px rgba(0,0,0,0.6)',
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    html { -webkit-tap-highlight-color: transparent; }
+    body { color: #eae4e2; }
+    ::selection { background: rgba(227, 168, 155, 0.3); }
+    .caption { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; color: #8d817d; }
+
+    /* ══ Motion foundation — easing + duration tokens ══ */
+    :root {
+      --e-emph: cubic-bezier(0.2, 0, 0, 1);
+      --e-spring: cubic-bezier(0.34, 1.4, 0.64, 1);   /* ≤1.03 overshoot then settle */
+      --e-exit: cubic-bezier(0.3, 0, 1, 1);
+      /* press 140ms · small 250ms · medium 400ms · large 550-650ms · stagger 55ms */
+    }
+
+    /* ── Press state layer: hover .06 · active .10 + scale .97 · focus ring ── */
+    .press { position: relative; transition: transform 140ms var(--e-emph); }
+    .press::after {
+      content: ''; position: absolute; inset: 0; border-radius: inherit;
+      background: #fff; opacity: 0; pointer-events: none;
+      transition: opacity 140ms var(--e-emph);
+    }
+    .press:hover::after { opacity: .06; }
+    .press:active { transform: scale(.97); }
+    .press:active::after { opacity: .10; }
+    .press:focus-visible { outline: 2px solid #e3a89b; outline-offset: 2px; }
+
+    /* ── Staggered block entrances (16px rise + fade) ── */
+    .enter { opacity: 0; transform: translateY(16px); transition: opacity 550ms var(--e-emph), transform 550ms var(--e-emph); }
+    .enter.in { opacity: 1; transform: none; }
+
+    /* ── Hero: corner morph 48→32 + ambient glow + delayed badge spring
+          (rise+fade delegated to the .enter wrapper, so the glow fades in too) ── */
+    .hero { border-radius: 48px; position: relative; transition: border-radius 600ms var(--e-emph); }
+    .hero.in { border-radius: 32px; }
+    .hero-glow {
+      position: absolute; inset: -6px; border-radius: 44px; background: #d98a80;
+      filter: blur(70px); opacity: .45; pointer-events: none;
+      animation: glowBreathe 6s ease-in-out infinite;
+    }
+    @keyframes glowBreathe {
+      0%, 100% { transform: scale(1); opacity: .45; }
+      50% { transform: scale(1.06); opacity: .7; }
+    }
+    /* car lands at 550ms → badge springs +200ms later with overshoot */
+    @keyframes badgeSpring {
+      from { opacity: 0; transform: scale(.6); }
+      70% { opacity: 1; transform: scale(1.03); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .hero.in .hero-badge { animation: badgeSpring 550ms var(--e-spring) 750ms both; }
+
+    /* ── Press shape morphs: rows rounded-full→22px, cards 24→16px ── */
+    .mrow { border-radius: 9999px; transition: transform 140ms var(--e-emph), border-radius 250ms var(--e-spring); }
+    .mrow:active { border-radius: 22px; }
+    .mcard { border-radius: 24px; transition: transform 140ms var(--e-emph), border-radius 250ms var(--e-spring); }
+    .mcard:active { border-radius: 16px; }
+
+    /* ── Text field: focus ring scale-in + lighter pill + prim label ── */
+    .field { position: relative; transition: background-color 250ms var(--e-emph); }
+    .field::after {
+      content: ''; position: absolute; inset: 0; border-radius: inherit;
+      box-shadow: inset 0 0 0 2px #e3a89b; opacity: 0; transform: scale(1.06);
+      transition: opacity 250ms var(--e-spring), transform 250ms var(--e-spring); pointer-events: none;
+    }
+    .field:focus-within { background-color: #2a2728; }
+    .field:focus-within::after { opacity: 1; transform: scale(1); }
+    .field-label { transition: color 250ms var(--e-emph); }
+    .field:focus-within .field-label { color: #e3a89b; }
+
+    /* ── Sintesi tile: press .95 + expanding ripple ring ── */
+    .tile { overflow: hidden; }
+    .tile:active { transform: scale(.95); }
+    .ripple-ring {
+      position: absolute; left: 50%; top: 50%; width: 12px; height: 12px;
+      transform: translate(-50%, -50%) scale(0); border-radius: 9999px;
+      border: 2px solid rgba(255, 255, 255, .35);
+      background: radial-gradient(circle, rgba(255, 255, 255, .18) 0%, rgba(255, 255, 255, 0) 70%);
+      animation: ripple 500ms var(--e-emph) forwards; pointer-events: none;
+    }
+    @keyframes ripple { to { transform: translate(-50%, -50%) scale(14); opacity: 0; } }
+
+    /* ── Count-up + spring bars ── */
+    .bar { width: 0; transition: width 650ms var(--e-spring); }
+
+    /* ── Section switching: out −8px / in +12px, re-staggered ── */
+    .pane { display: none; }
+    .pane.active { display: block; }
+    .pane.leaving {
+      display: block; opacity: 0; transform: translateX(-8px);
+      transition: opacity 250ms var(--e-exit), transform 250ms var(--e-exit);
+    }
+    .pane.entering { animation: paneIn 400ms var(--e-emph) both; }
+    @keyframes paneIn { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: none; } }
+
+    /* ── Fluid navbar: sliding indicator that stretches wider mid-flight ── */
+    .nav-ind {
+      position: absolute; left: 0; top: 8px; height: 40px; border-radius: 9999px;
+      background: #55291d; width: var(--w-to, 52px); transform: translateX(var(--x, 12px));
+      transition: transform 400ms var(--e-spring); pointer-events: none;
+    }
+    .nav-ind.stretch { animation: indStretch 450ms var(--e-emph); }
+    @keyframes indStretch {
+      0% { width: var(--w-from, 52px); }
+      55% { width: var(--w-mid, 70px); }
+      100% { width: var(--w-to, 52px); }
+    }
+    .nav-btn { transition: width 250ms var(--e-emph), transform 140ms var(--e-emph); }
+    .nav-btn.pop .nav-icon { animation: navPop 400ms var(--e-spring); }
+    @keyframes navPop { 0% { transform: scale(1); } 45% { transform: scale(1.15); } 100% { transform: scale(1); } }
+
+    /* ── FAB → sheet morph (centerpiece) ──
+       The .morph container starts at the FAB circle geometry (same rect, primC bg,
+       plus icon) and transitions left/right/bottom/height/radius/color to the full
+       sheet. The inner form is pinned to its FINAL screen position (translateX
+       compensates the 171px center drift), so the expanding window reveals planted
+       content. Close reverses with --e-exit. */
+    .morph {
+      position: absolute;
+      left: calc(100% - max(1rem, 50% - 199px) - 56px);
+      right: max(1rem, 50% - 199px);
+      bottom: 96px; height: 56px;
+      border-radius: 9999px; background: #55291d; overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5), 0 14px 32px rgba(0,0,0,0.55);
+      transition: left 450ms var(--e-exit), right 450ms var(--e-exit), bottom 450ms var(--e-exit),
+        height 450ms var(--e-exit), border-radius 450ms var(--e-exit), background-color 450ms var(--e-exit), box-shadow 450ms var(--e-exit);
+    }
+    .morph.open {
+      left: max(0px, 50% - 215px); right: max(0px, 50% - 215px);
+      bottom: 0; height: var(--sheet-h, 470px);
+      border-radius: 28px 28px 0 0; background: #1e1c1d;
+      box-shadow: 0 -8px 32px rgba(0,0,0,0.6);
+      transition: left 550ms var(--e-spring), right 550ms var(--e-spring), bottom 550ms var(--e-spring),
+        height 550ms var(--e-spring), border-radius 550ms var(--e-spring), background-color 550ms var(--e-spring), box-shadow 550ms var(--e-spring);
+    }
+    .morph-inner {
+      position: absolute; left: 50%; bottom: 0; width: 430px;
+      transform: translateX(calc(-50% - 171px)); transition: transform 450ms var(--e-exit);
+    }
+    .morph.open .morph-inner { transform: translateX(-50%); transition: transform 550ms var(--e-spring); }
+    .morph-body { opacity: 0; transform: translateY(12px); transition: opacity 300ms var(--e-exit), transform 300ms var(--e-exit); }
+    .morph.open .morph-body {
+      opacity: 1; transform: none; transition: opacity 350ms var(--e-emph) 150ms, transform 350ms var(--e-emph) 150ms;
+    }
+    .morph-plus {
+      position: absolute; inset: 0; margin: auto; width: 24px; height: 24px;
+      opacity: 1; transform: rotate(0deg) scale(1); transition: opacity 250ms var(--e-exit), transform 250ms var(--e-exit);
+    }
+    .morph.open .morph-plus {
+      opacity: 0; transform: rotate(90deg) scale(.6); transition: opacity 250ms var(--e-emph), transform 350ms var(--e-spring);
+    }
+
+    /* ── Settings sheet: spring up / exit down ── */
+    .sheet { transform: translateY(100%); transition: transform 450ms var(--e-exit); }
+    .sheet.open { transform: translateY(0); transition: transform 550ms var(--e-spring); }
+    .backdrop { opacity: 0; transition: opacity 400ms var(--e-emph); }
+    .dim .backdrop { opacity: 1; }
+
+    /* ── Filter chips (Attività) ── */
+    .fchip {
+      border: 1px solid #463f3d; color: #b9aca8;
+      transition: background-color 250ms var(--e-emph), color 250ms var(--e-emph), border-color 250ms var(--e-emph), transform 140ms var(--e-emph);
+    }
+    .fchip.on { background: #3d3431; color: #eadcd5; border-color: transparent; }
+
+    /* ── Reduced motion: neutralize everything ── */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important; animation-iteration-count: 1 !important;
+        animation-delay: 0ms !important; transition-duration: .01ms !important;
+        transition-delay: 0ms !important;
+      }
+      .hero, .enter { opacity: 1 !important; transform: none !important; }
+      .hero-glow { opacity: .55; }
+    }
+  </style>
+</head>
+<body class="bg-black font-sans antialiased">
+
+  <!-- ══ STRISCIA DI ANNOTAZIONE (fuori dal frame) ══ -->
+  <div class="bg-surfLox border-b border-white/[0.06]">
+    <div class="mx-auto max-w-[430px] px-4 py-3">
+      <p class="caption">d2 · Morfosi</p>
+      <p class="mt-1 text-[12px] font-medium text-onSurfV">intensità media — motion + shape morphing (FAB→sheet, navbar fluida, glow ambientale)</p>
+    </div>
+  </div>
+
+  <!-- ══ FRAME MOBILE 430px ══ -->
+  <div class="mx-auto max-w-[430px] min-h-screen bg-black">
+    <main class="px-4 pt-5 pb-36 space-y-7">
+
+      <!-- ══ HEADER (invariato) ══ -->
+      <header class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-full bg-primC flex items-center justify-center shrink-0">
+            <span class="font-black text-onPrimC text-sm tracking-tight">DS</span>
+          </div>
+          <div>
+            <h1 class="text-[22px] font-extrabold tracking-tight leading-tight text-onSurf">Dolphin Surf</h1>
+            <span class="inline-block mt-1 px-2.5 py-0.5 rounded-full border border-outline text-[10px] font-semibold text-onSurfV">2025 EU · 43,2 kWh</span>
+          </div>
+        </div>
+        <button id="gearBtn" aria-label="Impostazioni" class="press w-10 h-10 rounded-full bg-surfC flex items-center justify-center text-onSurfV">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
+      </header>
+
+      <!-- ══════════ PANE · CRUSCOTTO ══════════ -->
+      <section id="pane-cruscotto" class="pane active space-y-7">
+
+        <!-- §0 Campi -->
+        <section class="enter space-y-3">
+          <p class="caption">§0 Campi — pillola filled · focus → ring scale-in</p>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="field h-14 bg-surfHiX rounded-full px-5 pt-2">
+              <p class="field-label text-[10px] font-semibold text-onSurfV leading-none">Chilometraggio</p>
+              <div class="flex items-baseline gap-2 mt-1">
+                <input aria-label="Chilometraggio" type="text" inputmode="numeric" value="4.500" class="w-full bg-transparent p-0 text-[16px] font-medium text-onSurf focus:outline-none" /><span class="text-xs text-onSurfV shrink-0">km</span>
+              </div>
+            </div>
+            <div class="field h-14 bg-surfHiX rounded-full px-5 pt-2">
+              <p class="field-label text-[10px] font-semibold text-onSurfV leading-none">Consegna</p>
+              <div class="flex items-baseline gap-2 mt-1">
+                <input aria-label="Consegna" type="text" value="08/2025" class="w-full bg-transparent p-0 text-[16px] font-medium text-onSurf focus:outline-none" />
+              </div>
+            </div>
+            <div class="field h-14 bg-surfHiX rounded-full px-5 pt-2">
+              <p class="field-label text-[10px] font-semibold text-onSurfV leading-none">Consumo medio</p>
+              <div class="flex items-baseline gap-2 mt-1">
+                <input aria-label="Consumo medio" type="text" inputmode="decimal" value="13,9" class="w-full bg-transparent p-0 text-[16px] font-medium text-onSurf focus:outline-none" /><span class="text-xs text-onSurfV shrink-0">kWh/100</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- §B1 Hero -->
+        <section class="space-y-3">
+          <p class="caption">§B1 Hero — glow ambientale · angoli morph · badge spring</p>
+          <div class="enter relative">
+            <div class="hero-glow" aria-hidden="true"></div>
+            <article class="hero bg-errC p-5 shadow-hero space-y-4">
+              <div class="flex items-center justify-between">
+                <p class="text-[12px] font-bold uppercase tracking-[0.08em] text-onErrC/60">Prossima scadenza</p>
+                <span class="px-3 py-1 rounded-full bg-err text-onErr text-[11px] font-bold">Scaduto</span>
+              </div>
+
+              <div class="flex justify-center pt-1">
+                <div class="relative">
+                  <svg viewBox="0 0 160 64" class="h-24 w-auto" aria-hidden="true">
+                    <path d="M12 52 C8 52 6 49 6 45 C6 38 12 34 22 32 L38 30 L52 15 C55 11 60 9 66 9 L97 9 C104 9 110 12 114 18 L125 30 L139 32 C149 34 154 38 154 44 L154 49 C154 52 152 54 149 54 L12 54 Z" fill="#b96357"/><path d="M64 27 L70 15 C71 13 72 13 74 13 L88 13 C90 13 91 14 92 16 L98 27 Z" fill="#3e1d1c"/>
+                    <circle cx="40" cy="52" r="11" fill="#2c130c"/><circle cx="40" cy="52" r="4.5" fill="#3e1d1c"/><circle cx="120" cy="52" r="11" fill="#2c130c"/><circle cx="120" cy="52" r="4.5" fill="#3e1d1c"/>
+                  </svg>
+                  <span class="hero-badge absolute -top-2 right-1 px-2.5 py-1 rounded-full bg-err text-onErr text-[12px] font-extrabold shadow-fab">+4 g</span>
+                </div>
+              </div>
+
+              <div class="space-y-1.5">
+                <h2 class="text-[22px] font-black tracking-tight leading-tight text-onErrC">Bilanciamento LFP 100%</h2>
+                <p class="text-[13px] font-medium text-onErrC/70">Carica AC 100% + top-balance 1–2 h</p>
+                <div class="flex flex-wrap gap-2 pt-0.5">
+                  <span class="inline-flex items-center gap-1.5 rounded-full bg-white/[0.08] border border-white/10 px-3 py-1.5 text-[12px] font-medium text-onErrC">
+                    <svg class="w-3.5 h-3.5 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="16" height="10" rx="2"/><path d="M22 11v2"/><path d="M6 11v2"/></svg>Ogni 1 mese
+                  </span>
+                  <span class="inline-flex items-center gap-1.5 rounded-full bg-white/[0.08] border border-white/10 px-3 py-1.5 text-[12px] font-medium text-onErrC">
+                    <svg class="w-3.5 h-3.5 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l2.8 1.7"/></svg>1–2 h collegate
+                  </span>
+                </div>
+              </div>
+
+              <button id="heroCta" class="press w-full h-12 rounded-full bg-err text-onErr text-[15px] font-bold">Registra ora</button>
+            </article>
+          </div>
+        </section>
+
+        <!-- §C Prossime -->
+        <section class="enter space-y-2">
+          <p class="caption">§C Prossime — press → morph raggio (pill → 22px)</p>
+          <button class="mrow press w-full flex items-center gap-3 bg-surfC pl-2 pr-3 py-1.5 text-left">
+            <span class="w-10 h-10 rounded-full bg-surfHi flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-onSurfV" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            </span>
+            <span class="flex-1 min-w-0">
+              <span class="block text-[14px] font-semibold text-onSurf truncate">Antiruggine sottoscocca</span>
+              <span class="block text-[11px] text-mut truncate">Una tantum · Lanoguard / Dinitrol</span>
+            </span>
+            <span class="px-2.5 py-1 rounded-full bg-errC text-onErrC text-[10px] font-bold shrink-0">scad. dal 20/08</span>
+          </button>
+          <button class="mrow press w-full flex items-center gap-3 bg-surfC pl-2 pr-3 py-1.5 text-left">
+            <span class="w-10 h-10 rounded-full bg-surfHi flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-onSurfV" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            </span>
+            <span class="flex-1 min-w-0">
+              <span class="block text-[14px] font-semibold text-onSurf truncate">Manutenzione severe</span>
+              <span class="block text-[11px] text-mut truncate">12 mesi / 15.000 km</span>
+            </span>
+            <span class="px-2.5 py-1 rounded-full bg-errC text-onErrC text-[10px] font-bold shrink-0">scad. dal 01/08</span>
+          </button>
+        </section>
+
+        <!-- Sintesi -->
+        <section class="enter space-y-3">
+          <p class="caption">Sintesi — tap → ripple + navigazione filtrata</p>
+          <div class="rounded-[28px] bg-surfLox p-5">
+            <p class="text-[13px] font-semibold text-mut">In sintesi</p>
+            <div class="mt-3 grid grid-cols-3 gap-2.5">
+              <button class="tile press rounded-[20px] bg-okC px-2 py-3.5 text-center" data-stato="ok" data-label="In regola" data-n="2">
+                <p class="text-[26px] font-black leading-none text-onOkC"><span data-count="2">2</span></p>
+                <p class="mt-1.5 text-[10px] font-bold text-onOkC/80">In regola</p>
+              </button>
+              <button class="tile press rounded-[20px] bg-waC px-2 py-3.5 text-center" data-stato="in-scadenza" data-label="In scadenza" data-n="1">
+                <p class="text-[26px] font-black leading-none text-onWaC"><span data-count="1">1</span></p>
+                <p class="mt-1.5 text-[10px] font-bold text-onWaC/80">In scadenza</p>
+              </button>
+              <button class="tile press rounded-[20px] bg-errC px-2 py-3.5 text-center" data-stato="scaduto" data-label="Scadute" data-n="8">
+                <p class="text-[26px] font-black leading-none text-onErrC"><span data-count="8">8</span></p>
+                <p class="mt-1.5 text-[10px] font-bold text-onErrC/80">Scadute</p>
+              </button>
+            </div>
+            <p class="mt-3 pt-3 border-t border-white/[0.06] text-[12px] font-medium text-mut">Orizzonte 15 anni · 4,5k / 300k km · 1,5%</p>
+          </div>
+        </section>
+
+        <!-- Statistiche -->
+        <section class="enter space-y-3">
+          <p class="caption">Statistiche — count-up 700ms · barre spring</p>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-surfC rounded-[24px] p-4">
+              <p class="text-[12px] font-medium text-onSurfV">Prontezza</p>
+              <p class="mt-1.5 text-[30px] font-black leading-none tracking-tight text-onSurf"><span data-count="18">18</span><span class="text-sm font-bold text-mut">%</span></p>
+              <p class="mt-1 text-[11px] text-mut">2 di 11 in regola</p>
+              <div class="mt-3 h-1.5 rounded-full bg-surfHiX overflow-hidden">
+                <div class="bar h-full rounded-full bg-prim" data-w="18"></div>
+              </div>
+            </div>
+            <div class="bg-surfC rounded-[24px] p-4">
+              <p class="text-[12px] font-medium text-onSurfV">Cicli LFP</p>
+              <p class="mt-1.5 text-[30px] font-black leading-none tracking-tight text-onSurf"><span data-count="14">14</span><span class="text-sm font-bold text-mut">/5.000</span></p>
+              <p class="mt-1 text-[11px] text-mut">≈ 0,3% vita utile</p>
+              <div class="mt-3 h-1.5 rounded-full bg-surfHiX overflow-hidden">
+                <div class="bar h-full min-w-[4px] rounded-full bg-prim" data-w="0.3"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <!-- ══════════ PANE · ATTIVITÀ ══════════ -->
+      <section id="pane-attivita" class="pane space-y-4">
+        <p class="caption">Attività — chip filtro · press → morph raggio sulle card</p>
+
+        <div id="statoChip" class="hidden">
+          <span class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-secC text-onSecC text-xs font-bold">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+            <span id="statoChipLabel">Scadute</span>&nbsp;(<span id="statoChipCount">8</span>)
+            <button id="statoChipClose" aria-label="Rimuovi filtro stato" class="press -mr-1.5 ml-0.5 w-5 h-5 rounded-full flex items-center justify-center text-onSecC/80">
+              <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 6l12 12"/><path d="M18 6L6 18"/></svg>
+            </button>
+          </span>
+        </div>
+
+        <!-- Filter chips M3E -->
+        <div class="enter flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          <button class="fchip on press shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold" data-cat="tutte">
+            <svg class="fcheck w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+            Tutte (11)
+          </button>
+          <button class="fchip press shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold" data-cat="setup-iniziale">
+            <svg class="fcheck w-3.5 h-3.5 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+            Setup iniziale (4)
+          </button>
+          <button class="fchip press shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold" data-cat="routine">
+            <svg class="fcheck w-3.5 h-3.5 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+            Routine (4)
+          </button>
+          <button class="fchip press shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold" data-cat="fluidi-officina">
+            <svg class="fcheck w-3.5 h-3.5 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+            Fluidi officina (3)
+          </button>
+        </div>
+
+        <!-- Card attività (seed #5 / #10 / #9) -->
+        <div class="space-y-3">
+          <div class="enter"><article class="mcard press bg-surfC p-4">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <div class="flex items-baseline gap-2">
+                  <span class="text-[11px] font-bold text-mut">#5</span>
+                  <h3 class="text-[15px] font-bold tracking-tight leading-snug text-onSurf">Bilanciamento LFP 100%</h3>
+                </div>
+                <p class="mt-1.5 text-xs text-onSurfV">Ogni mese · con controllo pressione gomme</p>
+                <p class="text-xs text-onSurfV">Carica AC 100% + top-balance 1–2 h</p>
+              </div>
+              <span class="shrink-0 px-2.5 py-1 rounded-full bg-errC text-onErrC text-[10px] font-bold">Scaduto</span>
+            </div>
+            <div class="mt-3 pt-3 border-t border-white/[0.06] flex items-center justify-between gap-3">
+              <p class="text-[11px] text-mut">Ultimo: 09/10/2026 · 4.100 km</p>
+              <button class="press shrink-0 h-9 rounded-full bg-secC px-5 text-xs font-bold text-onSecC">Registra</button>
+            </div>
+          </article></div>
+
+          <div class="enter"><article class="mcard press bg-surfC p-4">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <div class="flex items-baseline gap-2">
+                  <span class="text-[11px] font-bold text-mut">#10</span>
+                  <h3 class="text-[15px] font-bold tracking-tight leading-snug text-onSurf">Fluido freni DOT 4</h3>
+                </div>
+                <p class="mt-1.5 text-xs text-onSurfV">Ogni 24 mesi · sostituzione obbligatoria</p>
+                <p class="text-xs text-onSurfV">DOT 4 / HZY6 · ≈ 1.100 ml</p>
+              </div>
+              <span class="shrink-0 px-2.5 py-1 rounded-full bg-waC text-onWaC text-[10px] font-bold">In scadenza</span>
+            </div>
+            <div class="mt-3 pt-3 border-t border-white/[0.06] flex items-center justify-between gap-3">
+              <p class="text-[11px] text-mut">Ultimo: 15/04/2025 (PDI) · 0 km</p>
+              <button class="press shrink-0 h-9 rounded-full bg-secC px-5 text-xs font-bold text-onSecC">Registra</button>
+            </div>
+          </article></div>
+
+          <div class="enter"><article class="mcard press bg-surfC p-4">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <div class="flex items-baseline gap-2">
+                  <span class="text-[11px] font-bold text-mut">#9</span>
+                  <h3 class="text-[15px] font-bold tracking-tight leading-snug text-onSurf">Olio riduttore</h3>
+                </div>
+                <p class="mt-1.5 text-xs text-onSurfV">Ogni 24 mesi · poi ogni 48.000 km</p>
+                <p class="text-xs text-onSurfV">Castrol BOT384 · ≈ 500 ml</p>
+              </div>
+              <span class="shrink-0 px-2.5 py-1 rounded-full bg-okC text-onOkC text-[10px] font-bold">In regola</span>
+            </div>
+            <div class="mt-3 pt-3 border-t border-white/[0.06] flex items-center justify-between gap-3">
+              <p class="text-[11px] text-mut">Prossimo: 08/2027 · 40.000 km</p>
+              <button class="press shrink-0 h-9 rounded-full bg-secC px-5 text-xs font-bold text-onSecC">Registra</button>
+            </div>
+          </article></div>
+        </div>
+      </section>
+
+      <!-- ══════════ PANE · STORICO ══════════ -->
+      <section id="pane-storico" class="pane space-y-4">
+        <p class="caption">Storico — righe pillola</p>
+        <div class="space-y-2">
+          <div class="enter flex items-center gap-3 rounded-full bg-surfC pl-2 pr-4 py-1.5">
+            <div class="w-11 h-11 rounded-full bg-surfHi flex items-center justify-center shrink-0 text-onSurfV">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[14px] font-semibold text-onSurf leading-snug truncate">Bilanciamento LFP 100%</p>
+              <p class="text-[11px] text-mut truncate">09/10/2026 · Garage di casa — 2 h</p>
+            </div>
+            <span class="shrink-0 px-2.5 py-1 rounded-full bg-secC text-onSecC text-[11px] font-bold">4.100 km</span>
+          </div>
+          <div class="enter flex items-center gap-3 rounded-full bg-surfC pl-2 pr-4 py-1.5">
+            <div class="w-11 h-11 rounded-full bg-surfHi flex items-center justify-center shrink-0 text-onSurfV">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[14px] font-semibold text-onSurf leading-snug truncate">Antiruggine sottoscocca</p>
+              <p class="text-[11px] text-mut truncate">20/08/2025 · Officina Corsi — 80 €</p>
+            </div>
+            <span class="shrink-0 px-2.5 py-1 rounded-full bg-secC text-onSecC text-[11px] font-bold">300 km</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════ PANE · PRODOTTI ══════════ -->
+      <section id="pane-prodotti" class="pane space-y-4">
+        <p class="caption">Prodotti — scheda prodotti</p>
+        <div class="enter bg-surfC rounded-[24px] p-4">
+          <div class="flex items-center justify-between gap-2">
+            <h3 class="text-sm font-bold tracking-tight text-onSurf">Sicuri su EPDM</h3>
+            <span class="shrink-0 px-3 py-1 rounded-full bg-okC text-onOkC text-[10px] font-bold whitespace-nowrap">&lt;1–2% rigonfiamento</span>
+          </div>
+          <ul class="mt-3 space-y-2">
+            <li class="flex items-start gap-2 text-xs text-onSurfV">
+              <svg class="w-3.5 h-3.5 text-onOkC mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg><span><strong class="font-bold text-onSurf">Krytox GPL 205</strong> — lubrificante PFPE inerte</span>
+            </li>
+            <li class="flex items-start gap-2 text-xs text-onSurfV">
+              <svg class="w-3.5 h-3.5 text-onOkC mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg><span><strong class="font-bold text-onSurf">Molykote 111</strong> — pasta PDMS pura</span>
+            </li>
+            <li class="flex items-start gap-2 text-xs text-onSurfV">
+              <svg class="w-3.5 h-3.5 text-onOkC mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg><span><strong class="font-bold text-onSurf">Glicerina pura</strong> — grado farmaceutico</span>
+            </li>
+          </ul>
+          <div class="mt-3.5 rounded-2xl bg-errC px-3 py-2.5 flex items-start gap-2">
+            <svg class="w-4 h-4 text-err mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+            <p class="text-xs font-bold text-onErrC leading-snug">MAI: WD-40, vaselina, spray siliconici</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ══ FAB ══ -->
+  <button id="fabBtn" aria-label="Nuova registrazione" class="press fixed z-40 bottom-24 w-14 h-14 rounded-full bg-primC text-onPrimC shadow-fab flex items-center justify-center right-[max(1rem,calc(50%_-_199px))]">
+    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+  </button>
+
+  <!-- ══ SHEET FAB — overlay con morph dal FAB ══ -->
+  <div id="fabOverlay" class="fixed inset-0 z-50" style="visibility: hidden; pointer-events: none;">
+    <div id="fabBackdrop" class="backdrop absolute inset-0 bg-black/70"></div>
+    <div id="morph" class="morph">
+      <svg class="morph-plus" viewBox="0 0 24 24" fill="none" stroke="#f3d4c8" stroke-width="2" stroke-linecap="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+      <div class="morph-inner">
+        <div id="morphBody" class="morph-body bg-transparent px-5 pt-3 pb-5 space-y-3">
+          <p class="caption text-center">Sheet FAB</p>
+          <div class="w-9 h-1 rounded-full bg-outline mx-auto"></div>
+          <p class="text-[15px] font-bold text-onSurf">Nuova registrazione</p>
+
+          <div class="field h-14 bg-surfHiX rounded-full px-5 pt-2">
+            <p class="field-label text-[10px] font-semibold text-onSurfV leading-none">Attività</p>
+            <div class="flex items-center justify-between mt-1">
+              <span class="text-[16px] font-medium text-onSurf">Bilanciamento LFP 100%</span>
+              <svg class="w-4 h-4 text-onSurfV" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div class="field h-14 bg-surfHiX rounded-full px-5 pt-2">
+              <p class="field-label text-[10px] font-semibold text-onSurfV leading-none">Data</p>
+              <p class="mt-1 text-[16px] font-medium text-onSurf">13/11/2026</p>
+            </div>
+            <div class="field h-14 bg-surfHiX rounded-full px-5 pt-2">
+              <p class="field-label text-[10px] font-semibold text-onSurfV leading-none">Chilometraggio</p>
+              <div class="flex items-baseline gap-2 mt-1"><p class="text-[16px] font-medium text-onSurf">4.500</p><span class="text-xs text-onSurfV shrink-0">km</span></div>
+            </div>
+          </div>
+
+          <div class="field h-14 bg-surfHiX rounded-full px-5 pt-2">
+            <p class="field-label text-[10px] font-semibold text-onSurfV leading-none">Luogo</p>
+            <p class="mt-1 text-[16px] font-medium text-onSurf">Garage di casa</p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div class="field h-14 bg-surfHiX rounded-full px-5 pt-2">
+              <p class="field-label text-[10px] font-semibold text-onSurfV leading-none">Costo</p>
+              <div class="flex items-baseline gap-2 mt-1"><p class="text-[16px] font-medium text-onSurf">0</p><span class="text-xs text-onSurfV shrink-0">€</span></div>
+            </div>
+            <div class="field h-14 bg-surfHiX rounded-full px-5 pt-2">
+              <p class="field-label text-[10px] font-semibold text-onSurfV leading-none">Durata</p>
+              <div class="flex items-baseline gap-2 mt-1"><p class="text-[16px] font-medium text-onSurf">2</p><span class="text-xs text-onSurfV shrink-0">h</span></div>
+            </div>
+          </div>
+
+          <div class="flex gap-3 pt-1">
+            <button id="fabCancel" class="press h-12 flex-1 rounded-full text-onSurfV text-sm font-bold">Annulla</button>
+            <button id="fabSave" class="press h-12 flex-1 rounded-full bg-prim text-onPrim text-[15px] font-bold">Registra</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SHEET IMPOSTAZIONI — spring up/down ══ -->
+  <div id="setOverlay" class="fixed inset-0 z-50" style="visibility: hidden; pointer-events: none;">
+    <div id="setBackdrop" class="backdrop absolute inset-0 bg-black/70"></div>
+    <div class="absolute inset-x-0 bottom-0">
+      <div class="mx-auto max-w-[430px]">
+        <div id="setSheet" class="sheet bg-surfC rounded-t-[28px] shadow-sheet px-5 pt-3 pb-5 space-y-1">
+          <p class="caption text-center">Sheet impostazioni</p>
+          <div class="w-9 h-1 rounded-full bg-outline mx-auto"></div>
+          <p class="text-[15px] font-bold text-onSurf pb-2 pt-1">Impostazioni</p>
+
+          <button id="setRowReset" class="press w-full flex items-center gap-3 py-3 text-left">
+            <span class="w-9 h-9 rounded-full bg-surfHi flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-onSurfV" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 4v5h5"/></svg>
+            </span>
+            <span class="flex-1">
+              <span class="block text-[14px] font-semibold text-onSurf">Ripristina dati iniziali</span>
+              <span class="block text-[11px] text-mut">Torna al seed di consegna (conferma richiesta)</span>
+            </span>
+          </button>
+
+          <div id="setRowConfirm" class="hidden w-full flex items-center gap-3 py-3">
+            <span class="w-9 h-9 rounded-full bg-surfHi flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-onSurfV" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 4v5h5"/></svg>
+            </span>
+            <span class="flex-1">
+              <span class="block text-[14px] font-semibold text-onSurf">Confermi il ripristino?</span>
+              <span class="block text-[11px] text-mut">Torna al seed di consegna</span>
+            </span>
+            <button id="setCancelReset" class="press h-10 shrink-0 px-3 rounded-full text-onSurfV text-sm font-bold">Annulla</button>
+            <button id="setConfirmReset" class="press h-10 shrink-0 px-3 rounded-full text-err text-sm font-bold">Conferma</button>
+          </div>
+
+          <button id="setVehicle" class="press w-full flex items-center gap-3 py-3 text-left">
+            <span class="w-9 h-9 rounded-full bg-surfHi flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-onSurfV" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l2.8 1.7"/></svg>
+            </span>
+            <span class="flex-1">
+              <span class="block text-[14px] font-semibold text-onSurf">Consegna e consumo</span>
+              <span class="block text-[11px] text-mut">Modifica i dati base del veicolo</span>
+            </span>
+          </button>
+
+          <p class="pt-3 border-t border-white/[0.06] text-[11px] text-mut">BYD Dolphin Surf · tracker v1 · dati solo sul dispositivo</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ NAVBAR — pillola flottante + indicatore fluido ══ -->
+  <nav class="fixed bottom-0 inset-x-0 z-40">
+    <div class="mx-auto max-w-[430px] px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <p class="caption text-center pb-1.5 pointer-events-none">Navbar</p>
+      <div class="relative bg-surfC/90 backdrop-blur-xl ring-1 ring-white/[0.06] shadow-nav rounded-full px-3 py-2 flex items-center justify-between">
+        <div id="navInd" class="nav-ind"></div>
+        <button aria-label="Cruscotto" data-pane="pane-cruscotto" class="nav-btn press h-10 w-[52px] rounded-full flex items-center justify-center">
+          <svg class="nav-icon w-5 h-5 text-onPrimC" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg>
+        </button>
+        <button aria-label="Attività" data-pane="pane-attivita" class="nav-btn press h-10 w-12 rounded-full flex items-center justify-center">
+          <svg class="nav-icon w-5 h-5 text-mut" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg>
+        </button>
+        <button aria-label="Storico" data-pane="pane-storico" class="nav-btn press h-10 w-12 rounded-full flex items-center justify-center">
+          <svg class="nav-icon w-5 h-5 text-mut" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+        </button>
+        <button aria-label="Prodotti" data-pane="pane-prodotti" class="nav-btn press h-10 w-12 rounded-full flex items-center justify-center">
+          <svg class="nav-icon w-5 h-5 text-mut" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/></svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <script>
+    /* ═══ d2 · Morfosi — motion engine (vanilla JS) ═══ */
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+    /* ── Count-up numeri (~700ms) ── */
+    function runCount(el) {
+      const target = parseFloat(el.dataset.count);
+      if (reduceMotion) { el.textContent = String(target); return; }
+      const t0 = performance.now();
+      function frame(now) {
+        const p = Math.min((now - t0) / 700, 1);
+        el.textContent = String(Math.round(target * (1 - Math.pow(1 - p, 3))));
+        if (p < 1) requestAnimationFrame(frame);
+        else el.textContent = String(target);
+      }
+      requestAnimationFrame(frame);
+    }
+
+    /* ── Reveal di un pane: stagger 55ms + count-up + barre spring ── */
+    function revealPane(pane) {
+      const items = $$('#' + pane.id + ' .enter, #' + pane.id + ' .hero');
+      items.forEach((el) => { el.classList.remove('in'); el.style.transitionDelay = '0ms'; });
+      void pane.offsetWidth;
+      items.forEach((el, i) => {
+        el.style.transitionDelay = reduceMotion ? '0ms' : (i * 55) + 'ms';
+        el.classList.add('in');
+      });
+      $$('#' + pane.id + ' [data-count]').forEach(runCount);
+      $$('#' + pane.id + ' .bar').forEach((bar) => {
+        bar.style.width = '0%'; void bar.offsetWidth; bar.style.width = bar.dataset.w + '%';
+      });
+    }
+
+    /* ── Switch sezioni: out −8px fade · in +12px con re-stagger ── */
+    let currentPane = 'pane-cruscotto';
+    let hideTimer = null;
+    function switchPane(id) {
+      if (id === currentPane) return;
+      const out = document.getElementById(currentPane);
+      const inn = document.getElementById(id);
+      clearTimeout(hideTimer);
+      $$('.pane.leaving').forEach((p) => p.classList.remove('leaving', 'active'));
+      out.classList.add('leaving');
+      currentPane = id;
+      hideTimer = setTimeout(() => {
+        out.classList.remove('active', 'leaving');
+        inn.classList.add('active');
+        requestAnimationFrame(() => {
+          inn.classList.add('entering');
+          revealPane(inn);
+          setTimeout(() => inn.classList.remove('entering'), 450);
+        });
+      }, reduceMotion ? 0 : 250);
+    }
+
+    /* ── Navbar fluida: indicatore che scorre e "stretcha" a metà volata ── */
+    const navBtns = $$('.nav-btn');
+    const navInd = $('#navInd');
+    function placeIndicator(btn, animate) {
+      const from = navInd.getBoundingClientRect().width || 52;
+      const to = btn.offsetWidth;
+      navInd.style.setProperty('--x', btn.offsetLeft + 'px');
+      navInd.style.setProperty('--w-from', from + 'px');
+      navInd.style.setProperty('--w-mid', (Math.max(from, to) + 18) + 'px');
+      navInd.style.setProperty('--w-to', to + 'px');
+      if (animate && !reduceMotion) {
+        navInd.classList.remove('stretch');
+        void navInd.offsetWidth;
+        navInd.classList.add('stretch');
+      }
+    }
+    function selectTab(btn) {
+      navBtns.forEach((b) => {
+        const on = b === btn;
+        b.classList.toggle('w-[52px]', on); b.classList.toggle('w-12', !on);
+        const icon = b.querySelector('.nav-icon');
+        icon.classList.toggle('text-onPrimC', on); icon.classList.toggle('text-mut', !on);
+        if (on) { b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); }
+      });
+      placeIndicator(btn, true);
+      switchPane(btn.dataset.pane);
+    }
+    navBtns.forEach((btn) => btn.addEventListener('click', () => selectTab(btn)));
+    window.addEventListener('resize', () => {
+      const active = navBtns.find((b) => b.dataset.pane === currentPane);
+      if (active) placeIndicator(active, false);
+    });
+
+    /* ── FAB → sheet morph (apri/chiudi, entrambe le direzioni) ── */
+    const fabBtn = $('#fabBtn');
+    const fabOverlay = $('#fabOverlay');
+    const fabBackdrop = $('#fabBackdrop');
+    const morph = $('#morph');
+    const morphBody = $('#morphBody');
+    let fabOpen = false;
+
+    function measureSheet() { morph.style.setProperty('--sheet-h', morphBody.offsetHeight + 'px'); }
+    window.addEventListener('load', measureSheet);
+    measureSheet();
+
+    function openFab() {
+      if (fabOpen) return;
+      fabOpen = true;
+      if (setOpen) closeSettings();
+      fabOverlay.style.visibility = 'visible'; fabOverlay.style.pointerEvents = 'auto';
+      fabBackdrop.style.pointerEvents = 'auto';
+      void morph.offsetWidth;              // fissa la geometria chiusa (cerchio FAB)
+      morph.classList.add('open');          // morph 550ms --e-spring
+      fabOverlay.classList.add('dim');      // backdrop fade-in
+      fabBtn.style.opacity = '0'; fabBtn.style.transform = 'scale(.8)';
+    }
+    function closeFab() {
+      if (!fabOpen) return;
+      fabOpen = false;
+      morph.classList.remove('open');       // reverse 450ms --e-exit
+      fabOverlay.classList.remove('dim');
+      fabBackdrop.style.pointerEvents = 'none';
+      setTimeout(() => {
+        if (fabOpen) return;
+        fabOverlay.style.visibility = 'hidden'; fabOverlay.style.pointerEvents = 'none';
+        fabBtn.style.opacity = ''; fabBtn.style.transform = '';
+      }, reduceMotion ? 0 : 470);
+    }
+    fabBtn.addEventListener('click', openFab);
+    $('#heroCta').addEventListener('click', openFab);
+    $('#fabCancel').addEventListener('click', closeFab);
+    $('#fabSave').addEventListener('click', closeFab);
+    fabBackdrop.addEventListener('click', closeFab);
+
+    /* ── Sheet impostazioni (stesso linguaggio spring) ── */
+    const setOverlay = $('#setOverlay');
+    const setBackdrop = $('#setBackdrop');
+    const setSheet = $('#setSheet');
+    let setOpen = false;
+
+    function openSettings() {
+      if (setOpen) return;
+      setOpen = true;
+      if (fabOpen) closeFab();
+      setOverlay.style.visibility = 'visible'; setOverlay.style.pointerEvents = 'auto';
+      setBackdrop.style.pointerEvents = 'auto';
+      void setSheet.offsetWidth;
+      setSheet.classList.add('open');
+      setOverlay.classList.add('dim');
+    }
+    function closeSettings() {
+      if (!setOpen) return;
+      setOpen = false;
+      setSheet.classList.remove('open');
+      setOverlay.classList.remove('dim');
+      setBackdrop.style.pointerEvents = 'none';
+      setTimeout(() => {
+        if (setOpen) return;
+        setOverlay.style.visibility = 'hidden'; setOverlay.style.pointerEvents = 'none';
+        $('#setRowConfirm').classList.add('hidden'); $('#setRowReset').classList.remove('hidden');
+      }, reduceMotion ? 0 : 470);
+    }
+    $('#gearBtn').addEventListener('click', openSettings);
+    setBackdrop.addEventListener('click', closeSettings);
+    $('#setRowReset').addEventListener('click', () => {
+      $('#setRowReset').classList.add('hidden'); $('#setRowConfirm').classList.remove('hidden');
+    });
+    $('#setCancelReset').addEventListener('click', () => {
+      $('#setRowConfirm').classList.add('hidden'); $('#setRowReset').classList.remove('hidden');
+    });
+    $('#setConfirmReset').addEventListener('click', closeSettings);
+    $('#setVehicle').addEventListener('click', () => {
+      closeSettings();
+      const cruscotto = navBtns.find((b) => b.dataset.pane === 'pane-cruscotto');
+      if (cruscotto) selectTab(cruscotto);
+    });
+
+    /* ── Escape: chiude gli sheet aperti ── */
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { closeFab(); closeSettings(); }
+    });
+
+    /* ── Tile sintesi: press .95 + ripple, poi navigazione filtrata ── */
+    const statoChip = $('#statoChip');
+    $$('.tile').forEach((tile) => {
+      tile.addEventListener('click', () => {
+        const ring = document.createElement('span');
+        ring.className = 'ripple-ring';
+        tile.appendChild(ring);
+        setTimeout(() => ring.remove(), 600);
+        setTimeout(() => {
+          $('#statoChipLabel').textContent = tile.dataset.label;
+          $('#statoChipCount').textContent = tile.dataset.n;
+          statoChip.classList.remove('hidden');
+          const attivita = navBtns.find((b) => b.dataset.pane === 'pane-attivita');
+          if (attivita) selectTab(attivita);
+        }, reduceMotion ? 0 : 450);
+      });
+    });
+    $('#statoChipClose').addEventListener('click', () => statoChip.classList.add('hidden'));
+
+    /* ── Chip filtro attività ── */
+    $$('.fchip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        $$('.fchip').forEach((c) => {
+          const on = c === chip;
+          c.classList.toggle('on', on);
+          c.querySelector('.fcheck').classList.toggle('hidden', !on);
+        });
+      });
+    });
+
+    /* ── Avvio: posa l'indicatore e rivela il pane iniziale ── */
+    (function init() {
+      const first = navBtns.find((b) => b.dataset.pane === currentPane);
+      if (first) placeIndicator(first, false);
+      revealPane(document.getElementById(currentPane));
+    })();
+  </script>
+</body>
+</html>

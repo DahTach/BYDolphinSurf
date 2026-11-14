@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>BYD · Cruscotto — bozza revisione MD3E (c)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..1000&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['"Roboto Flex"', 'Roboto', 'system-ui', 'sans-serif'] },
+          colors: {
+            prim: '#e3a89b', onPrim: '#402010',
+            primC: '#55291d', onPrimC: '#f3d4c8',
+            secC: '#3d3431', onSecC: '#eadcd5',
+            terC: '#463818', onTerC: '#e6cd96',
+            err: '#d98a80', onErr: '#441411',
+            errC: '#3e1d1c', onErrC: '#f2c1ba',
+            surf: '#000000', surfLox: '#0e0d0d', surfC: '#1e1c1d', surfHi: '#2a2728', surfHiX: '#353132',
+            onSurf: '#eae4e2', onSurfV: '#b9aca8', mut: '#8d817d', outline: '#463f3d',
+            okC: '#1d3326', onOkC: '#9cc7a8',
+            waC: '#363020', onWaC: '#d9c084',
+          },
+          boxShadow: {
+            fab: '0 4px 10px rgba(0,0,0,0.5), 0 14px 32px rgba(0,0,0,0.55)',
+            hero: '0 6px 24px rgba(0,0,0,0.35)',
+            nav: '0 8px 28px rgba(0,0,0,0.55)',
+            sheet: '0 -8px 32px rgba(0,0,0,0.6)',
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    html { -webkit-tap-highlight-color: transparent; }
+    body { color: #eae4e2; }
+    ::selection { background: rgba(227, 168, 155, 0.3); }
+    .caption { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; color: #8d817d; }
+  </style>
+</head>
+<body class="bg-black font-sans antialiased">
+
+  <div class="mx-auto max-w-[430px] min-h-screen bg-black">
+    <main class="px-4 pt-5 pb-36 space-y-9">
+
+      <!-- ══ HEADER (invariato) ══ -->
+      <header class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-full bg-primC flex items-center justify-center shrink-0">
+            <span class="font-black text-onPrimC text-sm tracking-tight">DS</span>
+          </div>
+          <div>
+            <h1 class="text-[22px] font-extrabold tracking-tight leading-tight text-onSurf">Dolphin Surf</h1>
+            <span class="inline-block mt-1 px-2.5 py-0.5 rounded-full border border-outline text-[10px] font-semibold text-onSurfV">2025 EU · 43,2 kWh</span>
+          </div>
+        </div>
+        <button aria-label="Impostazioni" class="w-10 h-10 rounded-full bg-surfC flex items-center justify-center text-onSurfV">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
+      </header>
+
+      <p class="caption -mt-4">Bozza c · revisione cruscotto — 3 varianti hero + code + sintesi + stat MD3E</p>
+
+      <!-- ══ 0 · CAMPI MD3 CORRETTI (fix, non opzionale) ══ -->
+      <section class="space-y-3">
+        <p class="caption">0 · Campi pill — rounded come il resto dell'app (fix)</p>
+        <div class="grid grid-cols-2 gap-3">
+          <!-- riposo: pillola surfHiX, label flottante -->
+          <div class="h-14 bg-surfHiX rounded-full px-5 pt-2">
+            <p class="text-[10px] font-semibold text-onSurfV leading-none">Chilometraggio</p>
+            <div class="flex items-baseline gap-2 mt-1">
+              <input aria-label="Chilometraggio" type="text" inputmode="numeric" value="4.500" class="w-full bg-transparent p-0 text-[16px] font-medium text-onSurf focus:outline-none" />
+              <span class="text-xs text-onSurfV shrink-0">km</span>
+            </div>
+          </div>
+          <!-- focus: pillola chiara + anello 2px prim, label prim -->
+          <div class="h-14 bg-surfHi rounded-full px-5 pt-2 ring-2 ring-prim">
+            <p class="text-[10px] font-bold text-prim leading-none">Consegna</p>
+            <div class="flex items-baseline gap-2 mt-1">
+              <input aria-label="Consegna" type="text" value="08/2025" class="w-full bg-transparent p-0 text-[16px] font-medium text-onSurf focus:outline-none" />
+            </div>
+          </div>
+          <div class="h-14 bg-surfHiX rounded-full px-5 pt-2">
+            <p class="text-[10px] font-semibold text-onSurfV leading-none">Consumo medio</p>
+            <div class="flex items-baseline gap-2 mt-1">
+              <input aria-label="Consumo medio" type="text" inputmode="decimal" value="13,9" class="w-full bg-transparent p-0 text-[16px] font-medium text-onSurf focus:outline-none" />
+              <span class="text-xs text-onSurfV shrink-0">kWh/100</span>
+            </div>
+          </div>
+        </div>
+        <p class="text-[11px] text-mut">Riposo: pillola bg-surfHiX · focus: contenitore più chiaro, anello 2px prim, label prim — niente linee, niente angoli vivi. Stessa anatomia nel form del FAB.</p>
+      </section>
+
+      <!-- ══ A · HERO VARIANTE A — RAFFINATA ══ -->
+      <section class="space-y-3">
+        <p class="caption">Variante A — Raffinata (DNA attuale, gerarchia ripulita)</p>
+        <article class="rounded-[28px] bg-primC p-5 shadow-hero space-y-4">
+          <div class="flex items-center justify-between">
+            <p class="text-[12px] font-bold uppercase tracking-[0.08em] text-prim">Prossima scadenza</p>
+            <span class="px-3 py-1 rounded-full bg-err text-onErr text-[11px] font-bold whitespace-nowrap">Scaduto</span>
+          </div>
+
+          <div class="flex items-center gap-1">
+            <svg viewBox="0 0 160 64" class="h-14 flex-1 min-w-0" aria-hidden="true">
+              <path d="M12 52 C8 52 6 49 6 45 C6 38 12 34 22 32 L38 30 L52 15 C55 11 60 9 66 9 L97 9 C104 9 110 12 114 18 L125 30 L139 32 C149 34 154 38 154 44 L154 49 C154 52 152 54 149 54 L12 54 Z" fill="#c96f60"/>
+              <path d="M64 27 L70 15 C71 13 72 13 74 13 L88 13 C90 13 91 14 92 16 L98 27 Z" fill="#55291d"/>
+              <circle cx="40" cy="52" r="11" fill="#2c130c"/><circle cx="40" cy="52" r="4.5" fill="#55291d"/>
+              <circle cx="120" cy="52" r="11" fill="#2c130c"/><circle cx="120" cy="52" r="4.5" fill="#55291d"/>
+            </svg>
+            <div class="relative w-24 h-24 shrink-0 flex items-center justify-center">
+              <svg viewBox="0 0 64 64" class="absolute inset-0 m-auto w-[96px] h-[96px] text-white/[0.08]" fill="currentColor" stroke="currentColor" stroke-width="7" stroke-linejoin="round" aria-hidden="true">
+                <path d="M32 8 L54.8 24.6 L46.1 51.4 L17.9 51.4 L9.2 24.6 Z"/>
+              </svg>
+              <div class="relative text-center">
+                <p class="text-[36px] font-black leading-none tracking-tight text-onPrimC">+3</p>
+                <p class="mt-0.5 text-[10px] font-semibold text-prim">GIORNI FA</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <h2 class="text-[22px] font-black tracking-tight leading-tight text-onPrimC">Bilanciamento LFP 100%</h2>
+            <p class="text-[13px] font-medium text-onPrimC/70">Carica AC 100% + top-balance 1–2 h</p>
+            <div class="flex flex-wrap gap-2 pt-0.5">
+              <span class="inline-flex items-center gap-1.5 rounded-full bg-white/10 border border-white/15 px-3 py-1.5 text-[12px] font-medium text-onPrimC">
+                <svg class="w-3.5 h-3.5 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="16" height="10" rx="2"/><path d="M22 11v2"/><path d="M6 11v2"/></svg>
+                Ogni 1 mese
+              </span>
+              <span class="inline-flex items-center gap-1.5 rounded-full bg-white/10 border border-white/15 px-3 py-1.5 text-[12px] font-medium text-onPrimC">
+                <svg class="w-3.5 h-3.5 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l2.8 1.7"/></svg>
+                1–2 h collegate
+              </span>
+            </div>
+          </div>
+
+          <svg viewBox="0 0 320 12" class="w-full h-3" preserveAspectRatio="none" fill="none" aria-hidden="true">
+            <path d="M0 6 Q 5 0 10 6 T 20 6 T 30 6 T 40 6 T 50 6 T 60 6 T 70 6 T 80 6 T 90 6 T 100 6 T 110 6 T 120 6 T 130 6 T 140 6 T 150 6 T 160 6 T 170 6 T 180 6 T 190 6 T 200 6 T 210 6 T 220 6 T 230 6 T 240 6 T 250 6 T 260 6 T 270 6 T 280 6 T 290 6 T 300 6 T 310 6 T 320 6" stroke="#f3d4c8" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+          <button class="w-full h-12 rounded-full bg-prim text-onPrim text-[15px] font-bold transition active:scale-[0.98]">Registra ora</button>
+        </article>
+      </section>
+
+      <!-- ══ B · HERO VARIANTE B — ESPRESSIVA, AUTO CENTRALE ══ -->
+      <section class="space-y-3">
+        <p class="caption">Variante B1 — auto protagonista · countdown come badge sull'auto</p>
+        <article class="rounded-[32px] bg-errC p-5 shadow-hero space-y-4">
+          <div class="flex items-center justify-between">
+            <p class="text-[12px] font-bold uppercase tracking-[0.08em] text-onErrC/60">Prossima scadenza</p>
+            <span class="px-3 py-1 rounded-full bg-err text-onErr text-[11px] font-bold">Scaduto</span>
+          </div>
+
+          <div class="relative flex justify-center pt-1">
+            <svg viewBox="0 0 160 64" class="h-24 w-auto" aria-hidden="true">
+              <path d="M12 52 C8 52 6 49 6 45 C6 38 12 34 22 32 L38 30 L52 15 C55 11 60 9 66 9 L97 9 C104 9 110 12 114 18 L125 30 L139 32 C149 34 154 38 154 44 L154 49 C154 52 152 54 149 54 L12 54 Z" fill="#b96357"/>
+              <path d="M64 27 L70 15 C71 13 72 13 74 13 L88 13 C90 13 91 14 92 16 L98 27 Z" fill="#3e1d1c"/>
+              <circle cx="40" cy="52" r="11" fill="#2c130c"/><circle cx="40" cy="52" r="4.5" fill="#3e1d1c"/>
+              <circle cx="120" cy="52" r="11" fill="#2c130c"/><circle cx="120" cy="52" r="4.5" fill="#3e1d1c"/>
+            </svg>
+            <span class="absolute -top-1 right-2 px-2.5 py-1 rounded-full bg-err text-onErr text-[12px] font-extrabold shadow-fab">+3 g</span>
+          </div>
+
+          <div class="space-y-1.5">
+            <h2 class="text-[22px] font-black tracking-tight leading-tight text-onErrC">Bilanciamento LFP 100%</h2>
+            <p class="text-[13px] font-medium text-onErrC/70">Carica AC 100% + top-balance 1–2 h</p>
+            <div class="flex flex-wrap gap-2 pt-0.5">
+              <span class="inline-flex items-center gap-1.5 rounded-full bg-white/[0.08] border border-white/10 px-3 py-1.5 text-[12px] font-medium text-onErrC">
+                <svg class="w-3.5 h-3.5 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="16" height="10" rx="2"/><path d="M22 11v2"/><path d="M6 11v2"/></svg>
+                Ogni 1 mese
+              </span>
+              <span class="inline-flex items-center gap-1.5 rounded-full bg-white/[0.08] border border-white/10 px-3 py-1.5 text-[12px] font-medium text-onErrC">
+                <svg class="w-3.5 h-3.5 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l2.8 1.7"/></svg>
+                1–2 h collegate
+              </span>
+            </div>
+          </div>
+
+          <button class="w-full h-12 rounded-full bg-err text-onErr text-[15px] font-bold transition active:scale-[0.98]">Registra ora</button>
+        </article>
+
+        <p class="caption pt-2">Variante B2 — auto protagonista · countdown come riga di testo</p>
+        <article class="rounded-[32px] bg-errC p-5 shadow-hero space-y-4">
+          <div class="flex items-center justify-between">
+            <p class="text-[12px] font-bold uppercase tracking-[0.08em] text-onErrC/60">Prossima scadenza</p>
+            <span class="px-3 py-1 rounded-full bg-err text-onErr text-[11px] font-bold">Scaduto</span>
+          </div>
+
+          <div class="flex justify-center pt-1">
+            <svg viewBox="0 0 160 64" class="h-24 w-auto" aria-hidden="true">
+              <path d="M12 52 C8 52 6 49 6 45 C6 38 12 34 22 32 L38 30 L52 15 C55 11 60 9 66 9 L97 9 C104 9 110 12 114 18 L125 30 L139 32 C149 34 154 38 154 44 L154 49 C154 52 152 54 149 54 L12 54 Z" fill="#b96357"/>
+              <path d="M64 27 L70 15 C71 13 72 13 74 13 L88 13 C90 13 91 14 92 16 L98 27 Z" fill="#3e1d1c"/>
+              <circle cx="40" cy="52" r="11" fill="#2c130c"/><circle cx="40" cy="52" r="4.5" fill="#3e1d1c"/>
+              <circle cx="120" cy="52" r="11" fill="#2c130c"/><circle cx="120" cy="52" r="4.5" fill="#3e1d1c"/>
+            </svg>
+          </div>
+
+          <div class="space-y-1.5">
+            <h2 class="text-[22px] font-black tracking-tight leading-tight text-onErrC">Bilanciamento LFP 100%</h2>
+            <p class="text-[15px] font-extrabold text-err">Scaduta da 3 giorni</p>
+            <div class="flex flex-wrap gap-2 pt-0.5">
+              <span class="inline-flex items-center gap-1.5 rounded-full bg-white/[0.08] border border-white/10 px-3 py-1.5 text-[12px] font-medium text-onErrC">
+                <svg class="w-3.5 h-3.5 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="16" height="10" rx="2"/><path d="M22 11v2"/><path d="M6 11v2"/></svg>
+                Ogni 1 mese
+              </span>
+              <span class="inline-flex items-center gap-1.5 rounded-full bg-white/[0.08] border border-white/10 px-3 py-1.5 text-[12px] font-medium text-onErrC">
+                <svg class="w-3.5 h-3.5 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l2.8 1.7"/></svg>
+                1–2 h collegate
+              </span>
+            </div>
+          </div>
+
+          <button class="w-full h-12 rounded-full bg-err text-onErr text-[15px] font-bold transition active:scale-[0.98]">Registra ora</button>
+        </article>
+        <p class="text-[11px] text-mut">Entrambe: niente wavy, niente cookie, niente numero display — l'auto è il centro; contenitore colorato dallo stato (scaduto → errC, futuro → primC). Per una scadenza futura: badge/testo "tra N g".</p>
+      </section>
+
+      <!-- ══ C · HERO VARIANTE C — COMPATTA + CODA IN EVIDENZA ══ -->
+      <section class="space-y-3">
+        <p class="caption">Variante C — Compatta · la coda "prossime" diventa protagonista</p>
+        <article class="rounded-[24px] bg-primC px-4 py-3.5 shadow-hero space-y-2">
+          <div class="flex items-center justify-between gap-3">
+            <span class="px-2.5 py-1 rounded-full bg-err text-onErr text-[10px] font-bold shrink-0">Scaduto</span>
+            <div class="flex-1 min-w-0 text-right">
+              <h2 class="text-[16px] font-extrabold tracking-tight leading-tight text-onPrimC truncate">Bilanciamento LFP 100%</h2>
+              <p class="text-[11px] font-medium text-onPrimC/70 truncate">Ogni 1 mese · carica AC 100%</p>
+            </div>
+            <div class="text-center shrink-0 pl-1">
+              <p class="text-[28px] font-black leading-none tracking-tight text-onPrimC">+3</p>
+              <p class="text-[9px] font-bold uppercase tracking-wide text-prim">g fa</p>
+            </div>
+          </div>
+          <button class="w-full h-10 rounded-full bg-prim text-onPrim text-[14px] font-bold transition active:scale-[0.98]">Registra ora</button>
+        </article>
+
+        <!-- Coda "prossime" — 2 card compatte -->
+        <div class="space-y-2">
+          <p class="caption pt-1">Prossime · dopo la prossima</p>
+          <button class="w-full flex items-center gap-3 rounded-full bg-surfC pl-2 pr-3 py-1.5 text-left transition active:scale-[0.99]">
+            <span class="w-10 h-10 rounded-full bg-surfHi flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-onSurfV" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            </span>
+            <span class="flex-1 min-w-0">
+              <span class="block text-[14px] font-semibold text-onSurf truncate">Antiruggine sottoscocca</span>
+              <span class="block text-[11px] text-mut truncate">Una tantum · Lanoguard / Dinitrol</span>
+            </span>
+            <span class="px-2.5 py-1 rounded-full bg-errC text-onErrC text-[10px] font-bold shrink-0">scad. dal 20/08</span>
+          </button>
+          <button class="w-full flex items-center gap-3 rounded-full bg-surfC pl-2 pr-3 py-1.5 text-left transition active:scale-[0.99]">
+            <span class="w-10 h-10 rounded-full bg-surfHi flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-onSurfV" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            </span>
+            <span class="flex-1 min-w-0">
+              <span class="block text-[14px] font-semibold text-onSurf truncate">Manutenzione severe</span>
+              <span class="block text-[11px] text-mut truncate">12 mesi / 15.000 km</span>
+            </span>
+            <span class="px-2.5 py-1 rounded-full bg-errC text-onErrC text-[10px] font-bold shrink-0">scad. dal 08/08</span>
+          </button>
+        </div>
+      </section>
+
+      <p class="text-[11px] text-mut -mt-4">La coda "Prossime" (2 righe pillola, stesso ordine di priorità dell'hero) si aggancia sotto la variante A o B così com'è qui sotto alla C.</p>
+
+      <!-- ══ SINTESI INTERATTIVA ══ -->
+      <section class="space-y-3">
+        <p class="caption">In sintesi — tile tonali tappable (tap → Attività filtrate per stato)</p>
+        <div class="rounded-[28px] bg-surfLox p-5">
+          <p class="text-[13px] font-semibold text-mut">In sintesi</p>
+          <div class="mt-3 grid grid-cols-3 gap-2.5">
+            <button class="rounded-[20px] bg-okC px-2 py-3.5 text-center transition active:scale-[0.97]">
+              <p class="text-[26px] font-black leading-none text-onOkC">2</p>
+              <p class="mt-1.5 text-[10px] font-bold text-onOkC/80">In regola</p>
+            </button>
+            <button class="rounded-[20px] bg-waC px-2 py-3.5 text-center transition active:scale-[0.97]">
+              <p class="text-[26px] font-black leading-none text-onWaC">1</p>
+              <p class="mt-1.5 text-[10px] font-bold text-onWaC/80">In scadenza</p>
+            </button>
+            <button class="rounded-[20px] bg-errC px-2 py-3.5 text-center transition active:scale-[0.97]">
+              <p class="text-[26px] font-black leading-none text-onErrC">8</p>
+              <p class="mt-1.5 text-[10px] font-bold text-onErrC/80">Scadute</p>
+            </button>
+          </div>
+          <p class="mt-3 pt-3 border-t border-white/[0.06] text-[12px] font-medium text-mut">Orizzonte 15 anni · 4,5k / 300k km · 1,5%</p>
+        </div>
+        <p class="text-[11px] text-mut">Ogni tile è un bottone: porta ad Attività con lo stato prefiltrato (i chip di categoria restano, si aggiunge un chip-stato). Contatori reali del seed: 2 / 1 / 8.</p>
+      </section>
+
+      <!-- ══ PRONTEZZA + CICLI — NEUTRE RAFFINATE (2 colonne, barre lineari) ══ -->
+      <section class="space-y-3">
+        <p class="caption">Prontezza + Cicli — neutre, 2 colonne, barre lineari tonde (niente wavy, niente anello)</p>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-surfC rounded-[24px] p-4">
+            <p class="text-[12px] font-medium text-onSurfV">Prontezza</p>
+            <p class="mt-1.5 text-[30px] font-black leading-none tracking-tight text-onSurf">18<span class="text-sm font-bold text-mut">%</span></p>
+            <p class="mt-1 text-[11px] text-mut">2 di 11 in regola</p>
+            <div class="mt-3 h-1.5 rounded-full bg-surfHiX overflow-hidden">
+              <div class="h-full w-[18%] rounded-full bg-prim"></div>
+            </div>
+          </div>
+          <div class="bg-surfC rounded-[24px] p-4">
+            <p class="text-[12px] font-medium text-onSurfV">Cicli LFP</p>
+            <p class="mt-1.5 text-[30px] font-black leading-none tracking-tight text-onSurf">14<span class="text-sm font-bold text-mut">/5.000</span></p>
+            <p class="mt-1 text-[11px] text-mut">≈ 0,3% vita utile</p>
+            <div class="mt-3 h-1.5 rounded-full bg-surfHiX overflow-hidden">
+              <div class="h-full w-[0.5%] min-w-[4px] rounded-full bg-prim"></div>
+            </div>
+          </div>
+        </div>
+        <p class="text-[11px] text-mut">Come prima in 2 colonne, solo UI rifinita: numero più grande, barra lineare tonda MD3 (fill prim) — la barra cicli è al valore reale 0,3% (pillola visibile a inizio barra).</p>
+      </section>
+
+      <!-- ══ SHEET FAB — FORM MD3 ══ -->
+      <section class="space-y-3">
+        <p class="caption">FAB · bottom sheet con campi MD3 (fix)</p>
+        <div class="rounded-t-[28px] bg-surfC shadow-sheet px-5 pt-3 pb-5 space-y-3">
+          <div class="w-9 h-1 rounded-full bg-outline mx-auto"></div>
+          <p class="text-[15px] font-bold text-onSurf">Nuova registrazione</p>
+          <div class="h-14 bg-surfHiX rounded-full px-5 pt-2">
+            <p class="text-[10px] font-semibold text-onSurfV leading-none">Attività</p>
+            <div class="flex items-center justify-between mt-1">
+              <span class="text-[16px] font-medium text-onSurf">Bilanciamento LFP 100%</span>
+              <svg class="w-4 h-4 text-onSurfV" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="h-14 bg-surfHi rounded-full px-5 pt-2 ring-2 ring-prim">
+              <p class="text-[10px] font-bold text-prim leading-none">Data</p>
+              <p class="mt-1 text-[16px] font-medium text-onSurf">13/11/2026</p>
+            </div>
+            <div class="h-14 bg-surfHiX rounded-full px-5 pt-2">
+              <p class="text-[10px] font-semibold text-onSurfV leading-none">Chilometraggio</p>
+              <div class="flex items-baseline gap-2 mt-1">
+                <span class="text-[16px] font-medium text-onSurf">4.500</span><span class="text-xs text-onSurfV shrink-0">km</span>
+              </div>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="h-14 bg-surfHiX rounded-full px-5 pt-2">
+              <p class="text-[10px] font-semibold text-onSurfV leading-none">Luogo</p>
+              <p class="mt-1 text-[16px] font-medium text-onSurf">Garage di casa</p>
+            </div>
+            <div class="h-14 bg-surfHiX rounded-full px-5 pt-2">
+              <p class="text-[10px] font-semibold text-onSurfV leading-none">Costo · Durata</p>
+              <p class="mt-1 text-[16px] font-medium text-onSurf">0 € · 2 h</p>
+            </div>
+          </div>
+          <div class="flex gap-3 pt-1">
+            <button class="h-12 flex-1 rounded-full text-onSurfV text-sm font-bold">Annulla</button>
+            <button class="h-12 flex-1 rounded-full bg-prim text-onPrim text-[15px] font-bold">Registra</button>
+          </div>
+        </div>
+        <p class="text-[11px] text-mut">Annulla diventa text-button M3 (senza bordo), drag handle in alto, stessa anatomia campi della sezione 0.</p>
+      </section>
+
+      <!-- ══ SHEET IMPOSTAZIONI (proposta per il gear) ══ -->
+      <section class="space-y-3">
+        <p class="caption">Gear · sheet impostazioni (proposta — da decidere)</p>
+        <div class="rounded-t-[28px] bg-surfC shadow-sheet px-5 pt-3 pb-5 space-y-1">
+          <div class="w-9 h-1 rounded-full bg-outline mx-auto"></div>
+          <p class="text-[15px] font-bold text-onSurf pb-2">Impostazioni</p>
+          <button class="w-full flex items-center gap-3 py-3 text-left">
+            <span class="w-9 h-9 rounded-full bg-surfHi flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-onSurfV" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 4v5h5"/></svg>
+            </span>
+            <span class="flex-1">
+              <span class="block text-[14px] font-semibold text-onSurf">Ripristina dati iniziali</span>
+              <span class="block text-[11px] text-mut">Torna al seed di consegna (conferma richiesta)</span>
+            </span>
+          </button>
+          <button class="w-full flex items-center gap-3 py-3 text-left">
+            <span class="w-9 h-9 rounded-full bg-surfHi flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-onSurfV" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l2.8 1.7"/></svg>
+            </span>
+            <span class="flex-1">
+              <span class="block text-[14px] font-semibold text-onSurf">Consegna e consumo</span>
+              <span class="block text-[11px] text-mut">Modifica i dati base del veicolo</span>
+            </span>
+          </button>
+          <p class="pt-3 border-t border-white/[0.06] text-[11px] text-mut">BYD Dolphin Surf · tracker v1 · dati solo sul dispositivo</p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</body>
+</html>

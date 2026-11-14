@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#17161c" />
+  <title>BYD Dolphin Surf — Terminal diagnostico · Draft C</title>
+
+  <!-- Tailwind (CDN, draft only) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: IBM Plex Mono (dati/label) + Manrope (titoli) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Manrope', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+            mono: ['"IBM Plex Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+          },
+          colors: {
+            ink:    '#17161c', // pagina
+            panel:  '#201e26', // superficie
+            panelh: '#26222b', // superficie hover
+            line:   '#3a3640', // bordi
+            mut:    '#a9a297', // testo muted
+            mut2:   '#7c7684', // testo molto muted
+            hi:     '#edeae2', // testo strong
+            amb:    '#ffb020', // accento ambra
+            ok:     '#10b981', // LED verde
+            rose:   '#f43f5e', // scaduto
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    body {
+      background-color: #17161c;
+      color: #a9a297;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* griglia blueprint di fondo (~34px) */
+    .grid-bg {
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+      background-size: 34px 34px;
+    }
+
+    /* striscia hazard sottile (divider) */
+    .hazard {
+      background: repeating-linear-gradient(
+        45deg,
+        rgba(255, 176, 32, 0.85) 0 6px,
+        transparent 6px 12px
+      );
+    }
+
+    /* staffe angolari viewfinder (hero) */
+    .corner { position: absolute; width: 14px; height: 14px; pointer-events: none; border: 0 solid #ffb020; }
+    .c-tl { top: 6px;    left: 6px;  border-top-width: 2px;    border-left-width: 2px; }
+    .c-tr { top: 6px;    right: 6px; border-top-width: 2px;    border-right-width: 2px; }
+    .c-bl { bottom: 6px; left: 6px;  border-bottom-width: 2px; border-left-width: 2px; }
+    .c-br { bottom: 6px; right: 6px; border-bottom-width: 2px; border-right-width: 2px; }
+
+    /* LED di stato con glow */
+    .led { width: 7px; height: 7px; border-radius: 9999px; display: inline-block; flex-shrink: 0; }
+    .led-ok    { background: #10b981; box-shadow: 0 0 7px 1px rgba(16, 185, 129, 0.65); }
+    .led-amb   { background: #ffb020; box-shadow: 0 0 7px 1px rgba(255, 176, 32, 0.65); }
+    .led-rose  { background: #f43f5e; box-shadow: 0 0 7px 1px rgba(244, 63, 94, 0.65); }
+
+    /* countdown hero con alone */
+    .countdown-glow { text-shadow: 0 0 26px rgba(244, 63, 94, 0.4); }
+
+    /* chip di stato */
+    .chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 8.5px; letter-spacing: 0.16em; text-transform: uppercase;
+      padding: 3px 7px; border: 1px solid; border-radius: 2px;
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .chip i { width: 4px; height: 4px; border-radius: 9999px; display: inline-block; }
+  </style>
+</head>
+
+<body class="font-sans antialiased">
+
+  <!-- griglia blueprint fissa di fondo -->
+  <div class="grid-bg fixed inset-0 z-0 pointer-events-none"></div>
+
+  <!-- frame mobile 430px -->
+  <div class="relative z-10 max-w-[430px] mx-auto min-h-screen border-x border-line/70 shadow-[0_0_80px_rgba(0,0,0,0.55)] flex flex-col">
+
+    <!-- ══ HEADER ══ -->
+    <header class="sticky top-0 z-30 bg-ink/95 backdrop-blur border-b border-line">
+      <div class="px-4 py-3 flex items-center gap-3">
+        <div class="w-10 h-10 shrink-0 border-2 border-amb bg-amb/10 flex items-center justify-center">
+          <span class="font-mono font-bold text-amb text-sm tracking-widest">DS</span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <h1 class="font-sans font-extrabold text-hi text-[17px] tracking-tight leading-none">DOLPHIN SURF</h1>
+          <p class="font-mono text-[9px] tracking-[0.18em] text-mut2 mt-1.5">2025 EU · 43,2 kWh · LFP</p>
+        </div>
+        <div class="flex flex-col items-end gap-1.5 shrink-0">
+          <button type="button" aria-label="Impostazioni" class="text-mut2 hover:text-mut transition-colors">
+            <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+          </button>
+          <div class="flex items-center gap-1.5">
+            <span class="led led-ok"></span>
+            <span class="font-mono text-[8px] tracking-[0.22em] text-ok">SISTEMA OK</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="flex-1 px-4 pt-5 pb-8">
+
+      <!-- ══ 01 — CRUSCOTTO ══ -->
+      <section>
+        <div class="flex items-center gap-3 pb-2.5">
+          <span class="font-mono text-[10px] tracking-[0.3em] text-amb whitespace-nowrap">01 — CRUSCOTTO</span>
+          <div class="hazard h-[3px] flex-1 opacity-40"></div>
+        </div>
+
+        <!-- riga dati -->
+        <div class="bg-panel border border-line px-3 py-2.5">
+          <div class="grid grid-cols-3 divide-x divide-line text-center">
+            <div class="px-1">
+              <div class="font-mono text-[8px] tracking-[0.24em] text-mut2">ODO</div>
+              <div class="font-mono font-semibold text-hi text-[13px] mt-1">4.500 <span class="text-mut2 font-normal text-[10px]">KM</span></div>
+            </div>
+            <div class="px-1">
+              <div class="font-mono text-[8px] tracking-[0.24em] text-mut2">CONSEGNA</div>
+              <div class="font-mono font-semibold text-hi text-[13px] mt-1">08/2025</div>
+            </div>
+            <div class="px-1">
+              <div class="font-mono text-[8px] tracking-[0.24em] text-mut2">CICLI LFP</div>
+              <div class="font-mono font-semibold text-hi text-[13px] mt-1">1.721<span class="text-mut2 font-normal">/5.000</span></div>
+            </div>
+          </div>
+          <div class="mt-3">
+            <div class="flex items-center justify-between font-mono text-[8.5px] tracking-[0.2em]">
+              <span class="text-mut2">ORIZZONTE 15 ANNI</span>
+              <span class="text-amb">1,5% · 4,5K/300K KM</span>
+            </div>
+            <div class="mt-1.5 h-1.5 bg-ink border border-line">
+              <div class="h-full bg-amb" style="width:1.5%; min-width:5px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- hero PROSSIMA SCADENZA -->
+        <div class="relative mt-3 bg-panel border border-line px-4 py-4">
+          <span class="corner c-tl"></span>
+          <span class="corner c-tr"></span>
+          <span class="corner c-bl"></span>
+          <span class="corner c-br"></span>
+
+          <div class="flex items-center justify-between">
+            <span class="font-mono text-[9px] tracking-[0.3em] text-amb">PROSSIMA SCADENZA</span>
+            <div class="flex items-center gap-1.5">
+              <span class="led led-rose"></span>
+              <span class="font-mono text-[8px] tracking-[0.22em] text-rose">ALLARME 01</span>
+            </div>
+          </div>
+
+          <div class="countdown-glow font-mono font-bold text-rose text-[32px] leading-none tracking-tight mt-3">LFP +3 GIORNI</div>
+          <div class="font-mono text-[9px] tracking-[0.18em] text-mut mt-2">BILANCIAMENTO 100% · SCADENZA 09/11/2026</div>
+
+          <!-- gauge segmentata 10 blocchi -->
+          <div class="mt-3.5 flex gap-1 h-2">
+            <div class="flex-1 bg-amb/85"></div>
+            <div class="flex-1 bg-amb/85"></div>
+            <div class="flex-1 bg-amb/85"></div>
+            <div class="flex-1 bg-amb/85"></div>
+            <div class="flex-1 bg-amb/85"></div>
+            <div class="flex-1 bg-amb/85"></div>
+            <div class="flex-1 bg-amb/85"></div>
+            <div class="flex-1 bg-amb/85"></div>
+            <div class="flex-1 bg-amb/85"></div>
+            <div class="flex-1 bg-rose" style="box-shadow:0 0 8px rgba(244,63,94,0.55);"></div>
+          </div>
+          <div class="mt-1.5 flex items-center justify-between font-mono text-[8px] tracking-[0.2em]">
+            <span class="text-mut2">CICLO 30 GIORNI</span>
+            <span class="text-rose">GIORNO 33/30</span>
+          </div>
+        </div>
+
+        <!-- scadenze compatte -->
+        <div class="mt-3 space-y-2">
+          <div class="flex items-center gap-3 bg-panel hover:bg-panelh border border-line px-3 py-2.5 transition-colors">
+            <span class="led led-ok"></span>
+            <div class="flex-1 min-w-0">
+              <div class="font-sans text-[12.5px] font-semibold text-hi leading-tight">Rotazione gomme</div>
+              <div class="font-mono text-[8.5px] tracking-[0.16em] text-mut2 mt-1">INTERVALLO 10.000 KM · PROSSIMA 8.500 KM</div>
+            </div>
+            <span class="font-mono text-[10px] tracking-[0.12em] text-ok whitespace-nowrap">TRA 4.000 KM</span>
+          </div>
+          <div class="flex items-center gap-3 bg-panel hover:bg-panelh border border-line px-3 py-2.5 transition-colors">
+            <span class="led led-amb"></span>
+            <div class="flex-1 min-w-0">
+              <div class="font-sans text-[12.5px] font-semibold text-hi leading-tight">Fluido freni DOT 4</div>
+              <div class="font-mono text-[8.5px] tracking-[0.16em] text-mut2 mt-1">INTERVALLO 24 MESI · PROSSIMO 04/2027</div>
+            </div>
+            <span class="font-mono text-[10px] tracking-[0.12em] text-amb whitespace-nowrap">TRA 5 MESI</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ 02 — ATTIVITÀ ══ -->
+      <section class="mt-7">
+        <div class="flex items-center gap-3 pb-2.5">
+          <span class="font-mono text-[10px] tracking-[0.3em] text-amb whitespace-nowrap">02 — ATTIVITÀ</span>
+          <div class="hazard h-[3px] flex-1 opacity-40"></div>
+        </div>
+
+        <!-- filtri -->
+        <div class="flex flex-wrap gap-1.5">
+          <button type="button" class="font-mono text-[9px] tracking-[0.18em] px-2.5 py-1.5 border border-amb/70 text-amb bg-amb/10 rounded-[2px]">TUTTE 11</button>
+          <button type="button" class="font-mono text-[9px] tracking-[0.18em] px-2.5 py-1.5 border border-line text-mut2 hover:text-mut hover:border-mut2 rounded-[2px] transition-colors">SETUP 4</button>
+          <button type="button" class="font-mono text-[9px] tracking-[0.18em] px-2.5 py-1.5 border border-line text-mut2 hover:text-mut hover:border-mut2 rounded-[2px] transition-colors">ROUTINE 4</button>
+          <button type="button" class="font-mono text-[9px] tracking-[0.18em] px-2.5 py-1.5 border border-line text-mut2 hover:text-mut hover:border-mut2 rounded-[2px] transition-colors">FLUIDI 3</button>
+        </div>
+
+        <!-- lista attività (righe dense) -->
+        <div class="mt-2.5 bg-panel border border-line divide-y divide-line">
+
+          <!-- 05 -->
+          <article class="p-3">
+            <div class="flex items-start gap-2.5">
+              <span class="font-mono text-[11px] font-semibold text-amb pt-0.5">05</span>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between gap-2">
+                  <h3 class="font-sans text-[13px] font-bold text-hi leading-snug">Bilanciamento LFP 100% + pressione</h3>
+                  <span class="chip border-rose/50 text-rose bg-rose/10"><i class="bg-rose"></i>SCADUTO</span>
+                </div>
+                <div class="font-mono text-[8.5px] tracking-[0.14em] text-mut2 mt-1.5">MENSILE · AC 100% + TOP-BALANCE 1–2 H</div>
+                <div class="mt-2 flex items-center justify-between gap-2">
+                  <span class="font-mono text-[8.5px] tracking-[0.14em] text-mut">ULTIMO 10/10/2026 · 3.100 KM</span>
+                  <button type="button" class="font-mono text-[9px] tracking-[0.22em] text-amb border border-amb/60 px-2.5 py-1.5 rounded-[2px] hover:bg-amb/10 transition-colors shrink-0">REGISTRA</button>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- 09 -->
+          <article class="p-3">
+            <div class="flex items-start gap-2.5">
+              <span class="font-mono text-[11px] font-semibold text-amb pt-0.5">09</span>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between gap-2">
+                  <h3 class="font-sans text-[13px] font-bold text-hi leading-snug">Olio riduttore</h3>
+                  <span class="chip border-ok/50 text-ok bg-ok/10"><i class="bg-ok"></i>OK</span>
+                </div>
+                <div class="font-mono text-[8.5px] tracking-[0.14em] text-mut2 mt-1.5">24 MESI / 40.000 KM · CASTROL BOT384 ~500 ML</div>
+                <div class="mt-2 flex items-center justify-between gap-2">
+                  <span class="font-mono text-[8.5px] tracking-[0.14em] text-mut2">ULTIMO N/D · PROSSIMO 08/2027</span>
+                  <button type="button" class="font-mono text-[9px] tracking-[0.22em] text-amb border border-amb/60 px-2.5 py-1.5 rounded-[2px] hover:bg-amb/10 transition-colors shrink-0">REGISTRA</button>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- 10 -->
+          <article class="p-3">
+            <div class="flex items-start gap-2.5">
+              <span class="font-mono text-[11px] font-semibold text-amb pt-0.5">10</span>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between gap-2">
+                  <h3 class="font-sans text-[13px] font-bold text-hi leading-snug">Fluido freni DOT 4</h3>
+                  <span class="chip border-amb/50 text-amb bg-amb/10"><i class="bg-amb"></i>IN SCADENZA</span>
+                </div>
+                <div class="font-mono text-[8.5px] tracking-[0.14em] text-mut2 mt-1.5">24 MESI · DOT 4 / HZY6 · ~1.100 ML</div>
+                <div class="mt-2 flex items-center justify-between gap-2">
+                  <span class="font-mono text-[8.5px] tracking-[0.14em] text-mut">ULTIMO 04/2025 · FABBRICA · SCAD. 04/2027</span>
+                  <button type="button" class="font-mono text-[9px] tracking-[0.22em] text-amb border border-amb/60 px-2.5 py-1.5 rounded-[2px] hover:bg-amb/10 transition-colors shrink-0">REGISTRA</button>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- 02 -->
+          <article class="p-3">
+            <div class="flex items-start gap-2.5">
+              <span class="font-mono text-[11px] font-semibold text-amb pt-0.5">02</span>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between gap-2">
+                  <h3 class="font-sans text-[13px] font-bold text-hi leading-snug">Antiruggine sottoscocca e longheroni</h3>
+                  <span class="chip border-rose/50 text-rose bg-rose/10"><i class="bg-rose"></i>SCADUTO</span>
+                </div>
+                <div class="font-mono text-[8.5px] tracking-[0.14em] text-mut2 mt-1.5">UNA VOLTA + RITOCCHI 12–18 M · LANOGUARD / DINITROL 3125/4941</div>
+                <div class="mt-2 flex items-center justify-between gap-2">
+                  <span class="font-mono text-[8.5px] tracking-[0.14em] text-mut">ULTIMO 20/09/2025 · 300 KM · RITOCCO 12M</span>
+                  <button type="button" class="font-mono text-[9px] tracking-[0.22em] text-amb border border-amb/60 px-2.5 py-1.5 rounded-[2px] hover:bg-amb/10 transition-colors shrink-0">REGISTRA</button>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- ══ 03 — STORICO ══ -->
+      <section class="mt-7">
+        <div class="flex items-center gap-3 pb-2.5">
+          <span class="font-mono text-[10px] tracking-[0.3em] text-amb whitespace-nowrap">03 — STORICO</span>
+          <div class="hazard h-[3px] flex-1 opacity-40"></div>
+        </div>
+
+        <div class="bg-panel border border-line divide-y divide-line">
+          <div class="px-3 py-2.5">
+            <div class="flex items-center gap-2">
+              <span class="font-mono text-[8.5px] tracking-[0.12em] text-mut border border-line px-1.5 py-0.5 rounded-[2px] whitespace-nowrap">02/11/2026</span>
+              <span class="font-mono text-[8.5px] tracking-[0.12em] text-amb border border-amb/40 px-1.5 py-0.5 rounded-[2px] whitespace-nowrap">4.200 KM</span>
+              <span class="font-sans text-[12px] font-semibold text-hi truncate">Guarnizioni EPDM + porta ricarica</span>
+            </div>
+            <div class="font-mono text-[8.5px] tracking-[0.14em] text-mut2 mt-1.5">DIY · MOLYKOTE 111 — 14 EUR</div>
+          </div>
+          <div class="px-3 py-2.5">
+            <div class="flex items-center gap-2">
+              <span class="font-mono text-[8.5px] tracking-[0.12em] text-mut border border-line px-1.5 py-0.5 rounded-[2px] whitespace-nowrap">12/11/2025</span>
+              <span class="font-mono text-[8.5px] tracking-[0.12em] text-amb border border-amb/40 px-1.5 py-0.5 rounded-[2px] whitespace-nowrap">480 KM</span>
+              <span class="font-sans text-[12px] font-semibold text-hi truncate">Controllo iniziale 3 mesi</span>
+            </div>
+            <div class="font-mono text-[8.5px] tracking-[0.14em] text-mut2 mt-1.5">OFFICINA CORSI — 80 EUR</div>
+          </div>
+          <div class="px-3 py-2.5">
+            <div class="flex items-center gap-2">
+              <span class="font-mono text-[8.5px] tracking-[0.12em] text-mut border border-line px-1.5 py-0.5 rounded-[2px] whitespace-nowrap">20/09/2025</span>
+              <span class="font-mono text-[8.5px] tracking-[0.12em] text-amb border border-amb/40 px-1.5 py-0.5 rounded-[2px] whitespace-nowrap">300 KM</span>
+              <span class="font-sans text-[12px] font-semibold text-hi truncate">Antiruggine sottoscocca</span>
+            </div>
+            <div class="font-mono text-[8.5px] tracking-[0.14em] text-mut2 mt-1.5">DIY · LANOGUARD KIT — 95 EUR</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ 04 — PRODOTTI ══ -->
+      <section class="mt-7">
+        <div class="flex items-center gap-3 pb-2.5">
+          <span class="font-mono text-[10px] tracking-[0.3em] text-amb whitespace-nowrap">04 — PRODOTTI</span>
+          <div class="hazard h-[3px] flex-1 opacity-40"></div>
+        </div>
+
+        <!-- pannello EPDM -->
+        <div class="bg-panel border border-line">
+          <div class="px-3 py-2 border-b border-line flex items-center justify-between gap-2">
+            <span class="font-mono text-[9px] tracking-[0.2em] text-ok">SICURI SU EPDM</span>
+            <span class="font-mono text-[8.5px] tracking-[0.14em] text-mut2">&lt;1–2% RIGONFIAMENTO</span>
+          </div>
+          <ul class="px-3 py-2.5 space-y-2">
+            <li class="flex items-center gap-2.5">
+              <span class="led led-ok" style="width:5px;height:5px;"></span>
+              <span class="font-sans text-[12px] font-semibold text-hi">Krytox GPL 205</span>
+              <span class="font-mono text-[8px] tracking-[0.12em] text-mut2 ml-auto whitespace-nowrap">PFPE · &lt;1%</span>
+            </li>
+            <li class="flex items-center gap-2.5">
+              <span class="led led-ok" style="width:5px;height:5px;"></span>
+              <span class="font-sans text-[12px] font-semibold text-hi">Molykote 111</span>
+              <span class="font-mono text-[8px] tracking-[0.12em] text-mut2 ml-auto whitespace-nowrap">PASTA PDMS · &lt;2%</span>
+            </li>
+            <li class="flex items-center gap-2.5">
+              <span class="led led-ok" style="width:5px;height:5px;"></span>
+              <span class="font-sans text-[12px] font-semibold text-hi">Glicerina pura</span>
+              <span class="font-mono text-[8px] tracking-[0.12em] text-mut2 ml-auto whitespace-nowrap">GRADO FARMACIA · ~0%</span>
+            </li>
+          </ul>
+          <div class="mx-3 mb-3 border border-rose/40 bg-rose/10 px-2.5 py-2 rounded-[2px]">
+            <span class="font-mono text-[8.5px] tracking-[0.14em] text-rose">MAI: WD-40 · VASELINA · SPRAY SILICONICI</span>
+          </div>
+        </div>
+
+        <!-- pannello antiruggine -->
+        <div class="mt-3 bg-panel border border-line">
+          <div class="px-3 py-2 border-b border-line flex items-center justify-between gap-2">
+            <span class="font-mono text-[9px] tracking-[0.2em] text-amb">ANTIRUGGINE SOTTOSCOCCA</span>
+            <span class="font-mono text-[8.5px] tracking-[0.14em] text-mut2">ESTERNO + CAVITÀ</span>
+          </div>
+          <ul class="px-3 py-2.5 space-y-2">
+            <li class="flex items-center gap-2.5">
+              <span class="led led-amb" style="width:5px;height:5px;"></span>
+              <span class="font-sans text-[12px] font-semibold text-hi">Lanoguard</span>
+              <span class="font-mono text-[8px] tracking-[0.12em] text-mut2 ml-auto whitespace-nowrap">LANOLINA · 0 SOLVENTI</span>
+            </li>
+            <li class="flex items-center gap-2.5">
+              <span class="led led-amb" style="width:5px;height:5px;"></span>
+              <span class="font-sans text-[12px] font-semibold text-hi">Dinitrol 3125 / 4941</span>
+              <span class="font-mono text-[8px] tracking-[0.12em] text-mut2 ml-auto whitespace-nowrap">CERA ELASTICA</span>
+            </li>
+          </ul>
+          <div class="mx-3 mb-3 border border-rose/40 bg-rose/10 px-2.5 py-2 rounded-[2px]">
+            <span class="font-mono text-[8.5px] tracking-[0.14em] text-rose">MAI SU DISCHI FRENO · CONNETTORI AT · PIASTRA BATTERIA</span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ══ NAV INFERIORE ══ -->
+    <nav class="sticky bottom-0 z-30">
+      <div class="hazard h-[2px] opacity-30"></div>
+      <div class="bg-panel/95 backdrop-blur border-t border-line grid grid-cols-4">
+        <button type="button" class="flex flex-col items-center gap-1 py-2.5 text-amb">
+          <span class="flex items-center gap-1.5">
+            <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+              <circle cx="8" cy="8" r="5.5"/>
+              <path d="M8 8l2.8-2.8"/>
+            </svg>
+            <span class="w-1 h-1 rounded-full bg-amb" style="box-shadow:0 0 6px rgba(255,176,32,0.8);"></span>
+          </span>
+          <span class="font-mono text-[8.5px] tracking-[0.18em]">CRUSCOTTO</span>
+        </button>
+        <button type="button" class="flex flex-col items-center gap-1 py-2.5 text-mut2 hover:text-mut transition-colors">
+          <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2.5 4.5l1 1 1.8-2M2.5 8.5l1 1 1.8-2M2.5 12.5l1 1 1.8-2"/>
+            <path d="M7.5 4.5h6M7.5 8.5h6M7.5 12.5h6"/>
+          </svg>
+          <span class="font-mono text-[8.5px] tracking-[0.18em]">ATTIVITÀ</span>
+        </button>
+        <button type="button" class="flex flex-col items-center gap-1 py-2.5 text-mut2 hover:text-mut transition-colors">
+          <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <circle cx="8" cy="8" r="5.5"/>
+            <path d="M8 5v3.2l2 1.2"/>
+          </svg>
+          <span class="font-mono text-[8.5px] tracking-[0.18em]">STORICO</span>
+        </button>
+        <button type="button" class="flex flex-col items-center gap-1 py-2.5 text-mut2 hover:text-mut transition-colors">
+          <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2.5 5.5L8 3l5.5 2.5v5L8 13l-5.5-2.5z"/>
+            <path d="M2.5 5.5L8 8l5.5-2.5M8 8v5"/>
+          </svg>
+          <span class="font-mono text-[8.5px] tracking-[0.18em]">PRODOTTI</span>
+        </button>
+      </div>
+    </nav>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,950 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>BYD · Cruscotto — bozza d3 vivace</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..1000&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['"Roboto Flex"', 'Roboto', 'system-ui', 'sans-serif'] },
+          colors: {
+            prim: '#e3a89b', onPrim: '#402010',
+            primC: '#55291d', onPrimC: '#f3d4c8',
+            secC: '#3d3431', onSecC: '#eadcd5',
+            terC: '#463818', onTerC: '#e6cd96',
+            err: '#d98a80', onErr: '#441411',
+            errC: '#3e1d1c', onErrC: '#f2c1ba',
+            surf: '#000000', surfLox: '#0e0d0d', surfC: '#1e1c1d', surfHi: '#2a2728', surfHiX: '#353132',
+            onSurf: '#eae4e2', onSurfV: '#b9aca8', mut: '#8d817d', outline: '#463f3d',
+            okC: '#1d3326', onOkC: '#9cc7a8',
+            waC: '#363020', onWaC: '#d9c084',
+          },
+          boxShadow: {
+            fab: '0 4px 10px rgba(0,0,0,0.5), 0 14px 32px rgba(0,0,0,0.55)',
+            hero: '0 6px 24px rgba(0,0,0,0.35)',
+            nav: '0 8px 28px rgba(0,0,0,0.55)',
+            sheet: '0 -8px 32px rgba(0,0,0,0.6)',
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    html { -webkit-tap-highlight-color: transparent; }
+    body { color: #eae4e2; }
+    ::selection { background: rgba(227, 168, 155, 0.3); }
+    .caption { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; color: #8d817d; }
+
+    /* ══ Token di movimento (fondazione condivisa) ══ */
+    :root {
+      --e-emph: cubic-bezier(0.2, 0, 0, 1);
+      --e-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+      --e-exit: cubic-bezier(0.3, 0, 1, 1);
+      --d-press: 140ms;      /* press 120-150ms  */
+      --d-small: 250ms;      /* small            */
+      --d-medium: 400ms;     /* medium           */
+      --d-large: 600ms;      /* large 550-650ms  */
+      --stagger: 55ms;
+      --cond: 0;             /* progresso header condensato */
+    }
+
+    /* ── State layers: hover / active / focus-visible ── */
+    button { -webkit-tap-highlight-color: transparent; }
+    button:focus-visible { outline: 2px solid #e3a89b; outline-offset: 2px; }
+    .press { transition: transform var(--d-press) var(--e-emph), border-radius var(--d-press) var(--e-emph), filter var(--d-press) var(--e-emph); }
+    .press:hover { filter: brightness(1.08); }
+    .press:active { transform: scale(0.97); border-radius: 18px; filter: brightness(0.96); }   /* press radius-morph */
+
+    /* ── Entrate cinematiche (blocchi + caption + sweep) ── */
+    .rise { opacity: 0; transform: translateY(24px); transition: opacity var(--d-large) var(--e-emph) var(--rd, 0ms), transform var(--d-large) var(--e-emph) var(--rd, 0ms); }
+    .rise.in { opacity: 1; transform: none; }
+    .cap-anim { opacity: 0; letter-spacing: .2em; transition: opacity var(--d-medium) var(--e-emph) var(--rd, 0ms), letter-spacing var(--d-medium) var(--e-emph) var(--rd, 0ms); }
+    .cap-anim.in { opacity: 1; letter-spacing: .14em; }
+    .sweep { transform: scaleX(0); transform-origin: left center; transition: transform var(--d-large) var(--e-emph) 350ms; }
+    .sweep.in { transform: scaleX(1); }
+
+    /* ── Transizioni direzionali tra sezioni ── */
+    @keyframes pane-in-right { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
+    @keyframes pane-in-left  { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: none; } }
+    .pane-in-right { animation: pane-in-right var(--d-medium) var(--e-emph) both; }
+    .pane-in-left  { animation: pane-in-left var(--d-medium) var(--e-emph) both; }
+
+    /* ── Hero palcoscenico: glow che respira, auto fluttuante, ombra a terra ── */
+    @keyframes glow-breathe { 0%, 100% { opacity: .55; transform: scale(1); } 50% { opacity: .95; transform: scale(1.07); } }
+    .hero-glow { animation: glow-breathe 4.5s ease-in-out infinite; }
+    @keyframes stage-breathe { 0%, 100% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) scale(1.12); } }
+    .stage-light { animation: stage-breathe 7s ease-in-out -2s infinite; }
+    @keyframes car-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+    .car-float { animation: car-float 5s ease-in-out infinite; }
+    @keyframes car-land { from { transform: translateY(-24px) scale(0.92); } to { transform: translateY(0) scale(1); } }
+    .car-land { animation: car-land var(--d-large) var(--e-spring) both; }
+    @keyframes shadow-breathe { 0%, 100% { transform: translateX(-50%) scaleX(1); opacity: .5; } 50% { transform: translateX(-50%) scaleX(0.9); opacity: .36; } }
+    .car-shadow { animation: shadow-breathe 5s ease-in-out infinite; }
+
+    /* ── Badge countdown cinetico (odometro + pop + tick) ── */
+    #heroBadge { opacity: 0; }
+    @keyframes badge-pop { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: scale(1); } }
+    .badge-pop { animation: badge-pop var(--d-medium) var(--e-spring) both; }
+    @keyframes badge-tick { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
+    .badge-tick { animation: badge-tick var(--d-medium) var(--e-spring); }
+    .digit { display: inline-flex; height: 1.15em; overflow: hidden; }
+    .digit-strip { display: flex; flex-direction: column; transform: translateY(0); transition: transform var(--d-large) var(--e-spring); }
+    .digit-strip > span { display: block; height: 1.15em; line-height: 1.15em; }
+    .no-anim { transition: none !important; }
+
+    /* ── Tile sintesi: ripple + micro-parallax ── */
+    .tile { position: relative; overflow: hidden; }
+    .tile-inner { transform: translate(var(--tx, 0px), var(--ty, 0px)); transition: transform var(--d-small) var(--e-spring); }
+    .ripple-dot { position: absolute; border-radius: 9999px; background: currentColor; opacity: .25; transform: scale(0); pointer-events: none; animation: ripple 550ms var(--e-emph) forwards; }
+    @keyframes ripple { to { transform: scale(1); opacity: 0; } }
+
+    /* ── Campi pill: anello prim sul focus ── */
+    .field { transition: background-color var(--d-small) var(--e-emph), box-shadow var(--d-small) var(--e-emph); }
+    .field:focus-within { background-color: #2a2728; box-shadow: 0 0 0 2px #e3a89b; }
+    .field:focus-within .field-label { color: #e3a89b; font-weight: 700; }
+    .field input:focus { outline: none; }
+
+    /* ── Chip filtro (selezionato = secondaryContainer + check) ── */
+    .filter-chip { border: 1px solid #463f3d; color: #b9aca8; transition: background-color var(--d-small) var(--e-emph), color var(--d-small) var(--e-emph), border-color var(--d-small) var(--e-emph), transform var(--d-press) var(--e-emph); }
+    .filter-chip .check { display: none; }
+    .filter-chip.is-on { background-color: #3d3431; color: #eadcd5; border-color: transparent; }
+    .filter-chip.is-on .check { display: block; }
+    .filter-chip:active { transform: scale(0.96); }
+
+    /* ── Navbar: indicatore fluido + icon pop + label attiva ── */
+    #navIndicator { transition: transform var(--d-large) var(--e-spring), width var(--d-large) var(--e-spring); }
+    .nav-icon { color: #8d817d; }
+    .nav-tab.is-active .nav-icon { color: #f3d4c8; animation: icon-pop var(--d-medium) var(--e-spring); }
+    @keyframes icon-pop { from { transform: translateY(0) scale(0.8); } 60% { transform: translateY(-3px) scale(1.15); } to { transform: translateY(-3px) scale(1); } }
+    .nav-label { opacity: 0; transform: translateY(4px); transition: opacity var(--d-small) var(--e-emph), transform var(--d-small) var(--e-emph); }
+    .nav-tab.is-active .nav-label { opacity: 1; transform: none; transition-delay: 120ms; }
+
+    /* ── FAB → sheet: morph circolo → rounded-t-[28px] (spring, reversibile) ── */
+    #fabSheet {
+      position: absolute; right: 16px; bottom: 96px;
+      width: 56px; height: 56px; border-radius: 9999px;
+      background: #55291d; overflow: hidden; box-shadow: 0 -8px 32px rgba(0,0,0,0.6);
+      transition: right var(--d-large) var(--e-exit), bottom var(--d-large) var(--e-exit), width var(--d-large) var(--e-exit), height var(--d-large) var(--e-exit), border-radius var(--d-large) var(--e-exit), background-color var(--d-medium) var(--e-emph);
+    }
+    #fabSheet.sheet-open {
+      right: 0; bottom: 0; width: 430px; height: var(--sheet-h, max-content);
+      border-radius: 28px 28px 0 0; background: #1e1c1d;
+      transition: right 650ms var(--e-spring), bottom 650ms var(--e-spring), width 650ms var(--e-spring), height 650ms var(--e-spring), border-radius 650ms var(--e-spring), background-color var(--d-medium) var(--e-emph);
+    }
+    #fabSheet.measure { visibility: hidden; }
+    #fabSheetInner { opacity: 0; transform: translateY(14px); transition: opacity var(--d-medium) var(--e-emph), transform var(--d-medium) var(--e-emph); }
+    #fabSheet.sheet-open #fabSheetInner { opacity: 1; transform: none; transition-delay: 200ms; }
+    #fabBtn.fab-gone { opacity: 0; pointer-events: none; transition: opacity var(--d-press) var(--e-emph); }
+
+    /* ── Sheet impostazioni: slide-up con la stessa lingua a molla ── */
+    #setSheet {
+      position: absolute; inset-inline: 0; bottom: 0; background: #1e1c1d; border-radius: 28px 28px 0 0;
+      box-shadow: 0 -8px 32px rgba(0,0,0,0.6); transform: translateY(100%); transition: transform var(--d-medium) var(--e-exit);
+    }
+    #setOverlay.open #setSheet { transform: none; transition: transform 550ms var(--e-spring); }
+    .scrim { position: absolute; inset: 0; background: rgba(0,0,0,0.7); opacity: 0; transition: opacity var(--d-medium) var(--e-emph); }
+    .overlay.open .scrim { opacity: 1; }
+
+    /* ── Reduced motion: tutto neutralizzato ── */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; transition-delay: 0ms !important; }
+      .rise, .cap-anim { opacity: 1; transform: none; letter-spacing: .14em; }
+      .sweep { transform: scaleX(1); }
+      #heroBadge { opacity: 1; }
+    }
+  </style>
+</head>
+<body class="bg-black font-sans antialiased">
+
+  <!-- ══ STRISCIA DI ANNOTAZIONE (fuori dal frame) ══ -->
+  <div class="mx-auto max-w-[430px] px-4 pt-6">
+    <div class="rounded-[20px] bg-surfLox ring-1 ring-white/[0.06] px-4 py-3">
+      <p class="text-[11px] font-bold uppercase tracking-[0.14em] text-prim">d3 · Vivace</p>
+      <p class="mt-1 text-[12px] leading-snug text-mut">intensità massima — staging espressivo: hero palcoscenico, tipografia cinetica, glow che respira, header che si condensa</p>
+    </div>
+  </div>
+
+  <!-- ══ FRAME TELEFONO 430px (scroll interno) ══ -->
+  <div class="mx-auto mt-4 w-[430px] pb-12">
+    <div id="frame" class="relative h-[860px] overflow-hidden rounded-[44px] bg-black ring-1 ring-white/[0.08] shadow-nav">
+
+      <div id="scroller" class="h-full overflow-y-auto overscroll-contain [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <main class="px-4 pt-5 pb-36 space-y-8">
+
+          <!-- ══ HEADER — si condensa allo scroll ══ -->
+          <header class="sticky top-0 z-30 -mx-4 px-4 pt-5 pb-3">
+            <div class="absolute inset-0 bg-surf/80 backdrop-blur-xl" style="opacity: var(--cond)" aria-hidden="true"></div>
+            <div class="relative flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-full bg-primC flex items-center justify-center shrink-0" style="transform: scale(calc(1 - 0.15 * var(--cond)))">
+                  <span class="font-black text-onPrimC text-sm tracking-tight">DS</span>
+                </div>
+                <div>
+                  <h1 class="text-[22px] font-extrabold tracking-tight leading-tight text-onSurf origin-left" style="transform: scale(calc(1 - 0.05 * var(--cond))) translateX(calc(2px * var(--cond)))">Dolphin Surf</h1>
+                  <span class="inline-block mt-1 px-2.5 py-0.5 rounded-full border border-outline text-[10px] font-semibold text-onSurfV" style="opacity: calc(1 - 0.35 * var(--cond)))">2025 EU · 43,2 kWh</span>
+                </div>
+              </div>
+              <button id="gearBtn" aria-label="Impostazioni" class="press w-10 h-10 rounded-full bg-surfC flex items-center justify-center text-onSurfV">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                  <circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </header>
+
+          <!-- ══════════ PANE · CRUSCOTTO ══════════ -->
+          <section id="pane-cruscotto" class="space-y-8">
+
+            <!-- §0 · CAMPI -->
+            <div class="space-y-3">
+              <p class="caption cap-anim">§0 Campi — pillola MD3</p>
+              <div class="rise grid grid-cols-2 gap-3">
+                <div class="field h-14 bg-surfHiX rounded-full px-5 pt-2">
+                  <p class="field-label text-[10px] font-semibold text-onSurfV leading-none">Chilometraggio</p>
+                  <div class="flex items-baseline gap-2 mt-1">
+                    <input aria-label="Chilometraggio" type="text" inputmode="numeric" value="4.500" class="w-full bg-transparent p-0 text-[16px] font-medium text-onSurf" />
+                    <span class="text-xs text-onSurfV shrink-0">km</span>
+                  </div>
+                </div>
+                <div class="field h-14 bg-surfHiX rounded-full px-5 pt-2">
+                  <p class="field-label text-[10px] font-semibold text-onSurfV leading-none">Consegna</p>
+                  <div class="flex items-baseline gap-2 mt-1">
+                    <input aria-label="Consegna" type="text" value="08/2025" class="w-full bg-transparent p-0 text-[16px] font-medium text-onSurf" />
+                  </div>
+                </div>
+                <div class="field h-14 bg-surfHiX rounded-full px-5 pt-2">
+                  <p class="field-label text-[10px] font-semibold text-onSurfV leading-none">Consumo medio</p>
+                  <div class="flex items-baseline gap-2 mt-1">
+                    <input aria-label="Consumo medio" type="text" inputmode="decimal" value="13,9" class="w-full bg-transparent p-0 text-[16px] font-medium text-onSurf" />
+                    <span class="text-xs text-onSurfV shrink-0">kWh/100</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- §B1 · HERO — palcoscenico -->
+            <div class="space-y-3">
+              <p class="caption cap-anim">§B1 Hero — palcoscenico</p>
+              <div class="relative">
+                <!-- glow di stato che respira (dietro la card) -->
+                <div class="hero-glow absolute -inset-3 rounded-[44px] bg-err/[0.18] blur-2xl" aria-hidden="true"></div>
+                <article class="rise relative rounded-[32px] bg-errC p-5 shadow-hero space-y-4">
+                  <div class="flex items-center justify-between">
+                    <p class="text-[12px] font-bold uppercase tracking-[0.08em] text-onErrC/60">Prossima scadenza</p>
+                    <span class="px-3 py-1 rounded-full bg-err text-onErr text-[11px] font-bold">Scaduto</span>
+                  </div>
+
+                  <!-- palco: luce radiale + auto che atterra e fluttua + ombra + badge odometro -->
+                  <div class="relative flex justify-center pt-2 pb-1">
+                    <div class="stage-light absolute left-1/2 top-1/2 w-56 h-28 rounded-[50%] bg-white/[0.06] blur-2xl" aria-hidden="true"></div>
+                    <div id="carStage" class="car-land relative">
+                      <div class="car-float relative z-10">
+                        <svg viewBox="0 0 160 64" class="h-24 w-auto" aria-hidden="true">
+                          <path d="M12 52 C8 52 6 49 6 45 C6 38 12 34 22 32 L38 30 L52 15 C55 11 60 9 66 9 L97 9 C104 9 110 12 114 18 L125 30 L139 32 C149 34 154 38 154 44 L154 49 C154 52 152 54 149 54 L12 54 Z" fill="#b96357"/>
+                          <path d="M64 27 L70 15 C71 13 72 13 74 13 L88 13 C90 13 91 14 92 16 L98 27 Z" fill="#3e1d1c"/>
+                          <circle cx="40" cy="52" r="11" fill="#2c130c"/><circle cx="40" cy="52" r="4.5" fill="#3e1d1c"/>
+                          <circle cx="120" cy="52" r="11" fill="#2c130c"/><circle cx="120" cy="52" r="4.5" fill="#3e1d1c"/>
+                        </svg>
+                      </div>
+                      <div class="car-shadow absolute z-0 left-1/2 -bottom-1 w-[150px] h-3 rounded-[50%] bg-black/40 blur-[6px]" aria-hidden="true"></div>
+                    </div>
+                    <!-- badge countdown cinetico: "+04 g" con digit-roll -->
+                    <span id="heroBadge" class="badge-pop absolute -top-1 right-2 px-2.5 py-1 rounded-full bg-err text-onErr text-[12px] font-extrabold shadow-fab inline-flex items-center">
+                      <span id="heroBadgeTick" class="inline-flex items-center">
+                        <span>+</span>
+                        <span class="digit" data-value="0"></span>
+                        <span class="digit" data-value="4"></span>
+                        <span>&nbsp;g</span>
+                      </span>
+                    </span>
+                  </div>
+
+                  <div class="space-y-1.5">
+                    <h2 class="text-[27px] font-black tracking-tight leading-tight text-onErrC">Bilanciamento LFP 100%</h2>
+                    <p class="text-[13px] font-medium text-onErrC/70">Carica AC 100% + top-balance 1–2 h</p>
+                    <div class="flex flex-wrap gap-2 pt-0.5">
+                      <span class="inline-flex items-center gap-1.5 rounded-full bg-white/[0.08] border border-white/10 px-3 py-1.5 text-[12px] font-medium text-onErrC">
+                        <svg class="w-3.5 h-3.5 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="16" height="10" rx="2"/><path d="M22 11v2"/><path d="M6 11v2"/></svg>
+                        Ogni 1 mese
+                      </span>
+                      <span class="inline-flex items-center gap-1.5 rounded-full bg-white/[0.08] border border-white/10 px-3 py-1.5 text-[12px] font-medium text-onErrC">
+                        <svg class="w-3.5 h-3.5 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l2.8 1.7"/></svg>
+                        1–2 h collegate
+                      </span>
+                    </div>
+                  </div>
+
+                  <button id="heroCta" class="press w-full h-12 rounded-full bg-err text-onErr text-[15px] font-bold">Registra ora</button>
+                </article>
+              </div>
+            </div>
+
+            <!-- §C · PROSSIME — coda -->
+            <div class="space-y-2">
+              <p class="caption cap-anim">§C Prossime — coda</p>
+              <button class="press rise w-full flex items-center gap-3 rounded-full bg-surfC pl-2 pr-3 py-1.5 text-left">
+                <span class="w-10 h-10 rounded-full bg-surfHi flex items-center justify-center shrink-0">
+                  <svg class="w-4 h-4 text-onSurfV" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                </span>
+                <span class="flex-1 min-w-0">
+                  <span class="block text-[14px] font-semibold text-onSurf truncate">Antiruggine sottoscocca</span>
+                  <span class="block text-[11px] text-mut truncate">Una tantum · Lanoguard / Dinitrol</span>
+                </span>
+                <span class="px-2.5 py-1 rounded-full bg-errC text-onErrC text-[10px] font-bold shrink-0">scad. dal 20/08</span>
+              </button>
+              <button class="press rise w-full flex items-center gap-3 rounded-full bg-surfC pl-2 pr-3 py-1.5 text-left">
+                <span class="w-10 h-10 rounded-full bg-surfHi flex items-center justify-center shrink-0">
+                  <svg class="w-4 h-4 text-onSurfV" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                </span>
+                <span class="flex-1 min-w-0">
+                  <span class="block text-[14px] font-semibold text-onSurf truncate">Manutenzione severe</span>
+                  <span class="block text-[11px] text-mut truncate">12 mesi / 15.000 km</span>
+                </span>
+                <span class="px-2.5 py-1 rounded-full bg-errC text-onErrC text-[10px] font-bold shrink-0">scad. dal 01/08</span>
+              </button>
+            </div>
+
+            <!-- SINTESI — tile tonali con ripple + micro-parallax -->
+            <div class="space-y-3">
+              <p class="caption cap-anim">Sintesi — tile tonali</p>
+              <div class="rise rounded-[28px] bg-surfLox p-5">
+                <p class="text-[13px] font-semibold text-mut">In sintesi</p>
+                <div class="mt-3 grid grid-cols-3 gap-2.5">
+                  <button class="tile rounded-[20px] bg-okC px-2 py-3.5 text-center">
+                    <span class="tile-inner block">
+                      <span class="block text-[26px] font-black leading-none text-onOkC"><span data-count="2">0</span></span>
+                      <span class="block mt-1.5 text-[10px] font-bold text-onOkC/80">In regola</span>
+                    </span>
+                  </button>
+                  <button class="tile rounded-[20px] bg-waC px-2 py-3.5 text-center">
+                    <span class="tile-inner block">
+                      <span class="block text-[26px] font-black leading-none text-onWaC"><span data-count="1">0</span></span>
+                      <span class="block mt-1.5 text-[10px] font-bold text-onWaC/80">In scadenza</span>
+                    </span>
+                  </button>
+                  <button class="tile rounded-[20px] bg-errC px-2 py-3.5 text-center">
+                    <span class="tile-inner block">
+                      <span class="block text-[26px] font-black leading-none text-onErrC"><span data-count="8">0</span></span>
+                      <span class="block mt-1.5 text-[10px] font-bold text-onErrC/80">Scadute</span>
+                    </span>
+                  </button>
+                </div>
+                <p class="mt-3 pt-3 border-t border-white/[0.06] text-[12px] font-medium text-mut">Orizzonte 15 anni · 4,5k / 300k km · 1,5%</p>
+              </div>
+            </div>
+
+            <!-- STATISTICHE — Prontezza + Cicli: count-up + sweep -->
+            <div class="space-y-3">
+              <p class="caption cap-anim">Statistiche — prontezza + cicli</p>
+              <div class="grid grid-cols-2 gap-3">
+                <div class="rise bg-surfC rounded-[24px] p-4">
+                  <p class="text-[12px] font-medium text-onSurfV">Prontezza</p>
+                  <p class="mt-1.5 text-[32px] font-black leading-none tracking-tight text-onSurf">
+                    <span class="relative inline-block">
+                      <span data-count="18">0</span><span class="text-sm font-bold text-mut">%</span>
+                      <span class="sweep absolute left-0 -bottom-1.5 h-[2px] w-full bg-prim rounded-full"></span>
+                    </span>
+                  </p>
+                  <p class="mt-1 text-[11px] text-mut">2 di 11 in regola</p>
+                  <div class="mt-3 h-1.5 rounded-full bg-surfHiX overflow-hidden">
+                    <div class="h-full w-[18%] rounded-full bg-prim"></div>
+                  </div>
+                </div>
+                <div class="rise bg-surfC rounded-[24px] p-4">
+                  <p class="text-[12px] font-medium text-onSurfV">Cicli LFP</p>
+                  <p class="mt-1.5 text-[32px] font-black leading-none tracking-tight text-onSurf">
+                    <span class="relative inline-block">
+                      <span data-count="14">0</span><span class="text-sm font-bold text-mut">/5.000</span>
+                      <span class="sweep absolute left-0 -bottom-1.5 h-[2px] w-full bg-prim rounded-full"></span>
+                    </span>
+                  </p>
+                  <p class="mt-1 text-[11px] text-mut">≈ 0,3% vita utile</p>
+                  <div class="mt-3 h-1.5 rounded-full bg-surfHiX overflow-hidden">
+                    <div class="h-full w-[0.3%] min-w-[4px] rounded-full bg-prim"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ══════════ PANE · ATTIVITÀ ══════════ -->
+          <section id="pane-attivita" class="space-y-4 hidden">
+            <p class="caption cap-anim">Attività — catalogo</p>
+
+            <!-- Chip filtro M3E a pillola -->
+            <div class="rise flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+              <button class="filter-chip is-on shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold">
+                <svg class="check w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+                Tutte (11)
+              </button>
+              <button class="filter-chip shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold">
+                <svg class="check w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+                Setup iniziale (4)
+              </button>
+              <button class="filter-chip shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold">
+                <svg class="check w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+                Routine (4)
+              </button>
+              <button class="filter-chip shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold">
+                <svg class="check w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+                Fluidi officina (3)
+              </button>
+            </div>
+
+            <!-- Card attività (seed reale) -->
+            <div class="space-y-3">
+              <article class="rise bg-surfC rounded-[24px] p-4">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="min-w-0">
+                    <div class="flex items-baseline gap-2">
+                      <span class="text-[11px] font-bold text-mut">#5</span>
+                      <h3 class="text-[15px] font-bold tracking-tight leading-snug text-onSurf">Bilanciamento LFP 100%</h3>
+                    </div>
+                    <p class="mt-1.5 text-xs text-onSurfV">Ogni mese · con controllo pressione gomme</p>
+                    <p class="text-xs text-onSurfV">Carica AC 100% + top-balance 1–2 h</p>
+                  </div>
+                  <span class="px-3 py-1 rounded-full bg-errC text-onErrC text-[11px] font-bold whitespace-nowrap">Scaduto</span>
+                </div>
+                <div class="mt-3 pt-3 border-t border-white/[0.06] flex items-center justify-between gap-3">
+                  <p class="text-[11px] text-mut">Ultimo: 09/10/2026 · 4.100 km</p>
+                  <button class="press shrink-0 h-9 rounded-full bg-secC px-5 text-xs font-bold text-onSecC">Registra</button>
+                </div>
+              </article>
+
+              <article class="rise bg-surfC rounded-[24px] p-4">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="min-w-0">
+                    <div class="flex items-baseline gap-2">
+                      <span class="text-[11px] font-bold text-mut">#10</span>
+                      <h3 class="text-[15px] font-bold tracking-tight leading-snug text-onSurf">Fluido freni DOT 4</h3>
+                    </div>
+                    <p class="mt-1.5 text-xs text-onSurfV">Ogni 24 mesi · sostituzione obbligatoria</p>
+                    <p class="text-xs text-onSurfV">DOT 4 / HZY6 · ≈ 1.100 ml</p>
+                  </div>
+                  <span class="px-3 py-1 rounded-full bg-waC text-onWaC text-[11px] font-bold whitespace-nowrap">In scadenza</span>
+                </div>
+                <div class="mt-3 pt-3 border-t border-white/[0.06] flex items-center justify-between gap-3">
+                  <p class="text-[11px] text-mut">Ultimo: 15/04/2025 (PDI) · 0 km</p>
+                  <button class="press shrink-0 h-9 rounded-full bg-secC px-5 text-xs font-bold text-onSecC">Registra</button>
+                </div>
+              </article>
+
+              <article class="rise bg-surfC rounded-[24px] p-4">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="min-w-0">
+                    <div class="flex items-baseline gap-2">
+                      <span class="text-[11px] font-bold text-mut">#9</span>
+                      <h3 class="text-[15px] font-bold tracking-tight leading-snug text-onSurf">Olio riduttore</h3>
+                    </div>
+                    <p class="mt-1.5 text-xs text-onSurfV">24 mesi / 40.000 km · poi ogni 48.000 km</p>
+                    <p class="text-xs text-onSurfV">Castrol BOT384 · ≈ 500 ml</p>
+                  </div>
+                  <span class="px-3 py-1 rounded-full bg-okC text-onOkC text-[11px] font-bold whitespace-nowrap">OK</span>
+                </div>
+                <div class="mt-3 pt-3 border-t border-white/[0.06] flex items-center justify-between gap-3">
+                  <p class="text-[11px] text-mut">Prossimo: 08/2027 · 40.000 km</p>
+                  <button class="press shrink-0 h-9 rounded-full bg-secC px-5 text-xs font-bold text-onSecC">Registra</button>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <!-- ══════════ PANE · STORICO ══════════ -->
+          <section id="pane-storico" class="space-y-4 hidden">
+            <p class="caption cap-anim">Storico — registrazioni</p>
+            <div class="space-y-2">
+              <div class="rise flex items-center gap-3 rounded-full bg-surfC pl-2 pr-4 py-1.5">
+                <div class="w-11 h-11 rounded-full bg-surfHi flex items-center justify-center shrink-0 text-onSurfV">
+                  <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-[14px] font-semibold text-onSurf leading-snug truncate">Bilanciamento LFP 100%</p>
+                  <p class="text-[11px] text-mut truncate">09/10/2026 · Garage di casa — 2 h</p>
+                </div>
+                <span class="shrink-0 px-2.5 py-1 rounded-full bg-secC text-onSecC text-[11px] font-bold">4.100 km</span>
+              </div>
+              <div class="rise flex items-center gap-3 rounded-full bg-surfC pl-2 pr-4 py-1.5">
+                <div class="w-11 h-11 rounded-full bg-surfHi flex items-center justify-center shrink-0 text-onSurfV">
+                  <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-[14px] font-semibold text-onSurf leading-snug truncate">Antiruggine sottoscocca</p>
+                  <p class="text-[11px] text-mut truncate">20/08/2025 · Officina Corsi — 80 €</p>
+                </div>
+                <span class="shrink-0 px-2.5 py-1 rounded-full bg-secC text-onSecC text-[11px] font-bold">300 km</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- ══════════ PANE · PRODOTTI ══════════ -->
+          <section id="pane-prodotti" class="space-y-4 hidden">
+            <p class="caption cap-anim">Prodotti — consentiti</p>
+            <div class="rise bg-surfC rounded-[24px] p-4">
+              <div class="flex items-center justify-between gap-2">
+                <h3 class="text-sm font-bold tracking-tight text-onSurf">Sicuri su EPDM</h3>
+                <span class="shrink-0 px-3 py-1 rounded-full bg-okC text-onOkC text-[10px] font-bold whitespace-nowrap">&lt;1–2% rigonfiamento</span>
+              </div>
+              <ul class="mt-3 space-y-2">
+                <li class="flex items-start gap-2 text-xs text-onSurfV">
+                  <svg class="w-3.5 h-3.5 text-onOkC mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg> <span><strong class="font-bold text-onSurf">Krytox GPL 205</strong> — lubrificante PFPE inerte</span>
+                </li>
+                <li class="flex items-start gap-2 text-xs text-onSurfV">
+                  <svg class="w-3.5 h-3.5 text-onOkC mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg> <span><strong class="font-bold text-onSurf">Molykote 111</strong> — pasta PDMS pura</span>
+                </li>
+                <li class="flex items-start gap-2 text-xs text-onSurfV">
+                  <svg class="w-3.5 h-3.5 text-onOkC mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg> <span><strong class="font-bold text-onSurf">Glicerina pura</strong> — grado farmaceutico</span>
+                </li>
+              </ul>
+              <div class="mt-3.5 rounded-2xl bg-errC px-3 py-2.5 flex items-start gap-2">
+                <svg class="w-4 h-4 text-err mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                <p class="text-xs font-bold text-onErrC leading-snug">MAI: WD-40, vaselina, spray siliconici</p>
+              </div>
+            </div>
+          </section>
+
+        </main>
+      </div>
+
+      <!-- ══ FAB (morphing → sheet) ══ -->
+      <button id="fabBtn" aria-label="Nuova registrazione" class="press absolute z-40 bottom-24 right-4 w-14 h-14 rounded-full bg-primC text-onPrimC shadow-fab flex items-center justify-center">
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+      </button>
+
+      <!-- ══ OVERLAY · SHEET FAB (morph dal cerchio) ══ -->
+      <div id="fabOverlay" class="overlay absolute inset-0 z-50 hidden">
+        <div id="fabScrim" class="scrim"></div>
+        <div id="fabSheet">
+          <div id="fabSheetInner" class="px-5 pt-3 pb-6 space-y-3">
+            <div class="w-9 h-1 rounded-full bg-outline mx-auto"></div>
+            <p class="caption text-center">Sheet FAB</p>
+            <p class="text-[15px] font-bold text-onSurf">Nuova registrazione</p>
+
+            <div class="field h-14 bg-surfHiX rounded-full px-5 pt-2">
+              <p class="field-label text-[10px] font-semibold text-onSurfV leading-none">Attività</p>
+              <div class="flex items-center justify-between mt-1">
+                <span class="text-[16px] font-medium text-onSurf">Bilanciamento LFP 100%</span>
+                <svg class="w-4 h-4 text-onSurfV" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="field h-14 bg-surfHi rounded-full px-5 pt-2 ring-2 ring-prim">
+                <p class="text-[10px] font-bold text-prim leading-none">Data</p>
+                <p class="mt-1 text-[16px] font-medium text-onSurf">14/11/2026</p>
+              </div>
+              <div class="field h-14 bg-surfHiX rounded-full px-5 pt-2">
+                <p class="field-label text-[10px] font-semibold text-onSurfV leading-none">Chilometraggio</p>
+                <div class="flex items-baseline gap-2 mt-1">
+                  <span class="text-[16px] font-medium text-onSurf">4.500</span><span class="text-xs text-onSurfV shrink-0">km</span>
+                </div>
+              </div>
+            </div>
+            <div class="field h-14 bg-surfHiX rounded-full px-5 pt-2">
+              <p class="field-label text-[10px] font-semibold text-onSurfV leading-none">Luogo</p>
+              <p class="mt-1 text-[16px] font-medium text-onSurf">Garage di casa</p>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="field h-14 bg-surfHiX rounded-full px-5 pt-2">
+                <p class="field-label text-[10px] font-semibold text-onSurfV leading-none">Costo</p>
+                <div class="flex items-baseline gap-2 mt-1">
+                  <span class="text-[16px] font-medium text-onSurf">0</span><span class="text-xs text-onSurfV shrink-0">€</span>
+                </div>
+              </div>
+              <div class="field h-14 bg-surfHiX rounded-full px-5 pt-2">
+                <p class="field-label text-[10px] font-semibold text-onSurfV leading-none">Durata</p>
+                <div class="flex items-baseline gap-2 mt-1">
+                  <span class="text-[16px] font-medium text-onSurf">2</span><span class="text-xs text-onSurfV shrink-0">h</span>
+                </div>
+              </div>
+            </div>
+            <div class="flex gap-3 pt-1">
+              <button id="fabCancel" class="press h-12 flex-1 rounded-full text-onSurfV text-sm font-bold">Annulla</button>
+              <button id="fabSave" class="press h-12 flex-1 rounded-full bg-prim text-onPrim text-[15px] font-bold">Registra</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ OVERLAY · SHEET IMPOSTAZIONI ══ -->
+      <div id="setOverlay" class="overlay absolute inset-0 z-50 hidden">
+        <div id="setScrim" class="scrim"></div>
+        <div id="setSheet" class="px-5 pt-3 pb-6 space-y-1">
+          <div class="w-9 h-1 rounded-full bg-outline mx-auto"></div>
+          <p class="caption text-center pt-2">Sheet impostazioni</p>
+          <p class="text-[15px] font-bold text-onSurf pb-2">Impostazioni</p>
+
+          <button id="resetRow" class="w-full flex items-center gap-3 py-3 text-left">
+            <span class="w-9 h-9 rounded-full bg-surfHi flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-onSurfV" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 4v5h5"/></svg>
+            </span>
+            <span class="flex-1">
+              <span class="block text-[14px] font-semibold text-onSurf">Ripristina dati iniziali</span>
+              <span class="block text-[11px] text-mut">Torna al seed di consegna (conferma richiesta)</span>
+            </span>
+          </button>
+
+          <div id="confirmRow" class="hidden w-full flex items-center gap-3 py-3">
+            <span class="w-9 h-9 rounded-full bg-surfHi flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-onSurfV" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 4v5h5"/></svg>
+            </span>
+            <span class="flex-1">
+              <span class="block text-[14px] font-semibold text-onSurf">Confermi il ripristino?</span>
+              <span class="block text-[11px] text-mut">Torna al seed di consegna</span>
+            </span>
+            <button id="cancelReset" class="press h-10 shrink-0 px-3 rounded-full text-onSurfV text-sm font-bold">Annulla</button>
+            <button id="confirmReset" class="press h-10 shrink-0 px-3 rounded-full text-err text-sm font-bold">Conferma</button>
+          </div>
+
+          <button id="goVehicle" class="w-full flex items-center gap-3 py-3 text-left">
+            <span class="w-9 h-9 rounded-full bg-surfHi flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-onSurfV" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l2.8 1.7"/></svg>
+            </span>
+            <span class="flex-1">
+              <span class="block text-[14px] font-semibold text-onSurf">Consegna e consumo</span>
+              <span class="block text-[11px] text-mut">Modifica i dati base del veicolo</span>
+            </span>
+          </button>
+
+          <p class="pt-3 border-t border-white/[0.06] text-[11px] text-mut">BYD Dolphin Surf · tracker v1 · dati solo sul dispositivo</p>
+        </div>
+      </div>
+
+      <!-- ══ NAVBAR — pillola flottante con indicatore fluido ══ -->
+      <nav class="absolute bottom-0 inset-x-0 z-40 px-4 pb-4">
+        <p class="caption mb-1.5 text-center opacity-70">Navbar</p>
+        <div class="relative rounded-full bg-surfC/90 backdrop-blur-xl ring-1 ring-white/[0.06] shadow-nav px-3 py-2 flex items-center justify-between">
+          <div id="navIndicator" class="absolute top-2 left-0 h-11 w-[52px] rounded-full bg-primC"></div>
+
+          <button class="nav-tab is-active press relative h-11 w-[52px] rounded-full flex items-center justify-center" data-target="pane-cruscotto" aria-label="Cruscotto">
+            <svg class="nav-icon w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg>
+            <span class="nav-label absolute bottom-[3px] left-0 right-0 text-center text-[9px] font-bold text-onPrimC">Cruscotto</span>
+          </button>
+          <button class="nav-tab press relative h-11 w-[52px] rounded-full flex items-center justify-center" data-target="pane-attivita" aria-label="Attività">
+            <svg class="nav-icon w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/>
+            </svg>
+            <span class="nav-label absolute bottom-[3px] left-0 right-0 text-center text-[9px] font-bold text-onPrimC">Attività</span>
+          </button>
+          <button class="nav-tab press relative h-11 w-[52px] rounded-full flex items-center justify-center" data-target="pane-storico" aria-label="Storico">
+            <svg class="nav-icon w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>
+            </svg>
+            <span class="nav-label absolute bottom-[3px] left-0 right-0 text-center text-[9px] font-bold text-onPrimC">Storico</span>
+          </button>
+          <button class="nav-tab press relative h-11 w-[52px] rounded-full flex items-center justify-center" data-target="pane-prodotti" aria-label="Prodotti">
+            <svg class="nav-icon w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/>
+            </svg>
+            <span class="nav-label absolute bottom-[3px] left-0 right-0 text-center text-[9px] font-bold text-onPrimC">Prodotti</span>
+          </button>
+        </div>
+      </nav>
+
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* ══════════════════════════════════════════════════════════
+         d3 · Vivace — orchestrazione (vanilla JS)
+         fondazione: --e-emph / --e-spring / --e-exit, stagger 55ms
+         ══════════════════════════════════════════════════════════ */
+      const $ = (sel, root) => (root || document).querySelector(sel);
+      const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      /* ── 1 · Header condensabile: interpolazione continua da scroll ── */
+      const scroller = $('#scroller');
+      const frame = $('#frame');
+      function onScroll() {
+        const p = Math.min(1, Math.max(0, scroller.scrollTop / 96));
+        frame.style.setProperty('--cond', p.toFixed(3));
+      }
+      scroller.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+
+      /* ── 2 · Entrate cinematiche + count-up (IntersectionObserver) ── */
+      function countUp(el) {
+        const target = parseFloat(el.dataset.count);
+        if (!Number.isFinite(target)) return;
+        if (reduced) { el.textContent = String(target); return; }
+        const t0 = performance.now();
+        (function step(now) {
+          const p = Math.min(1, (now - t0) / 600);
+          const eased = 1 - Math.pow(1 - p, 3);
+          el.textContent = String(Math.round(target * eased));
+          if (p < 1) requestAnimationFrame(step);
+          else el.textContent = String(target);
+        })(performance.now());
+      }
+
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const el = entry.target;
+          el.classList.add('in');
+          if (el.dataset.count != null) countUp(el);
+          io.unobserve(el);
+        });
+      }, { root: scroller, threshold: 0.2 });
+
+      function observeIn(root) {
+        $$('.rise, .cap-anim, .sweep, [data-count]', root).forEach((el, i) => {
+          el.classList.remove('in');
+          if (el.dataset.count != null) el.textContent = '0';
+          el.style.setProperty('--rd', Math.min(i, 8) * 55 + 'ms');   /* stagger 55ms */
+          io.observe(el);
+        });
+      }
+
+      /* ── 3 · Navbar: indicatore fluido + switch direzionale delle sezioni ── */
+      const tabs = $$('.nav-tab');
+      const panes = tabs.map((t) => $('#' + t.dataset.target));
+      const indicator = $('#navIndicator');
+      let current = -1;
+      let indTimer = 0;
+      let indX = tabs.length ? tabs[0].offsetLeft : 0;
+
+      function moveIndicator(tab, instant) {
+        const x = tab.offsetLeft;
+        const w = tab.offsetWidth;
+        clearTimeout(indTimer);
+        if (instant || reduced) {
+          indicator.style.transition = 'none';
+          indicator.style.width = w + 'px';
+          indicator.style.transform = 'translateX(' + x + 'px)';
+          void indicator.offsetWidth;
+          indicator.style.transition = '';
+          indX = x;
+          return;
+        }
+        /* fase 1: stiramento in direzione del movimento (overshoot di larghezza) */
+        const dist = Math.abs(x - indX);
+        const dir = x >= indX ? 1 : -1;
+        indicator.style.transitionDuration = '180ms';
+        indicator.style.transitionTimingFunction = 'cubic-bezier(0.2, 0, 0, 1)';
+        indicator.style.width = (w + Math.min(28, dist * 0.4)) + 'px';
+        indicator.style.transform = 'translateX(' + (x - dir * Math.min(12, dist * 0.15)) + 'px)';
+        /* fase 2: settle con molla (overshoot naturale di --e-spring) */
+        indTimer = setTimeout(() => {
+          indicator.style.transitionDuration = '';
+          indicator.style.transitionTimingFunction = '';
+          indicator.style.width = w + 'px';
+          indicator.style.transform = 'translateX(' + x + 'px)';
+        }, 170);
+        indX = x;
+      }
+
+      function switchTo(index, instant) {
+        if (index === current) return;
+        const dir = index > current ? 1 : -1;
+        current = index;
+        tabs.forEach((t, i) => t.classList.toggle('is-active', i === index));
+        moveIndicator(tabs[index], instant === true);
+        panes.forEach((p, i) => p.classList.toggle('hidden', i !== index));
+        const pane = panes[index];
+        if (!instant) {
+          pane.classList.remove('pane-in-right', 'pane-in-left');
+          void pane.offsetWidth;
+          pane.classList.add(dir > 0 ? 'pane-in-right' : 'pane-in-left');
+          scroller.scrollTop = 0;
+        }
+        observeIn(pane);
+        if (index === 0) heroPlay();
+      }
+
+      tabs.forEach((tab, i) => tab.addEventListener('click', () => switchTo(i)));
+
+      /* ── 4 · Hero: car-land → pop badge → digit-roll → tick ── */
+      const carStage = $('#carStage');
+      const heroBadge = $('#heroBadge');
+      const heroBadgeTick = $('#heroBadgeTick');
+      const digitEls = $$('.digit');
+      const heroTimers = [];
+
+      /* strip odometro: 0-9 ripetuti — un giro pieno + atterraggio sul digit target */
+      digitEls.forEach((d) => {
+        const strip = document.createElement('span');
+        strip.className = 'digit-strip';
+        strip.dataset.value = d.dataset.value || '0';
+        for (let i = 0; i < 20; i++) {
+          const item = document.createElement('span');
+          item.textContent = String(i % 10);
+          strip.appendChild(item);
+        }
+        d.appendChild(strip);
+      });
+      const strips = digitEls.map((d) => $('.digit-strip', d));
+      const stripTarget = (s) => 'translateY(-' + ((10 + Number(s.dataset.value)) * 1.15) + 'em)';
+
+      function resetDigits() {
+        strips.forEach((s) => {
+          s.classList.add('no-anim');
+          s.style.transform = 'translateY(0)';
+        });
+        void heroBadge.offsetWidth;
+        strips.forEach((s) => s.classList.remove('no-anim'));
+      }
+
+      function rollDigits() {
+        strips.forEach((s, i) => {
+          heroTimers.push(setTimeout(() => { s.style.transform = stripTarget(s); }, i * 55));
+        });
+      }
+
+      function heroPlay() {
+        while (heroTimers.length) clearTimeout(heroTimers.pop());
+        carStage.classList.remove('car-land');
+        heroBadge.classList.remove('badge-pop');
+        heroBadgeTick.classList.remove('badge-tick');
+        void carStage.offsetWidth;
+        if (reduced) {
+          resetDigits();
+          strips.forEach((s) => { s.style.transform = stripTarget(s); });
+          heroBadge.classList.add('badge-pop');
+          return;
+        }
+        carStage.classList.add('car-land');                       /* atterraggio a molla */
+        resetDigits();
+        heroTimers.push(setTimeout(() => heroBadge.classList.add('badge-pop'), 460));
+        heroTimers.push(setTimeout(rollDigits, 540));             /* roll + stagger 55ms */
+        heroTimers.push(setTimeout(() => {                        /* tick quando assestato */
+          heroBadgeTick.classList.remove('badge-tick');
+          void heroBadgeTick.offsetWidth;
+          heroBadgeTick.classList.add('badge-tick');
+        }, 540 + 600 + 2 * 55 + 80));
+      }
+
+      /* ── 5 · FAB ↔ sheet: morph circolo → rounded-t-[28px], reversibile ── */
+      const fabBtn = $('#fabBtn');
+      const fabOverlay = $('#fabOverlay');
+      const fabSheet = $('#fabSheet');
+      let fabHideTimer = 0;
+
+      function openFab() {
+        clearTimeout(fabHideTimer);
+        fabBtn.classList.add('fab-gone');
+        fabOverlay.classList.remove('hidden');
+        /* misura l'altezza finale a piena larghezza, senza animare (nessun flash) */
+        fabSheet.style.removeProperty('--sheet-h');
+        fabSheet.classList.add('no-anim', 'measure', 'sheet-open');
+        const h = fabSheet.offsetHeight;
+        fabSheet.style.setProperty('--sheet-h', h + 'px');
+        fabSheet.classList.remove('sheet-open');
+        void fabSheet.offsetWidth;
+        fabSheet.classList.remove('no-anim', 'measure');
+        requestAnimationFrame(() => {
+          fabOverlay.classList.add('open');
+          fabSheet.classList.add('sheet-open');
+        });
+      }
+
+      function closeFab() {
+        fabOverlay.classList.remove('open');
+        fabSheet.classList.remove('sheet-open');                  /* morph inverso */
+        fabBtn.classList.remove('fab-gone');
+        clearTimeout(fabHideTimer);
+        fabHideTimer = setTimeout(() => fabOverlay.classList.add('hidden'), 620);
+      }
+
+      fabBtn.addEventListener('click', openFab);
+      $('#fabScrim').addEventListener('click', closeFab);
+      $('#fabCancel').addEventListener('click', closeFab);
+      $('#fabSave').addEventListener('click', closeFab);
+      $('#heroCta').addEventListener('click', openFab);
+
+      /* ── 6 · Sheet impostazioni: slide-up con la stessa lingua a molla ── */
+      const setOverlay = $('#setOverlay');
+      let setHideTimer = 0;
+
+      function openSet() {
+        clearTimeout(setHideTimer);
+        setOverlay.classList.remove('hidden');
+        requestAnimationFrame(() => setOverlay.classList.add('open'));
+      }
+
+      function closeSet() {
+        setOverlay.classList.remove('open');
+        $('#resetRow').classList.remove('hidden');
+        $('#confirmRow').classList.add('hidden');
+        clearTimeout(setHideTimer);
+        setHideTimer = setTimeout(() => setOverlay.classList.add('hidden'), 480);
+      }
+
+      $('#gearBtn').addEventListener('click', openSet);
+      $('#setScrim').addEventListener('click', closeSet);
+      $('#resetRow').addEventListener('click', () => {
+        $('#resetRow').classList.add('hidden');
+        $('#confirmRow').classList.remove('hidden');
+      });
+      $('#cancelReset').addEventListener('click', () => {
+        $('#resetRow').classList.remove('hidden');
+        $('#confirmRow').classList.add('hidden');
+      });
+      $('#confirmReset').addEventListener('click', closeSet);
+      $('#goVehicle').addEventListener('click', closeSet);
+
+      /* Escape chiude gli sheet aperti */
+      document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        if (!fabOverlay.classList.contains('hidden')) closeFab();
+        if (!setOverlay.classList.contains('hidden')) closeSet();
+      });
+
+      /* ── 7 · Sintesi: ripple al tap + micro-parallax contro il dito ── */
+      $$('.tile').forEach((tile) => {
+        tile.addEventListener('pointerdown', (e) => {
+          const rect = tile.getBoundingClientRect();
+          const size = Math.max(rect.width, rect.height) * 2;
+          const dot = document.createElement('span');
+          dot.className = 'ripple-dot';
+          dot.style.width = size + 'px';
+          dot.style.height = size + 'px';
+          dot.style.left = (e.clientX - rect.left - size / 2) + 'px';
+          dot.style.top = (e.clientY - rect.top - size / 2) + 'px';
+          tile.appendChild(dot);
+          dot.addEventListener('animationend', () => dot.remove());
+        });
+        const shift = (e) => {
+          const inner = $('.tile-inner', tile);
+          if (!inner) return;
+          const rect = tile.getBoundingClientRect();
+          const nx = (e.clientX - rect.left) / rect.width - 0.5;
+          const ny = (e.clientY - rect.top) / rect.height - 0.5;
+          inner.style.setProperty('--tx', (-nx * 5).toFixed(2) + 'px');   /* ±2,5px */
+          inner.style.setProperty('--ty', (-ny * 5).toFixed(2) + 'px');
+        };
+        const reset = () => {
+          const inner = $('.tile-inner', tile);
+          if (!inner) return;
+          inner.style.setProperty('--tx', '0px');
+          inner.style.setProperty('--ty', '0px');
+        };
+        tile.addEventListener('pointermove', shift);
+        tile.addEventListener('pointerup', reset);
+        tile.addEventListener('pointercancel', reset);
+        tile.addEventListener('pointerleave', reset);
+      });
+
+      /* ── 8 · Chip filtro (solo stato visivo) ── */
+      const chips = $$('.filter-chip');
+      chips.forEach((chip) => {
+        chip.addEventListener('click', () => {
+          chips.forEach((c) => c.classList.toggle('is-on', c === chip));
+        });
+      });
+
+      /* ── Avvio: prima sezione + sequenza hero ── */
+      switchTo(0, true);
+    })();
+  </script>
+</body>
+</html>

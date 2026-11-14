@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
+  <title>Dolphin Surf — Manutenzione · Draft B — Material 3 Expressive (black)</title>
+  <!-- Bozza statica — Direction B in Material 3 Expressive, dark-only su nero pieno.
+       Corallo desaturato, superfici tonali senza bordi, navbar flottante a pillola
+       (solo icone, pill attiva), righe lista a pillola, cookie pentagonale dietro il
+       countdown, wavy progress, ring con gap, FAB circolare. Solo markup, nessuna logica. -->
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..1000&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Roboto Flex"', 'Roboto', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            // M3 color roles (dark scheme su nero, corallo attenuato)
+            prim:   '#e3a89b', onPrim:  '#402010',
+            primC:  '#55291d', onPrimC: '#f3d4c8',
+            secC:   '#3d3431', onSecC:  '#eadcd5',
+            terC:   '#463818', onTerC:  '#e6cd96',
+            err:    '#d98a80', onErr:   '#441411',
+            errC:   '#3e1d1c', onErrC:  '#f2c1ba',
+            // Surface ramp su nero pieno
+            surf:    '#000000',
+            surfLox: '#0e0d0d',
+            surfC:   '#1e1c1d',
+            surfHi:  '#2a2728',
+            surfHiX: '#353132',
+            onSurf:  '#eae4e2',
+            onSurfV: '#b9aca8',
+            mut:     '#8d817d',
+            outline: '#463f3d',
+            // Stato (success/warn custom)
+            okC: '#1d3326', onOkC: '#9cc7a8',
+            waC: '#363020', onWaC: '#d9c084',
+          },
+          boxShadow: {
+            fab:  '0 4px 10px rgba(0,0,0,0.5), 0 14px 32px rgba(0,0,0,0.55)',
+            hero: '0 6px 24px rgba(0,0,0,0.35)',
+            nav:  '0 8px 28px rgba(0,0,0,0.55)',
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    html { -webkit-tap-highlight-color: transparent; }
+    body { color: #eae4e2; }
+    ::selection { background: rgba(227, 168, 155, 0.3); }
+  </style>
+</head>
+<body class="bg-black font-sans antialiased">
+
+  <!-- Cornice mobile centrata -->
+  <div class="mx-auto max-w-[430px] min-h-screen bg-black">
+    <main class="px-4 pt-5 pb-36 space-y-7">
+
+      <!-- ══ 1 · HEADER ══ -->
+      <header class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-full bg-primC flex items-center justify-center shrink-0">
+            <span class="font-black text-onPrimC text-sm tracking-tight">DS</span>
+          </div>
+          <div>
+            <h1 class="text-[22px] font-extrabold tracking-tight leading-tight text-onSurf">Dolphin Surf</h1>
+            <span class="inline-block mt-1 px-2.5 py-0.5 rounded-full border border-outline text-[10px] font-semibold text-onSurfV">2025 EU · 43,2 kWh</span>
+          </div>
+        </div>
+        <button aria-label="Impostazioni" class="w-10 h-10 rounded-full bg-surfC flex items-center justify-center text-onSurfV">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
+      </header>
+
+      <!-- ══ 2 · CRUSCOTTO ══ -->
+      <section class="space-y-4">
+        <p class="text-sm font-medium text-mut">Cruscotto</p>
+
+        <!-- Text field M3 filled (stato focus, label flottante) -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <div class="h-14 bg-surfHiX rounded-t-[4px] px-4 pt-2 flex flex-col justify-center">
+              <p class="text-[10px] font-semibold text-prim leading-none">Chilometraggio</p>
+              <div class="flex items-baseline gap-2 mt-1">
+                <input aria-label="Chilometraggio" type="text" inputmode="numeric" value="4.500"
+                  class="w-full bg-transparent p-0 text-[16px] font-medium text-onSurf focus:outline-none" />
+                <span class="text-xs text-onSurfV shrink-0">km</span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="h-14 bg-surfHiX rounded-t-[4px] px-4 pt-2 flex flex-col justify-center">
+              <p class="text-[10px] font-semibold text-prim leading-none">Consegna</p>
+              <div class="flex items-baseline gap-2 mt-1">
+                <input aria-label="Consegna" type="text" value="08/2025"
+                  class="w-full bg-transparent p-0 text-[16px] font-medium text-onSurf focus:outline-none" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hero: prossima scadenza — primaryContainer, shape extra-large 28dp -->
+        <article class="rounded-[28px] bg-primC p-5 shadow-hero space-y-4">
+          <div class="flex items-center justify-between">
+            <p class="text-[13px] font-bold text-onPrimC">Prossima scadenza</p>
+            <span class="px-3 py-1 rounded-full bg-err text-onErr text-[11px] font-bold whitespace-nowrap">Scaduto</span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <!-- Auto stilizzata -->
+            <svg viewBox="0 0 160 64" class="h-16 flex-1 min-w-0" aria-hidden="true">
+              <path d="M12 52 C8 52 6 49 6 45 C6 38 12 34 22 32 L38 30 L52 15 C55 11 60 9 66 9 L97 9 C104 9 110 12 114 18 L125 30 L139 32 C149 34 154 38 154 44 L154 49 C154 52 152 54 149 54 L12 54 Z" fill="#c96f60"/>
+              <path d="M64 27 L70 15 C71 13 72 13 74 13 L88 13 C90 13 91 14 92 16 L98 27 Z" fill="#55291d"/>
+              <circle cx="40" cy="52" r="11" fill="#2c130c"/>
+              <circle cx="40" cy="52" r="4.5" fill="#55291d"/>
+              <circle cx="120" cy="52" r="11" fill="#2c130c"/>
+              <circle cx="120" cy="52" r="4.5" fill="#55291d"/>
+            </svg>
+            <!-- Countdown su cookie pentagonale (shape espressiva M3E) -->
+            <div class="relative w-28 h-28 shrink-0 flex items-center justify-center">
+              <svg viewBox="0 0 64 64" class="absolute inset-0 m-auto w-[104px] h-[104px] text-white/[0.08]" fill="currentColor" stroke="currentColor" stroke-width="7" stroke-linejoin="round" aria-hidden="true">
+                <path d="M32 8 L54.8 24.6 L46.1 51.4 L17.9 51.4 L9.2 24.6 Z"/>
+              </svg>
+              <div class="relative text-center">
+                <p class="text-[40px] font-black leading-none tracking-tight text-onPrimC">+3</p>
+                <p class="mt-0.5 text-[11px] font-semibold text-prim">giorni fa</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-2.5">
+            <h2 class="text-[20px] font-extrabold tracking-tight leading-snug text-onPrimC">Bilanciamento LFP 100%</h2>
+            <div class="flex flex-wrap gap-2">
+              <span class="inline-flex items-center gap-1.5 rounded-full bg-white/10 border border-white/15 px-3 py-1.5 text-[12px] font-medium text-onPrimC">
+                <svg class="w-3.5 h-3.5 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="16" height="10" rx="2"/><path d="M22 11v2"/><path d="M6 11v2"/><path d="M10 11v2"/><path d="M14 11v2"/></svg>
+                Ogni 1 mese
+              </span>
+              <span class="inline-flex items-center gap-1.5 rounded-full bg-white/10 border border-white/15 px-3 py-1.5 text-[12px] font-medium text-onPrimC">
+                <svg class="w-3.5 h-3.5 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l2.8 1.7"/></svg>
+                1–2 h collegate
+              </span>
+            </div>
+          </div>
+
+          <!-- Wavy progress indicator (firma M3 Expressive) -->
+          <svg viewBox="0 0 320 12" class="w-full h-3" preserveAspectRatio="none" fill="none" aria-hidden="true">
+            <path d="M0 6 Q 5 0 10 6 T 20 6 T 30 6 T 40 6 T 50 6 T 60 6 T 70 6 T 80 6 T 90 6 T 100 6 T 110 6 T 120 6 T 130 6 T 140 6 T 150 6 T 160 6 T 170 6 T 180 6 T 190 6 T 200 6 T 210 6 T 220 6 T 230 6 T 240 6 T 250 6 T 260 6 T 270 6 T 280 6 T 290 6 T 300 6 T 310 6 T 320 6"
+              stroke="#f3d4c8" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+
+          <!-- Filled button -->
+          <button class="w-full h-12 rounded-full bg-prim text-onPrim text-[15px] font-bold transition active:scale-[0.98]">Registra ora</button>
+        </article>
+
+        <!-- Sintesi — card su surfaceContainerLowest (contrasto tonale) -->
+        <div class="rounded-[28px] bg-surfLox p-5">
+          <div class="flex items-center justify-between">
+            <p class="text-[13px] font-semibold text-mut">In sintesi</p>
+            <svg class="w-5 h-5 text-mut" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+          </div>
+
+          <div class="mt-1 divide-y divide-white/[0.06]">
+            <div class="flex items-center justify-between py-3.5">
+              <div class="flex items-center gap-3">
+                <span class="w-2 h-2 rounded-full bg-emerald-400/90"></span>
+                <p class="text-[15px] font-medium text-onSurf/80">In regola</p>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="text-xl font-black">9</span>
+                <span class="w-8 h-8 rounded-full bg-white/[0.08] flex items-center justify-center">
+                  <svg class="w-4 h-4 text-onSurf/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+                </span>
+              </div>
+            </div>
+            <div class="flex items-center justify-between py-3.5">
+              <div class="flex items-center gap-3">
+                <span class="w-2 h-2 rounded-full bg-amber-400/90"></span>
+                <p class="text-[15px] font-medium text-onSurf/80">In scadenza</p>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="text-xl font-black">1</span>
+                <span class="w-8 h-8 rounded-full bg-white/[0.08] flex items-center justify-center">
+                  <svg class="w-4 h-4 text-onSurf/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+                </span>
+              </div>
+            </div>
+            <div class="flex items-center justify-between py-3.5">
+              <div class="flex items-center gap-3">
+                <span class="w-2 h-2 rounded-full bg-rose-400/90"></span>
+                <p class="text-[15px] font-medium text-onSurf/80">Scadute</p>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="text-xl font-black">1</span>
+                <span class="w-8 h-8 rounded-full bg-white/[0.08] flex items-center justify-center">
+                  <svg class="w-4 h-4 text-onSurf/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <p class="mt-1 pt-3 border-t border-white/[0.06] text-[12px] font-medium text-mut">Orizzonte 15 anni · 4,5k / 300k km · 1,5%</p>
+        </div>
+
+        <!-- Mini statistiche -->
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-surfC rounded-[24px] p-4">
+            <p class="text-[12px] font-medium text-onSurfV">Prontezza</p>
+            <div class="mt-2 flex items-center gap-3">
+              <!-- Ring indicator con gap + end dot (M3E) -->
+              <svg viewBox="0 0 48 48" class="w-11 h-11 shrink-0" aria-hidden="true">
+                <circle cx="24" cy="24" r="20" fill="none" stroke="#353132" stroke-width="4" stroke-linecap="round" stroke-dasharray="110.6 15.1" transform="rotate(-90 24 24)"/>
+                <circle cx="24" cy="24" r="20" fill="none" stroke="#e3a89b" stroke-width="4" stroke-linecap="round" stroke-dasharray="90.7 35" transform="rotate(-90 24 24)"/>
+                <circle cx="4.3" cy="27.5" r="3" fill="#e3a89b"/>
+              </svg>
+              <div>
+                <p class="text-2xl font-black leading-none text-onSurf">82<span class="text-sm font-bold text-mut">%</span></p>
+                <p class="mt-1 text-[11px] text-mut">9 in regola</p>
+              </div>
+            </div>
+          </div>
+          <div class="bg-surfC rounded-[24px] p-4">
+            <p class="text-[12px] font-medium text-onSurfV">Cicli LFP</p>
+            <p class="mt-1.5 text-2xl font-black leading-none text-onSurf">1.721<span class="text-sm font-bold text-mut">/5.000</span></p>
+            <p class="mt-1 text-[11px] text-mut">≈ 34% vita utile</p>
+            <div class="mt-2.5 h-1.5 rounded-full bg-surfHiX overflow-hidden">
+              <div class="h-full w-[34%] rounded-full bg-prim"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ 3 · ATTIVITÀ ══ -->
+      <section class="space-y-4">
+        <p class="text-sm font-medium text-mut">Attività</p>
+
+        <!-- Filter chips M3E a pillola (selected = secondaryContainer + check) -->
+        <div class="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          <button class="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-secC text-onSecC text-xs font-bold">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+            Tutte (11)
+          </button>
+          <button class="shrink-0 px-4 py-2 rounded-full border border-outline text-onSurfV text-xs font-semibold">Setup iniziale (4)</button>
+          <button class="shrink-0 px-4 py-2 rounded-full border border-outline text-onSurfV text-xs font-semibold">Routine (4)</button>
+          <button class="shrink-0 px-4 py-2 rounded-full border border-outline text-onSurfV text-xs font-semibold">Fluidi officina (3)</button>
+        </div>
+
+        <!-- Card attività -->
+        <div class="space-y-3">
+
+          <!-- #5 Bilanciamento LFP — Scaduto -->
+          <article class="bg-surfC rounded-[24px] p-4">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <div class="flex items-baseline gap-2">
+                  <span class="text-[11px] font-bold text-mut">#5</span>
+                  <h3 class="text-[15px] font-bold tracking-tight leading-snug text-onSurf">Bilanciamento LFP 100%</h3>
+                </div>
+                <p class="mt-1.5 text-xs text-onSurfV">Ogni mese · con controllo pressione gomme</p>
+                <p class="text-xs text-onSurfV">Carica AC 100% + top-balance 1–2 h</p>
+              </div>
+              <span class="shrink-0 px-3 py-1 rounded-full bg-errC text-onErrC text-[11px] font-bold whitespace-nowrap">Scaduto</span>
+            </div>
+            <div class="mt-3 pt-3 border-t border-white/[0.06] flex items-center justify-between gap-3">
+              <p class="text-[11px] text-mut">Ultimo: 09/10/2026 · 4.100 km</p>
+              <button class="shrink-0 h-9 rounded-full bg-secC px-5 text-xs font-bold text-onSecC transition active:scale-95">Registra</button>
+            </div>
+          </article>
+
+          <!-- #9 Olio riduttore — OK -->
+          <article class="bg-surfC rounded-[24px] p-4">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <div class="flex items-baseline gap-2">
+                  <span class="text-[11px] font-bold text-mut">#9</span>
+                  <h3 class="text-[15px] font-bold tracking-tight leading-snug text-onSurf">Olio riduttore</h3>
+                </div>
+                <p class="mt-1.5 text-xs text-onSurfV">24 mesi / 40.000 km · poi ogni 48.000 km</p>
+                <p class="text-xs text-onSurfV">Castrol BOT384 · ≈ 500 ml</p>
+              </div>
+              <span class="shrink-0 px-3 py-1 rounded-full bg-okC text-onOkC text-[11px] font-bold whitespace-nowrap">OK</span>
+            </div>
+            <div class="mt-3 pt-3 border-t border-white/[0.06] flex items-center justify-between gap-3">
+              <p class="text-[11px] text-mut">Prossimo: 08/2027 · 40.000 km</p>
+              <button class="shrink-0 h-9 rounded-full bg-secC px-5 text-xs font-bold text-onSecC transition active:scale-95">Registra</button>
+            </div>
+          </article>
+
+          <!-- #10 Fluido freni — In scadenza -->
+          <article class="bg-surfC rounded-[24px] p-4">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <div class="flex items-baseline gap-2">
+                  <span class="text-[11px] font-bold text-mut">#10</span>
+                  <h3 class="text-[15px] font-bold tracking-tight leading-snug text-onSurf">Fluido freni DOT 4</h3>
+                </div>
+                <p class="mt-1.5 text-xs text-onSurfV">Ogni 24 mesi · sostituzione obbligatoria</p>
+                <p class="text-xs text-onSurfV">DOT 4 / HZY6 · ≈ 1.100 ml</p>
+              </div>
+              <span class="shrink-0 px-3 py-1 rounded-full bg-waC text-onWaC text-[11px] font-bold whitespace-nowrap">In scadenza</span>
+            </div>
+            <div class="mt-3 pt-3 border-t border-white/[0.06] flex items-center justify-between gap-3">
+              <p class="text-[11px] text-mut">Ultimo: 15/04/2025 (PDI) · 0 km</p>
+              <button class="shrink-0 h-9 rounded-full bg-secC px-5 text-xs font-bold text-onSecC transition active:scale-95">Registra</button>
+            </div>
+          </article>
+
+          <!-- #2 Antiruggine sottoscocca — Scaduto -->
+          <article class="bg-surfC rounded-[24px] p-4">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <div class="flex items-baseline gap-2">
+                  <span class="text-[11px] font-bold text-mut">#2</span>
+                  <h3 class="text-[15px] font-bold tracking-tight leading-snug text-onSurf">Antiruggine sottoscocca</h3>
+                </div>
+                <p class="mt-1.5 text-xs text-onSurfV">Una tantum + ritocco ogni 12–18 mesi</p>
+                <p class="text-xs text-onSurfV">Lanoguard · Dinitrol 3125 / 4941</p>
+              </div>
+              <span class="shrink-0 px-3 py-1 rounded-full bg-errC text-onErrC text-[11px] font-bold whitespace-nowrap">Scaduto</span>
+            </div>
+            <div class="mt-3 pt-3 border-t border-white/[0.06] flex items-center justify-between gap-3">
+              <p class="text-[11px] text-mut">Ultimo: 20/08/2025 · 300 km</p>
+              <button class="shrink-0 h-9 rounded-full bg-secC px-5 text-xs font-bold text-onSecC transition active:scale-95">Registra</button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- ══ 4 · STORICO ══ -->
+      <section class="space-y-4">
+        <p class="text-sm font-medium text-mut">Storico</p>
+
+        <!-- Righe lista M3E a pillola (leading circle + testi + meta trailing) -->
+        <div class="space-y-2">
+          <div class="flex items-center gap-3 rounded-full bg-surfC pl-2 pr-4 py-1.5">
+            <div class="w-11 h-11 rounded-full bg-surfHi flex items-center justify-center shrink-0 text-onSurfV">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[14px] font-semibold text-onSurf leading-snug truncate">Bilanciamento LFP 100%</p>
+              <p class="text-[11px] text-mut truncate">09/10/2026 · Garage di casa — 2 h</p>
+            </div>
+            <span class="shrink-0 px-2.5 py-1 rounded-full bg-secC text-onSecC text-[11px] font-bold">4.100 km</span>
+          </div>
+          <div class="flex items-center gap-3 rounded-full bg-surfC pl-2 pr-4 py-1.5">
+            <div class="w-11 h-11 rounded-full bg-surfHi flex items-center justify-center shrink-0 text-onSurfV">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[14px] font-semibold text-onSurf leading-snug truncate">Antiruggine sottoscocca</p>
+              <p class="text-[11px] text-mut truncate">20/08/2025 · Officina Corsi — 80 €</p>
+            </div>
+            <span class="shrink-0 px-2.5 py-1 rounded-full bg-secC text-onSecC text-[11px] font-bold">300 km</span>
+          </div>
+          <div class="flex items-center gap-3 rounded-full bg-surfC pl-2 pr-4 py-1.5">
+            <div class="w-11 h-11 rounded-full bg-surfHi flex items-center justify-center shrink-0 text-onSurfV">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[14px] font-semibold text-onSurf leading-snug truncate">Consegna veicolo + PDI</p>
+              <p class="text-[11px] text-mut truncate">08/08/2025 · BYD Store Milano — 0 €</p>
+            </div>
+            <span class="shrink-0 px-2.5 py-1 rounded-full bg-secC text-onSecC text-[11px] font-bold">15 km</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ 5 · PRODOTTI ══ -->
+      <section class="space-y-4">
+        <p class="text-sm font-medium text-mut">Prodotti</p>
+
+        <!-- EPDM -->
+        <div class="bg-surfC rounded-[24px] p-4">
+          <div class="flex items-center justify-between gap-2">
+            <h3 class="text-sm font-bold tracking-tight text-onSurf">Sicuri su EPDM</h3>
+            <span class="shrink-0 px-3 py-1 rounded-full bg-okC text-onOkC text-[10px] font-bold whitespace-nowrap">&lt;1–2% rigonfiamento</span>
+          </div>
+          <ul class="mt-3 space-y-2">
+            <li class="flex items-start gap-2 text-xs text-onSurfV">
+              <svg class="w-3.5 h-3.5 text-onOkC mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+              <span><strong class="font-bold text-onSurf">Krytox GPL 205</strong> — lubrificante PFPE inerte</span>
+            </li>
+            <li class="flex items-start gap-2 text-xs text-onSurfV">
+              <svg class="w-3.5 h-3.5 text-onOkC mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+              <span><strong class="font-bold text-onSurf">Molykote 111</strong> — pasta PDMS pura</span>
+            </li>
+            <li class="flex items-start gap-2 text-xs text-onSurfV">
+              <svg class="w-3.5 h-3.5 text-onOkC mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+              <span><strong class="font-bold text-onSurf">Glicerina pura</strong> — grado farmaceutico</span>
+            </li>
+          </ul>
+          <div class="mt-3.5 rounded-2xl bg-errC px-3 py-2.5 flex items-start gap-2">
+            <svg class="w-4 h-4 text-err mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>
+            </svg>
+            <p class="text-xs font-bold text-onErrC leading-snug">MAI: WD-40, vaselina, spray siliconici</p>
+          </div>
+        </div>
+
+        <!-- Antiruggine -->
+        <div class="bg-surfC rounded-[24px] p-4">
+          <div class="flex items-center justify-between gap-2">
+            <h3 class="text-sm font-bold tracking-tight text-onSurf">Antiruggine sottoscocca</h3>
+            <span class="shrink-0 px-3 py-1 rounded-full bg-terC text-onTerC text-[10px] font-bold whitespace-nowrap">70 kV dielettrico</span>
+          </div>
+          <ul class="mt-3 space-y-2">
+            <li class="flex items-start gap-2 text-xs text-onSurfV">
+              <svg class="w-3.5 h-3.5 text-onOkC mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+              <span><strong class="font-bold text-onSurf">Lanoguard</strong> — lanolina senza solventi</span>
+            </li>
+            <li class="flex items-start gap-2 text-xs text-onSurfV">
+              <svg class="w-3.5 h-3.5 text-onOkC mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+              <span><strong class="font-bold text-onSurf">Dinitrol 3125 / 4941</strong> — cera sintetica elastica</span>
+            </li>
+          </ul>
+          <div class="mt-3.5 rounded-2xl bg-errC px-3 py-2.5 flex items-start gap-2">
+            <svg class="w-4 h-4 text-err mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>
+            </svg>
+            <p class="text-xs font-bold text-onErrC leading-snug">MAI su dischi freno, connettori AT, piastra batteria</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- FAB circolare -->
+  <button aria-label="Nuova registrazione" class="fixed z-40 bottom-24 w-14 h-14 rounded-full bg-primC text-onPrimC shadow-fab flex items-center justify-center transition active:scale-95 right-[max(1rem,calc(50%-199px))]">
+    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+  </button>
+
+  <!-- ══ 6 · NAV BAR M3E FLOTTANTE (pillola, solo icone) ══ -->
+  <nav class="fixed bottom-0 inset-x-0 z-40">
+    <div class="mx-auto max-w-[430px] px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <div class="bg-surfC/90 backdrop-blur-xl ring-1 ring-white/[0.06] shadow-nav rounded-full px-3 py-2 flex items-center justify-between">
+        <button aria-label="Cruscotto" class="w-[52px] h-10 rounded-full bg-primC flex items-center justify-center transition active:scale-95">
+          <svg class="w-5 h-5 text-onPrimC" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/>
+          </svg>
+        </button>
+        <button aria-label="Attività" class="w-12 h-10 rounded-full flex items-center justify-center transition active:scale-95">
+          <svg class="w-5 h-5 text-mut" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/>
+          </svg>
+        </button>
+        <button aria-label="Storico" class="w-12 h-10 rounded-full flex items-center justify-center transition active:scale-95">
+          <svg class="w-5 h-5 text-mut" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>
+          </svg>
+        </button>
+        <button aria-label="Prodotti" class="w-12 h-10 rounded-full flex items-center justify-center transition active:scale-95">
+          <svg class="w-5 h-5 text-mut" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+</body>
+</html>

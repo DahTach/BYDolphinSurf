@@ -1,0 +1,763 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>BYD · Cruscotto — bozza d1 raffinato</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..1000&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['"Roboto Flex"', 'Roboto', 'system-ui', 'sans-serif'] },
+          colors: {
+            prim: '#e3a89b', onPrim: '#402010',
+            primC: '#55291d', onPrimC: '#f3d4c8',
+            secC: '#3d3431', onSecC: '#eadcd5',
+            terC: '#463818', onTerC: '#e6cd96',
+            err: '#d98a80', onErr: '#441411',
+            errC: '#3e1d1c', onErrC: '#f2c1ba',
+            surf: '#000000', surfLox: '#0e0d0d', surfC: '#1e1c1d', surfHi: '#2a2728', surfHiX: '#353132',
+            onSurf: '#eae4e2', onSurfV: '#b9aca8', mut: '#8d817d', outline: '#463f3d',
+            okC: '#1d3326', onOkC: '#9cc7a8',
+            waC: '#363020', onWaC: '#d9c084',
+          },
+          boxShadow: {
+            fab: '0 4px 10px rgba(0,0,0,0.5), 0 14px 32px rgba(0,0,0,0.55)',
+            hero: '0 6px 24px rgba(0,0,0,0.35)',
+            nav: '0 8px 28px rgba(0,0,0,0.55)',
+            sheet: '0 -8px 32px rgba(0,0,0,0.6)',
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    html { -webkit-tap-highlight-color: transparent; }
+    body { color: #eae4e2; }
+    ::selection { background: rgba(227, 168, 155, 0.3); }
+    .caption { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; color: #8d817d; }
+
+    /* ══ Fondazione motion (condivisa tra le varianti) ══ */
+    :root {
+      --e-emph: cubic-bezier(0.2, 0, 0, 1);          /* M3 emphasized */
+      --e-spring: cubic-bezier(0.34, 1.4, 0.64, 1);  /* overshoot dolce */
+      --e-exit: cubic-bezier(0.3, 0, 1, 1);
+      --d-press: 130ms; --d-small: 250ms; --d-medium: 400ms; --d-large: 600ms;
+      --stagger: 55ms;
+    }
+
+    /* State layer coerente per OGNI elemento interattivo (hover / active / focus-visible) */
+    .tap { position: relative; transition: transform var(--d-press) var(--e-emph), background-color 200ms var(--e-emph), color 200ms var(--e-emph); }
+    .tap::after { content: ''; position: absolute; inset: 0; border-radius: inherit; background: #fff; opacity: 0; pointer-events: none; transition: opacity var(--d-press) var(--e-emph); }
+    .tap:hover::after { opacity: .06; }
+    .tap:active::after { opacity: .10; }
+    .tap:active { transform: scale(.97); }
+    .tap:focus-visible { outline: 2px solid #e3a89b; outline-offset: 2px; }
+    .tap:disabled { transform: none; opacity: .4; }
+    .tap:disabled::after { content: none; }
+
+    /* 1 · Entrata sfalsata — blocchi salgono 16px + fade */
+    .rise { opacity: 0; transform: translateY(16px); }
+    .rise.in { opacity: 1; transform: translateY(0); transition: opacity var(--d-medium) var(--e-emph), transform var(--d-medium) var(--e-emph); }
+
+    /* 2 · Barre di avanzamento — fill da 0 con molla */
+    .bar-fill { width: 0; transition: width var(--d-large) var(--e-spring); }
+
+    /* 3 · Indicatore navbar — slide su left/width, mai un salto */
+    .nav-ind { transition: left var(--d-medium) var(--e-emph), width var(--d-medium) var(--e-emph); }
+
+    /* 4 · Bottom sheet — slide-up con overshoot, backdrop fade, uscita --e-exit */
+    .sheet { opacity: 0; pointer-events: none; transition: opacity var(--d-small) var(--e-exit); }
+    .sheet.open { opacity: 1; pointer-events: auto; transition: opacity var(--d-small) var(--e-emph); }
+    .sheet-panel { transform: translateY(100%); transition: transform var(--d-medium) var(--e-exit); }
+    .sheet.open .sheet-panel { transform: translateY(0); transition: transform var(--d-large) var(--e-spring); }
+
+    /* 5 · Campo di testo — focus 200ms: layer chiaro + anello prim che scalda, label bold prim */
+    .field { position: relative; }
+    .field::before { content: ''; position: absolute; inset: 0; border-radius: inherit; background: #fff; opacity: 0; pointer-events: none; transition: opacity 200ms var(--e-emph); }
+    .field:focus-within::before { opacity: .06; }
+    .field:focus-within { background-color: #2a2728; }
+    .field-ring { position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 2px #e3a89b; opacity: 0; transform: scale(.96); pointer-events: none; transition: opacity 200ms var(--e-emph), transform 200ms var(--e-emph); }
+    .field:focus-within .field-ring { opacity: 1; transform: scale(1); }
+    .field-label { transition: color 200ms var(--e-emph); }
+    .field:focus-within .field-label { color: #e3a89b; font-weight: 700; }
+
+    /* 6 · Crossfade pannelli — 150ms out (--e-exit) / 300ms in (--e-emph) + re-stagger */
+    .panel.fade-out { opacity: 0; transition: opacity 150ms var(--e-exit); }
+    .panel.fade-in { animation: panel-in 300ms var(--e-emph) both; }
+    @keyframes panel-in { from { opacity: 0; } to { opacity: 1; } }
+
+    /* 7 · Accessibilità: durate neutralizzate */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+    }
+  </style>
+</head>
+<body class="bg-black font-sans antialiased">
+
+  <!-- ══ Striscia di annotazione (fuori dalla cornice) ══ -->
+  <div class="bg-surfLox border-b border-white/[0.06]">
+    <div class="mx-auto max-w-[430px] px-4 py-3">
+      <p class="text-[11px] font-black uppercase tracking-[0.14em] text-prim">d1 · Raffinato</p>
+      <p class="mt-1 text-[11px] text-mut">intensità contenuta — nessun cambio di layout, solo craft di motion</p>
+    </div>
+  </div>
+
+  <!-- ══ Cornice mobile 430px ══ -->
+  <div id="frame" class="mx-auto max-w-[430px] min-h-screen bg-black">
+    <main class="px-4 pt-5 pb-36 space-y-7">
+
+      <!-- HEADER (persistente, invariato rispetto ad app.html) -->
+      <header id="app-header" class="rise flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-full bg-primC flex items-center justify-center shrink-0">
+            <span class="font-black text-onPrimC text-sm tracking-tight">DS</span>
+          </div>
+          <div>
+            <h1 class="text-[22px] font-extrabold tracking-tight leading-tight text-onSurf">Dolphin Surf</h1>
+            <span class="inline-block mt-1 px-2.5 py-0.5 rounded-full border border-outline text-[10px] font-semibold text-onSurfV">2025 EU · 43,2 kWh</span>
+          </div>
+        </div>
+        <button id="btn-gear" aria-label="Impostazioni" class="tap w-10 h-10 rounded-full bg-surfC flex items-center justify-center text-onSurfV">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
+      </header>
+
+      <!-- ══════ PANNELLO · CRUSCOTTO ══════ -->
+      <section id="panel-cruscotto" class="panel space-y-8">
+
+        <!-- §0 · Campi pill -->
+        <section class="rise space-y-2.5">
+          <p class="caption">§0 Campi</p>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="field tap h-14 bg-surfHiX rounded-full px-5 pt-2">
+              <div class="field-ring"></div>
+              <p class="field-label text-[10px] font-semibold text-onSurfV leading-none">Chilometraggio</p>
+              <div class="flex items-baseline gap-2 mt-1">
+                <input data-count="4500" aria-label="Chilometraggio" type="text" inputmode="numeric" value="4.500" class="w-full bg-transparent p-0 text-[16px] font-medium text-onSurf focus:outline-none" />
+                <span class="text-xs text-onSurfV shrink-0">km</span>
+              </div>
+            </div>
+            <div class="field tap h-14 bg-surfHiX rounded-full px-5 pt-2">
+              <div class="field-ring"></div>
+              <p class="field-label text-[10px] font-semibold text-onSurfV leading-none">Consegna</p>
+              <div class="flex items-baseline gap-2 mt-1">
+                <input aria-label="Consegna" type="text" value="08/2025" class="w-full bg-transparent p-0 text-[16px] font-medium text-onSurf focus:outline-none" />
+              </div>
+            </div>
+            <div class="field tap h-14 bg-surfHiX rounded-full px-5 pt-2">
+              <div class="field-ring"></div>
+              <p class="field-label text-[10px] font-semibold text-onSurfV leading-none">Consumo medio</p>
+              <div class="flex items-baseline gap-2 mt-1">
+                <input aria-label="Consumo medio" type="text" inputmode="decimal" value="13,9" class="w-full bg-transparent p-0 text-[16px] font-medium text-onSurf focus:outline-none" />
+                <span class="text-xs text-onSurfV shrink-0">kWh/100</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- §B1 · Hero — auto protagonista, countdown badge sull'auto -->
+        <section class="rise space-y-2.5">
+          <p class="caption">§B1 Hero</p>
+          <article class="rounded-[32px] bg-errC p-5 shadow-hero space-y-4">
+            <div class="flex items-center justify-between">
+              <p class="text-[12px] font-bold uppercase tracking-[0.08em] text-onErrC/60">Prossima scadenza</p>
+              <span class="px-3 py-1 rounded-full bg-err text-onErr text-[11px] font-bold">Scaduto</span>
+            </div>
+
+            <div class="relative flex justify-center pt-1">
+              <svg viewBox="0 0 160 64" class="h-24 w-auto" aria-hidden="true">
+                <path d="M12 52 C8 52 6 49 6 45 C6 38 12 34 22 32 L38 30 L52 15 C55 11 60 9 66 9 L97 9 C104 9 110 12 114 18 L125 30 L139 32 C149 34 154 38 154 44 L154 49 C154 52 152 54 149 54 L12 54 Z" fill="#b96357"/>
+                <path d="M64 27 L70 15 C71 13 72 13 74 13 L88 13 C90 13 91 14 92 16 L98 27 Z" fill="#3e1d1c"/>
+                <circle cx="40" cy="52" r="11" fill="#2c130c"/><circle cx="40" cy="52" r="4.5" fill="#3e1d1c"/>
+                <circle cx="120" cy="52" r="11" fill="#2c130c"/><circle cx="120" cy="52" r="4.5" fill="#3e1d1c"/>
+              </svg>
+              <span class="absolute -top-1 right-2 px-2.5 py-1 rounded-full bg-err text-onErr text-[12px] font-extrabold shadow-fab">+4 g</span>
+            </div>
+
+            <div class="space-y-1.5">
+              <h2 class="text-[22px] font-black tracking-tight leading-tight text-onErrC">Bilanciamento LFP 100%</h2>
+              <p class="text-[13px] font-medium text-onErrC/70">Carica AC 100% + top-balance 1–2 h</p>
+              <div class="flex flex-wrap gap-2 pt-0.5">
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-white/[0.08] border border-white/10 px-3 py-1.5 text-[12px] font-medium text-onErrC">
+                  <svg class="w-3.5 h-3.5 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="16" height="10" rx="2"/><path d="M22 11v2"/><path d="M6 11v2"/></svg>
+                  Ogni 1 mese
+                </span>
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-white/[0.08] border border-white/10 px-3 py-1.5 text-[12px] font-medium text-onErrC">
+                  <svg class="w-3.5 h-3.5 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l2.8 1.7"/></svg>
+                  1–2 h collegate
+                </span>
+              </div>
+            </div>
+
+            <button class="tap w-full h-12 rounded-full bg-err text-onErr text-[15px] font-bold">Registra ora</button>
+          </article>
+        </section>
+
+        <!-- §C · Prossime — coda prioritaria -->
+        <section class="rise space-y-2.5">
+          <p class="caption">§C Prossime</p>
+          <div class="space-y-2">
+            <button class="tap w-full flex items-center gap-3 rounded-full bg-surfC pl-2 pr-3 py-1.5 text-left">
+              <span class="w-10 h-10 rounded-full bg-surfHi flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4 text-onSurfV" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+              </span>
+              <span class="flex-1 min-w-0">
+                <span class="block text-[14px] font-semibold text-onSurf truncate">Antiruggine sottoscocca</span>
+                <span class="block text-[11px] text-mut truncate">Una tantum · Lanoguard / Dinitrol</span>
+              </span>
+              <span class="px-2.5 py-1 rounded-full bg-errC text-onErrC text-[10px] font-bold shrink-0">scad. dal 20/08</span>
+            </button>
+            <button class="tap w-full flex items-center gap-3 rounded-full bg-surfC pl-2 pr-3 py-1.5 text-left">
+              <span class="w-10 h-10 rounded-full bg-surfHi flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4 text-onSurfV" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+              </span>
+              <span class="flex-1 min-w-0">
+                <span class="block text-[14px] font-semibold text-onSurf truncate">Manutenzione severe</span>
+                <span class="block text-[11px] text-mut truncate">12 mesi / 15.000 km</span>
+              </span>
+              <span class="px-2.5 py-1 rounded-full bg-errC text-onErrC text-[10px] font-bold shrink-0">scad. dal 01/08</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Sintesi — tile tonali -->
+        <section class="rise space-y-2.5">
+          <p class="caption">Sintesi</p>
+          <div class="rounded-[28px] bg-surfLox p-5">
+            <p class="text-[13px] font-semibold text-mut">In sintesi</p>
+            <div class="mt-3 grid grid-cols-3 gap-2.5">
+              <button class="tap rounded-[20px] bg-okC px-2 py-3.5 text-center">
+                <p class="text-[26px] font-black leading-none text-onOkC"><span data-count="2">2</span></p>
+                <p class="mt-1.5 text-[10px] font-bold text-onOkC/80">In regola</p>
+              </button>
+              <button class="tap rounded-[20px] bg-waC px-2 py-3.5 text-center">
+                <p class="text-[26px] font-black leading-none text-onWaC"><span data-count="1">1</span></p>
+                <p class="mt-1.5 text-[10px] font-bold text-onWaC/80">In scadenza</p>
+              </button>
+              <button class="tap rounded-[20px] bg-errC px-2 py-3.5 text-center">
+                <p class="text-[26px] font-black leading-none text-onErrC"><span data-count="8">8</span></p>
+                <p class="mt-1.5 text-[10px] font-bold text-onErrC/80">Scadute</p>
+              </button>
+            </div>
+            <p class="mt-3 pt-3 border-t border-white/[0.06] text-[12px] font-medium text-mut">Orizzonte 15 anni · 4,5k / 300k km · 1,5%</p>
+          </div>
+        </section>
+
+        <!-- Statistiche — Prontezza + Cicli, barre lineari -->
+        <section class="rise space-y-2.5">
+          <p class="caption">Statistiche</p>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-surfC rounded-[24px] p-4">
+              <p class="text-[12px] font-medium text-onSurfV">Prontezza</p>
+              <p class="mt-1.5 text-[30px] font-black leading-none tracking-tight text-onSurf"><span data-count="18">18</span><span class="text-sm font-bold text-mut">%</span></p>
+              <p class="mt-1 text-[11px] text-mut">2 di 11 in regola</p>
+              <div class="mt-3 h-1.5 rounded-full bg-surfHiX overflow-hidden">
+                <div class="bar-fill h-full rounded-full bg-prim" data-w="18"></div>
+              </div>
+            </div>
+            <div class="bg-surfC rounded-[24px] p-4">
+              <p class="text-[12px] font-medium text-onSurfV">Cicli LFP</p>
+              <p class="mt-1.5 text-[30px] font-black leading-none tracking-tight text-onSurf"><span data-count="14">14</span><span class="text-sm font-bold text-mut">/5.000</span></p>
+              <p class="mt-1 text-[11px] text-mut">≈ 0,3% vita utile</p>
+              <div class="mt-3 h-1.5 rounded-full bg-surfHiX overflow-hidden">
+                <div class="bar-fill h-full min-w-[4px] rounded-full bg-prim" data-w="0.3"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </section>
+
+      <!-- ══════ PANNELLO · ATTIVITÀ ══════ -->
+      <section id="panel-attivita" class="panel hidden space-y-8">
+
+        <!-- Filtri a pillola -->
+        <section class="rise space-y-2.5">
+          <p class="caption">Attività</p>
+          <div class="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            <button class="filter-chip tap shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs bg-secC text-onSecC font-bold" aria-pressed="true">
+              <svg class="chip-check w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+              Tutte (11)
+            </button>
+            <button class="filter-chip tap shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs border border-outline text-onSurfV font-semibold" aria-pressed="false">
+              <svg class="chip-check hidden w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+              Setup iniziale (4)
+            </button>
+            <button class="filter-chip tap shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs border border-outline text-onSurfV font-semibold" aria-pressed="false">
+              <svg class="chip-check hidden w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+              Routine (4)
+            </button>
+            <button class="filter-chip tap shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs border border-outline text-onSurfV font-semibold" aria-pressed="false">
+              <svg class="chip-check hidden w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+              Fluidi officina (3)
+            </button>
+          </div>
+        </section>
+
+        <!-- Card attività (seed reale) -->
+        <section class="rise space-y-3">
+          <article class="bg-surfC rounded-[24px] p-4">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <div class="flex items-baseline gap-2">
+                  <span class="text-[11px] font-bold text-mut">#5</span>
+                  <h3 class="text-[15px] font-bold tracking-tight leading-snug text-onSurf">Bilanciamento LFP 100%</h3>
+                </div>
+                <p class="mt-1.5 text-xs text-onSurfV">Ogni mese · con controllo pressione gomme</p>
+                <p class="text-xs text-onSurfV">Carica AC 100% + top-balance 1–2 h</p>
+              </div>
+              <span class="px-3 py-1 rounded-full text-[11px] font-bold whitespace-nowrap bg-errC text-onErrC">Scaduto</span>
+            </div>
+            <div class="mt-3 pt-3 border-t border-white/[0.06] flex items-center justify-between gap-3">
+              <p class="text-[11px] text-mut">Ultimo: 09/10/2026 · 4.100 km</p>
+              <button class="tap shrink-0 h-9 rounded-full bg-secC px-5 text-xs font-bold text-onSecC">Registra</button>
+            </div>
+          </article>
+
+          <article class="bg-surfC rounded-[24px] p-4">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <div class="flex items-baseline gap-2">
+                  <span class="text-[11px] font-bold text-mut">#10</span>
+                  <h3 class="text-[15px] font-bold tracking-tight leading-snug text-onSurf">Fluido freni DOT 4</h3>
+                </div>
+                <p class="mt-1.5 text-xs text-onSurfV">Ogni 24 mesi · sostituzione obbligatoria</p>
+                <p class="text-xs text-onSurfV">DOT 4 / HZY6 · ≈ 1.100 ml</p>
+              </div>
+              <span class="px-3 py-1 rounded-full text-[11px] font-bold whitespace-nowrap bg-waC text-onWaC">In scadenza</span>
+            </div>
+            <div class="mt-3 pt-3 border-t border-white/[0.06] flex items-center justify-between gap-3">
+              <p class="text-[11px] text-mut">Ultimo: 15/04/2025 (PDI) · 0 km</p>
+              <button class="tap shrink-0 h-9 rounded-full bg-secC px-5 text-xs font-bold text-onSecC">Registra</button>
+            </div>
+          </article>
+
+          <article class="bg-surfC rounded-[24px] p-4">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <div class="flex items-baseline gap-2">
+                  <span class="text-[11px] font-bold text-mut">#11</span>
+                  <h3 class="text-[15px] font-bold tracking-tight leading-snug text-onSurf">Liquido raffreddamento + 12V</h3>
+                </div>
+                <p class="mt-1.5 text-xs text-onSurfV">36 mesi / 70.000 km</p>
+                <p class="text-xs text-onSurfV">OAT -40°C (3,1–3,3 L) + test di carico 12V</p>
+              </div>
+              <span class="px-3 py-1 rounded-full text-[11px] font-bold whitespace-nowrap bg-okC text-onOkC">OK</span>
+            </div>
+            <div class="mt-3 pt-3 border-t border-white/[0.06] flex items-center justify-between gap-3">
+              <p class="text-[11px] text-mut">Prossimo: 08/2028 · 70.000 km</p>
+              <button class="tap shrink-0 h-9 rounded-full bg-secC px-5 text-xs font-bold text-onSecC">Registra</button>
+            </div>
+          </article>
+        </section>
+
+      </section>
+
+      <!-- ══════ PANNELLO · STORICO (semplificato) ══════ -->
+      <section id="panel-storico" class="panel hidden space-y-8">
+        <section class="rise space-y-2.5">
+          <p class="caption">Storico</p>
+          <div class="space-y-2">
+            <div class="flex items-center gap-3 rounded-full bg-surfC pl-2 pr-4 py-1.5">
+              <div class="w-11 h-11 rounded-full bg-surfHi flex items-center justify-center shrink-0 text-onSurfV">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/></svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-[14px] font-semibold text-onSurf leading-snug truncate">Bilanciamento LFP 100%</p>
+                <p class="text-[11px] text-mut truncate">09/10/2026 · Garage di casa — 2 h</p>
+              </div>
+              <span class="shrink-0 px-2.5 py-1 rounded-full bg-secC text-onSecC text-[11px] font-bold">4.100 km</span>
+            </div>
+            <div class="flex items-center gap-3 rounded-full bg-surfC pl-2 pr-4 py-1.5">
+              <div class="w-11 h-11 rounded-full bg-surfHi flex items-center justify-center shrink-0 text-onSurfV">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/></svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-[14px] font-semibold text-onSurf leading-snug truncate">Antiruggine sottoscocca</p>
+                <p class="text-[11px] text-mut truncate">20/08/2025 · Officina Corsi — 80 €</p>
+              </div>
+              <span class="shrink-0 px-2.5 py-1 rounded-full bg-secC text-onSecC text-[11px] font-bold">300 km</span>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <!-- ══════ PANNELLO · PRODOTTI (semplificato) ══════ -->
+      <section id="panel-prodotti" class="panel hidden space-y-8">
+        <section class="rise space-y-2.5">
+          <p class="caption">Prodotti</p>
+          <div class="bg-surfC rounded-[24px] p-4">
+            <div class="flex items-center justify-between gap-2">
+              <h3 class="text-sm font-bold tracking-tight text-onSurf">Antiruggine sottoscocca</h3>
+              <span class="shrink-0 px-3 py-1 rounded-full text-[10px] font-bold whitespace-nowrap bg-terC text-onTerC">70 kV dielettrico</span>
+            </div>
+            <ul class="mt-3 space-y-2">
+              <li class="flex items-start gap-2 text-xs text-onSurfV">
+                <svg class="w-3.5 h-3.5 text-onOkC mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+                <span><strong class="font-bold text-onSurf">Lanoguard</strong> — lanolina senza solventi</span>
+              </li>
+              <li class="flex items-start gap-2 text-xs text-onSurfV">
+                <svg class="w-3.5 h-3.5 text-onOkC mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+                <span><strong class="font-bold text-onSurf">Dinitrol 3125 / 4941</strong> — cera sintetica elastica</span>
+              </li>
+            </ul>
+            <div class="mt-3.5 rounded-2xl bg-errC px-3 py-2.5 flex items-start gap-2">
+              <svg class="w-4 h-4 text-err mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>
+              </svg>
+              <p class="text-xs font-bold text-onErrC leading-snug">MAI su dischi freno, connettori AT, piastra batteria</p>
+            </div>
+          </div>
+        </section>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ══ FAB (circulari, sopra la navbar) ══ -->
+  <button id="btn-fab" aria-label="Nuova registrazione" class="tap fixed z-40 bottom-24 w-14 h-14 rounded-full bg-primC text-onPrimC shadow-fab flex items-center justify-center right-[max(1rem,calc(50%_-_199px))]">
+    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+  </button>
+
+  <!-- ══ Sheet FAB — form MD3 (slide-up con overshoot) ══ -->
+  <div id="sheet-fab" class="sheet fixed inset-0 z-50">
+    <div class="absolute inset-0 bg-black/70" data-close></div>
+    <div class="absolute inset-x-0 bottom-0">
+      <div class="mx-auto max-w-[430px]">
+        <p class="caption px-5 pb-2">Sheet FAB</p>
+        <form id="form-fab" class="sheet-panel bg-surfC rounded-t-[28px] shadow-sheet px-5 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] space-y-3">
+          <div class="w-9 h-1 rounded-full bg-outline mx-auto"></div>
+          <p class="text-[15px] font-bold text-onSurf">Nuova registrazione</p>
+
+          <!-- Attività (select) -->
+          <button type="button" class="field tap w-full h-14 bg-surfHiX rounded-full px-5 pt-2 text-left">
+            <div class="field-ring"></div>
+            <p class="field-label text-[10px] font-semibold text-onSurfV leading-none">Attività</p>
+            <div class="flex items-center justify-between gap-2 mt-1">
+              <span class="flex-1 min-w-0 truncate text-[16px] font-medium text-onSurf">Bilanciamento LFP 100%</span>
+              <svg class="w-4 h-4 text-onSurfV shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            </div>
+          </button>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div class="field tap h-14 bg-surfHiX rounded-full px-5 pt-2">
+              <div class="field-ring"></div>
+              <p class="field-label text-[10px] font-semibold text-onSurfV leading-none">Data</p>
+              <div class="flex items-baseline gap-2 mt-1">
+                <input id="fab-date" aria-label="Data" type="text" value="14/11/2026" class="w-full bg-transparent p-0 text-[16px] font-medium text-onSurf focus:outline-none" />
+              </div>
+            </div>
+            <div class="field tap h-14 bg-surfHiX rounded-full px-5 pt-2">
+              <div class="field-ring"></div>
+              <p class="field-label text-[10px] font-semibold text-onSurfV leading-none">Chilometraggio</p>
+              <div class="flex items-baseline gap-2 mt-1">
+                <input id="fab-km" aria-label="Chilometraggio" type="text" inputmode="numeric" value="4.500" class="w-full bg-transparent p-0 text-[16px] font-medium text-onSurf focus:outline-none" />
+                <span class="text-xs text-onSurfV shrink-0">km</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="field tap h-14 bg-surfHiX rounded-full px-5 pt-2">
+            <div class="field-ring"></div>
+            <p class="field-label text-[10px] font-semibold text-onSurfV leading-none">Luogo</p>
+            <div class="flex items-baseline gap-2 mt-1">
+              <input aria-label="Luogo" type="text" value="Garage di casa" class="w-full bg-transparent p-0 text-[16px] font-medium text-onSurf focus:outline-none" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div class="field tap h-14 bg-surfHiX rounded-full px-5 pt-2">
+              <div class="field-ring"></div>
+              <p class="field-label text-[10px] font-semibold text-onSurfV leading-none">Costo</p>
+              <div class="flex items-baseline gap-2 mt-1">
+                <input aria-label="Costo in euro" type="text" inputmode="decimal" value="0" class="w-full bg-transparent p-0 text-[16px] font-medium text-onSurf focus:outline-none" />
+                <span class="text-xs text-onSurfV shrink-0">€</span>
+              </div>
+            </div>
+            <div class="field tap h-14 bg-surfHiX rounded-full px-5 pt-2">
+              <div class="field-ring"></div>
+              <p class="field-label text-[10px] font-semibold text-onSurfV leading-none">Durata</p>
+              <div class="flex items-baseline gap-2 mt-1">
+                <input aria-label="Durata in ore" type="text" inputmode="decimal" value="2" class="w-full bg-transparent p-0 text-[16px] font-medium text-onSurf focus:outline-none" />
+                <span class="text-xs text-onSurfV shrink-0">h</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex gap-3 pt-1">
+            <button type="button" data-close class="tap h-12 flex-1 rounded-full text-onSurfV text-sm font-bold">Annulla</button>
+            <button id="fab-submit" type="submit" class="tap h-12 flex-1 rounded-full bg-prim text-onPrim text-[15px] font-bold disabled:opacity-40">Registra</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Sheet impostazioni (gear) ══ -->
+  <div id="sheet-settings" class="sheet fixed inset-0 z-50">
+    <div class="absolute inset-0 bg-black/70" data-close></div>
+    <div class="absolute inset-x-0 bottom-0">
+      <div class="mx-auto max-w-[430px]">
+        <p class="caption px-5 pb-2">Sheet impostazioni</p>
+        <div class="sheet-panel bg-surfC rounded-t-[28px] shadow-sheet px-5 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] space-y-1">
+          <div class="w-9 h-1 rounded-full bg-outline mx-auto"></div>
+          <p class="text-[15px] font-bold text-onSurf pb-2">Impostazioni</p>
+
+          <!-- Ripristina: prima riga → inline confirm (come settings-sheet.ts) -->
+          <button id="set-reset-row" class="tap w-full flex items-center gap-3 py-3 text-left">
+            <span class="w-9 h-9 rounded-full bg-surfHi flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-onSurfV" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 4v5h5"/></svg>
+            </span>
+            <span class="flex-1">
+              <span class="block text-[14px] font-semibold text-onSurf">Ripristina dati iniziali</span>
+              <span class="block text-[11px] text-mut">Torna al seed di consegna (conferma richiesta)</span>
+            </span>
+          </button>
+          <div id="set-confirm-row" class="hidden w-full flex items-center gap-3 py-3">
+            <span class="w-9 h-9 rounded-full bg-surfHi flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-onSurfV" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 4v5h5"/></svg>
+            </span>
+            <span class="flex-1">
+              <span class="block text-[14px] font-semibold text-onSurf">Confermi il ripristino?</span>
+              <span class="block text-[11px] text-mut">Torna al seed di consegna</span>
+            </span>
+            <button id="set-cancel" class="tap h-10 shrink-0 px-3 rounded-full text-onSurfV text-sm font-bold">Annulla</button>
+            <button id="set-ok" class="tap h-10 shrink-0 px-3 rounded-full text-err text-sm font-bold">Conferma</button>
+          </div>
+
+          <button id="set-vehicle" class="tap w-full flex items-center gap-3 py-3 text-left">
+            <span class="w-9 h-9 rounded-full bg-surfHi flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-onSurfV" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l2.8 1.7"/></svg>
+            </span>
+            <span class="flex-1">
+              <span class="block text-[14px] font-semibold text-onSurf">Consegna e consumo</span>
+              <span class="block text-[11px] text-mut">Modifica i dati base del veicolo</span>
+            </span>
+          </button>
+
+          <p class="pt-3 border-t border-white/[0.06] text-[11px] text-mut">BYD Dolphin Surf · tracker v1 · dati solo sul dispositivo</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Navbar pill flottante — indicatore scorrevole ══ -->
+  <nav class="fixed bottom-0 inset-x-0 z-40">
+    <div class="mx-auto max-w-[430px] px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <p class="caption pb-1.5">Navbar</p>
+      <div class="relative bg-surfC/90 backdrop-blur-xl ring-1 ring-white/[0.06] shadow-nav rounded-full px-3 py-2 flex items-center justify-between">
+        <div id="nav-indicator" class="nav-ind absolute inset-y-2 rounded-full bg-primC pointer-events-none"></div>
+        <button class="nav-btn tap relative w-12 h-10 rounded-full flex items-center justify-center" data-panel="cruscotto" aria-label="Cruscotto">
+          <svg class="w-5 h-5" style="color:#f3d4c8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg>
+        </button>
+        <button class="nav-btn tap relative w-12 h-10 rounded-full flex items-center justify-center" data-panel="attivita" aria-label="Attività">
+          <svg class="w-5 h-5" style="color:#8d817d" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg>
+        </button>
+        <button class="nav-btn tap relative w-12 h-10 rounded-full flex items-center justify-center" data-panel="storico" aria-label="Storico">
+          <svg class="w-5 h-5" style="color:#8d817d" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+        </button>
+        <button class="nav-btn tap relative w-12 h-10 rounded-full flex items-center justify-center" data-panel="prodotti" aria-label="Prodotti">
+          <svg class="w-5 h-5" style="color:#8d817d" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/></svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* ── Fondazione motion ── */
+      var RM = window.matchMedia('(prefers-reduced-motion: reduce)');
+      function ms(v) { return RM.matches ? 0 : v; }
+      var STAGGER = 55, COUNT_DUR = 700;
+
+      /* Solver cubic-bezier per gli easing dichiarati in CSS */
+      function cubicBezier(x1, y1, x2, y2) {
+        function calc(t, a, b) { return ((1 - 3 * b + 3 * a) * t + (3 * b - 6 * a)) * t + 3 * a * t; }
+        function slope(t, a, b) { return 3 * (1 - 3 * b + 3 * a) * t * t + 2 * (3 * b - 6 * a) * t + 3 * a; }
+        return function (x) {
+          var t = x;
+          for (var i = 0; i < 5; i++) {
+            var s = slope(t, x1, x2);
+            if (s === 0) break;
+            t -= (calc(t, x1, x2) - x) / s;
+          }
+          return calc(t, y1, y2);
+        };
+      }
+      var easeEmph = cubicBezier(0.2, 0, 0, 1);   /* --e-emph */
+
+      var fmt = new Intl.NumberFormat('it-IT');
+      function setText(el, value) {
+        if (el.tagName === 'INPUT') el.value = fmt.format(value);
+        else el.textContent = fmt.format(value);
+      }
+      function countUp(el, target, delay) {
+        if (RM.matches) { setText(el, target); return; }
+        setText(el, 0);                                /* azzeramento subito, invisibile nel fade */
+        setTimeout(function () {
+          var t0 = performance.now();
+          (function frame(now) {
+            var p = Math.min(1, (now - t0) / COUNT_DUR);
+            setText(el, Math.round(easeEmph(p) * target));
+            if (p < 1) requestAnimationFrame(frame);
+            else setText(el, target);
+          })(t0);
+        }, delay);
+      }
+      function fillBar(el, delay) {
+        if (RM.matches) { el.style.width = el.dataset.w + '%'; return; }
+        setTimeout(function () {
+          requestAnimationFrame(function () { el.style.width = el.dataset.w + '%'; });
+        }, delay);
+      }
+
+      /* ── 1 · Entrata sfalsata (rise 16px + fade, 55ms) con count-up e fill barre ── */
+      function playEntrance(blocks) {
+        blocks.forEach(function (el) { el.classList.remove('in'); });
+        void document.body.offsetHeight;               /* retrigger delle transizioni */
+        blocks.forEach(function (el, i) {
+          var delay = ms(i * STAGGER);
+          el.style.transitionDelay = delay + 'ms';
+          el.classList.add('in');
+          el.querySelectorAll('[data-count]').forEach(function (n) { countUp(n, Number(n.dataset.count), delay + 150); });
+          el.querySelectorAll('.bar-fill').forEach(function (b) { fillBar(b, delay + 150); });
+        });
+      }
+
+      /* ── 2 · Crossfade pannelli (150ms out / 300ms in) + re-stagger ── */
+      var panels = {
+        cruscotto: document.getElementById('panel-cruscotto'),
+        attivita: document.getElementById('panel-attivita'),
+        storico: document.getElementById('panel-storico'),
+        prodotti: document.getElementById('panel-prodotti')
+      };
+      var switching = false;
+      function showPanel(name) {
+        var next = panels[name];
+        var current = document.querySelector('.panel:not(.hidden)');
+        if (!next || current === next || switching) return;
+        switching = true;
+        function enter() {
+          next.classList.remove('fade-in', 'fade-out');
+          void next.offsetWidth;
+          next.classList.remove('hidden');
+          next.classList.add('fade-in');
+          playEntrance(Array.prototype.slice.call(next.querySelectorAll('.rise')));
+          switching = false;
+        }
+        if (current) {
+          current.classList.add('fade-out');
+          setTimeout(function () {
+            current.classList.add('hidden');
+            current.classList.remove('fade-out');
+            enter();
+          }, ms(150));
+        } else {
+          enter();
+        }
+      }
+
+      /* ── 3 · Navbar: pill attiva che SCIVOLA (indicatore unico left/width) ── */
+      var navBtns = Array.prototype.slice.call(document.querySelectorAll('.nav-btn'));
+      var indicator = document.getElementById('nav-indicator');
+      var activeNavBtn = null;
+      function moveIndicator(btn) {
+        indicator.style.left = btn.offsetLeft + 'px';
+        indicator.style.width = btn.offsetWidth + 'px';
+      }
+      function setActiveNav(btn) {
+        activeNavBtn = btn;
+        navBtns.forEach(function (b) {
+          var active = b === btn;
+          b.style.width = active ? '52px' : '';         /* pill attiva 52px / 48px: width dell'indicatore anima */
+          b.querySelector('svg').style.color = active ? '#f3d4c8' : '#8d817d';
+        });
+        moveIndicator(btn);
+      }
+      navBtns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          setActiveNav(btn);
+          showPanel(btn.dataset.panel);
+        });
+      });
+      window.addEventListener('resize', function () {
+        indicator.style.transition = 'none';
+        moveIndicator(activeNavBtn || navBtns[0]);
+        void indicator.offsetWidth;
+        indicator.style.transition = '';
+      });
+
+      /* ── 4 · Sheet: apertura/chiusura con molla + backdrop fade ── */
+      function openSheet(id) { document.getElementById(id).classList.add('open'); }
+      function closeSheet(sheet) {
+        sheet.classList.remove('open');
+        if (sheet.id === 'sheet-settings') swapReset(false);   /* azzera la conferma */
+      }
+      document.getElementById('btn-fab').addEventListener('click', function () { openSheet('sheet-fab'); });
+      document.getElementById('btn-gear').addEventListener('click', function () { openSheet('sheet-settings'); });
+      document.querySelectorAll('.sheet').forEach(function (sheet) {
+        sheet.querySelectorAll('[data-close]').forEach(function (el) {
+          el.addEventListener('click', function () { closeSheet(sheet); });
+        });
+        var form = sheet.querySelector('form');
+        if (form) {
+          form.addEventListener('submit', function (e) { e.preventDefault(); closeSheet(sheet); });
+        }
+      });
+
+      /* ── 5 · Sheet impostazioni: swap riga → conferma inline ── */
+      var resetRow = document.getElementById('set-reset-row');
+      var confirmRow = document.getElementById('set-confirm-row');
+      function swapReset(showConfirm) {
+        resetRow.classList.toggle('hidden', showConfirm);
+        confirmRow.classList.toggle('hidden', !showConfirm);
+      }
+      resetRow.addEventListener('click', function () { swapReset(true); });
+      document.getElementById('set-cancel').addEventListener('click', function () { swapReset(false); });
+      document.getElementById('set-ok').addEventListener('click', function () { closeSheet(document.getElementById('sheet-settings')); });
+      document.getElementById('set-vehicle').addEventListener('click', function () { closeSheet(document.getElementById('sheet-settings')); });
+
+      /* ── 6 · Validazione form FAB (data + km obbligatori, come fab.ts) ── */
+      var fabDate = document.getElementById('fab-date');
+      var fabKm = document.getElementById('fab-km');
+      var fabSubmit = document.getElementById('fab-submit');
+      function validate() {
+        fabSubmit.disabled = fabDate.value.trim() === '' || fabKm.value.trim() === '';
+      }
+      [fabDate, fabKm].forEach(function (input) { input.addEventListener('input', validate); });
+      validate();
+
+      /* ── 7 · Chip di filtro (stato esclusivo + check) ── */
+      var chipOn = ['bg-secC', 'text-onSecC', 'font-bold'];
+      var chipOff = ['border', 'border-outline', 'text-onSurfV', 'font-semibold'];
+      document.querySelectorAll('.filter-chip').forEach(function (chip) {
+        chip.addEventListener('click', function () {
+          document.querySelectorAll('.filter-chip').forEach(function (c) {
+            var on = c === chip;
+            chipOn.concat(chipOff).forEach(function (cls) { c.classList.remove(cls); });
+            (on ? chipOn : chipOff).forEach(function (cls) { c.classList.add(cls); });
+            c.setAttribute('aria-pressed', String(on));
+            c.querySelector('.chip-check').classList.toggle('hidden', !on);
+          });
+        });
+      });
+
+      /* ── Avvio: entrata header + cruscotto, indicatore in posizione ── */
+      setActiveNav(navBtns[0]);
+      playEntrance([document.getElementById('app-header')].concat(
+        Array.prototype.slice.call(panels.cruscotto.querySelectorAll('.rise'))
+      ));
+    })();
+  </script>
+</body>
+</html>

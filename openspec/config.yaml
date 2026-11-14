@@ -1,0 +1,22 @@
+schema: spec-driven
+
+# Project context (shown to AI when creating artifacts)
+context: |
+  App: BYD Dolphin Surf — personal EV maintenance tracker. Italian UI. Dark-only (no light mode).
+  Tech stack: Angular 22 (standalone, zoneless, new file naming), TypeScript strict, Tailwind CSS v4
+  via @tailwindcss/postcss, global SCSS, bun as package manager (never npm/yarn).
+  Design reference (source of truth for look): ui-drafts/b-blade.html — Material 3 Expressive,
+  full-black background, muted coral tonal palette, pill navbar, pill list rows, cookie shapes,
+  wavy progress, ring indicator with gap, FAB.
+  Angular structure reference (source of truth for code organization):
+  ~/Developer/AutofficinaPindemonte — src/app/{app.config.ts, app.routes.ts, app.ts, pages/, components/}.
+  Storage: localStorage only. No backend. No new dependencies without user approval.
+
+rules:
+  proposal:
+    - Keep proposals under 500 words
+    - Include a "Non-goals" section
+    - Flag any decision not yet made as NEEDS DECISION instead of choosing silently
+  tasks:
+    - Each task names the reference file(s) it mirrors
+    - No task may add dependencies or tooling
