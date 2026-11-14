@@ -1,0 +1,59 @@
+<nav class="fixed bottom-0 inset-x-0 z-40">
+  <div class="mx-auto max-w-[430px] px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+    <div class="nav-pill bg-surfC/90 backdrop-blur-xl ring-1 ring-white/[0.06] shadow-nav rounded-full px-3 py-2 flex items-center justify-between">
+      <div #navInd class="nav-ind"></div>
+
+      <button
+        #navBtn
+        type="button"
+        aria-label="Cruscotto"
+        routerLink="/"
+        class="nav-btn press hit-area"
+        [class.active]="activeIndex() === 0"
+      >
+        <svg class="nav-icon w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/>
+        </svg>
+      </button>
+
+      <button
+        #navBtn
+        type="button"
+        aria-label="Attività"
+        routerLink="/attivita"
+        class="nav-btn press hit-area"
+        [class.active]="activeIndex() === 1"
+      >
+        <svg class="nav-icon w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/>
+        </svg>
+      </button>
+
+      <button
+        #navBtn
+        type="button"
+        aria-label="Storico"
+        routerLink="/storico"
+        class="nav-btn press hit-area"
+        [class.active]="activeIndex() === 2"
+      >
+        <svg class="nav-icon w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>
+        </svg>
+      </button>
+
+      <button
+        #navBtn
+        type="button"
+        aria-label="Prodotti"
+        routerLink="/prodotti"
+        class="nav-btn press hit-area"
+        [class.active]="activeIndex() === 3"
+      >
+        <svg class="nav-icon w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</nav>

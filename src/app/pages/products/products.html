@@ -1,0 +1,32 @@
+<section class="space-y-4">
+  <p class="t-body font-medium text-mut">Prodotti</p>
+
+  <!-- Rhythm: blocchi pagina 24px (space-y-6) — caption→contenuto resta 16px (space-y-4) -->
+  <div class="space-y-6">
+  <!-- Schede prodotti statiche (specs/products): niente press feedback — solo
+       l'entrance `.enter` all'attivazione della rotta (design D11). -->
+  @for (card of cards; track card.title) {
+    <div #cardBlock class="enter in bg-surfC rounded-card p-4">
+      <div class="flex items-center justify-between gap-2">
+        <h3 class="t-card-title tracking-tight text-onSurf">{{ card.title }}</h3>
+        <span class="shrink-0 px-3 py-1 rounded-pill t-caption whitespace-nowrap" [class]="card.chipClass">{{ card.chip }}</span>
+      </div>
+      <ul class="mt-3 space-y-2">
+        @for (item of card.items; track item.name) {
+          <li class="flex items-start gap-2 t-label text-onSurfV">
+            <svg class="w-3.5 h-3.5 text-onOkC mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+            <span><strong class="font-bold text-onSurf">{{ item.name }}</strong> — {{ item.desc }}</span>
+          </li>
+        }
+      </ul>
+      <!-- MAI box: 20px tile radius (design D3 — ex rounded-2xl drift) -->
+      <div class="mt-3.5 rounded-tile bg-errC px-3 py-2.5 flex items-start gap-2">
+        <svg class="w-4 h-4 text-err mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>
+        </svg>
+        <p class="t-label font-bold text-onErrC leading-snug">{{ card.mai }}</p>
+      </div>
+    </div>
+  }
+  </div>
+</section>

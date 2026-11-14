@@ -1,0 +1,65 @@
+<section class="space-y-4">
+  <p class="t-body font-medium text-mut">Attività</p>
+
+  <!-- Rhythm: blocchi pagina 24px (space-y-6) — caption→contenuto resta 16px (space-y-4) -->
+  <div class="space-y-6">
+  <!-- Chip-stato da `?stato=` (tile sintesi / deep link) — dismissibile. Stesso
+       pattern delle chip filtro (task 5.4): stato selezionato (secC + check),
+       la × ha il proprio press + ≥44px hit area e rimuove il query param. -->
+  @if (statoFilter(); as stato) {
+    <div>
+      <span [class]="chipClasses(true)">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+        {{ statoLabel(stato) }} ({{ statoCounts()[stato] }})
+        <button type="button" (click)="clearStato()" aria-label="Rimuovi filtro stato" class="press hit-area -mr-1.5 ml-0.5 w-5 h-5 rounded-pill flex items-center justify-center text-onSecC/80">
+          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 6l12 12"/><path d="M18 6L6 18"/></svg>
+        </button>
+      </span>
+    </div>
+  }
+
+  <!-- Chip filtro M3E — un solo markup @for (task 5.4): selected = secC + check,
+       unselected = bordo outline; press + ≥44px hit area su tutte. -->
+  <div #headerBlock class="enter in flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+    @for (chip of chips(); track chip.key) {
+      <button type="button" (click)="select(chip.key)" [class]="chipClasses(selected() === chip.key)">
+        @if (selected() === chip.key) {
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+        }
+        {{ chip.label }} ({{ chip.count }})
+      </button>
+    }
+  </div>
+
+  <!-- Card attività (.mcard + .press: morph raggio 24→16px + state layers, D9) -->
+  <div class="space-y-3">
+    @for (card of cards(); track card.activity.id) {
+      <div #listBlock class="enter in">
+        <article class="mcard press bg-surfC p-4">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <div class="flex items-baseline gap-2">
+                <span class="t-meta font-bold text-mut">#{{ card.activity.id }}</span>
+                <h3 class="t-card-title tracking-tight leading-snug text-onSurf">{{ card.activity.title }}</h3>
+              </div>
+              <p class="mt-1.5 t-label text-onSurfV">{{ intervalLine(card.activity.interval, card.activity.intervalNote) }}</p>
+              <p class="t-label text-onSurfV">{{ card.activity.spec }}</p>
+            </div>
+            <app-status-chip [status]="card.status" />
+          </div>
+          <div class="mt-3 pt-3 border-t border-white/[0.06] flex items-center justify-between gap-3">
+            <p class="t-meta text-mut">{{ card.infoLine }}</p>
+            <button type="button" (click)="registra(card.activity.id)" class="btn btn-filled-sm shrink-0">Registra</button>
+          </div>
+        </article>
+      </div>
+    } @empty {
+      <!-- Empty filtered state (specs/activities): mai un gap vuoto -->
+      <div #listBlock class="enter in py-6 text-center">
+        <p class="t-body-sm text-mut">Nessuna attività corrisponde ai filtri</p>
+        <button type="button" (click)="clearFilters()" class="btn btn-filled-sm mt-4">Cancella filtro</button>
+      </div>
+    }
+  </div>
+  </div>
+</section>
