@@ -20,9 +20,12 @@ import { prefersReducedMotion } from '../../shared/motion';
    Tab trap, Escape closes, focus restored to the FAB. Reduced motion = no morph:
    the sheet opens and closes instantly (the CSS clamp kills every transition).
 
-   The form (per specs/activities) is unchanged: ISO date + numeric km required,
-   submit disabled otherwise; saving creates the same history entry + lastDone
-   update as the one-tap quick registra. */
+   The form (per specs/activities, rifiniture-e D5) lays out its fields per expected
+   input length in one `grid grid-cols-2 gap-4` (Attività and Luogo full-width, the
+   other pairs half/half; half values truncate in their flex-1 min-w-0 slot) with the
+   mockup footer pair ("Annulla" auto-width, "Registra" flex-1). Validation and save
+   are unchanged: ISO date + numeric km required, submit disabled otherwise; saving
+   creates the same history entry + lastDone update as the one-tap quick registra. */
 
 /** Overlay stays mounted this long after close begins before unmounting (--d-exit-flight). */
 const EXIT_MS = 450;
@@ -183,18 +186,20 @@ const EXIT_MS = 450;
         <div #dialog class="morph" tabindex="-1" role="dialog" aria-modal="true" aria-label="Nuova registrazione">
           <svg class="morph-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
           <div class="morph-inner">
-            <form #morphBody class="morph-body px-5 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] space-y-3" (submit)="save($event)">
+            <form #morphBody class="morph-body px-5 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))]" (submit)="save($event)">
               <div class="w-9 h-1 rounded-full bg-outline mx-auto"></div>
-              <p class="t-card-title text-onSurf">Nuova registrazione</p>
+              <p class="mt-4 t-card-title text-onSurf">Nuova registrazione</p>
 
-              <app-text-field
-                label="Attività"
-                [value]="activityValue()"
-                [options]="activityOptions()"
-                (valueChange)="onActivityId($event)"
-              />
-
-              <div class="grid grid-cols-2 gap-3">
+              <!-- Griglia per lunghezza attesa (rifiniture-e D5): full · mezza+mezza ·
+                   full · mezza+mezza — stacco costante di 16px in entrambe le direzioni -->
+              <div class="mt-4 grid grid-cols-2 gap-4">
+                <app-text-field
+                  class="col-span-2"
+                  label="Attività"
+                  [value]="activityValue()"
+                  [options]="activityOptions()"
+                  (valueChange)="onActivityId($event)"
+                />
                 <app-text-field
                   label="Data"
                   type="date"
@@ -209,16 +214,13 @@ const EXIT_MS = 450;
                   [value]="km()"
                   (valueChange)="onKm($event)"
                 />
-              </div>
-
-              <app-text-field
-                label="Luogo"
-                commitOn="input"
-                [value]="place()"
-                (valueChange)="onPlace($event)"
-              />
-
-              <div class="grid grid-cols-2 gap-3">
+                <app-text-field
+                  class="col-span-2"
+                  label="Luogo"
+                  commitOn="input"
+                  [value]="place()"
+                  (valueChange)="onPlace($event)"
+                />
                 <app-text-field
                   label="Costo"
                   ariaLabel="Costo in euro"
@@ -239,8 +241,9 @@ const EXIT_MS = 450;
                 />
               </div>
 
-              <div class="flex gap-3 pt-1">
-                <button type="button" (click)="close()" class="btn btn-text h-12 flex-1">Annulla</button>
+              <div class="mt-5 flex items-center gap-3">
+                <!-- Annulla auto-width, Registra flex-1 (rifiniture-e D5) -->
+                <button type="button" (click)="close()" class="btn btn-text h-12 px-6">Annulla</button>
                 <button type="submit" class="btn btn-filled flex-1" [disabled]="!valid()">Registra</button>
               </div>
             </form>

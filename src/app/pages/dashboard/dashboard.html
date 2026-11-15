@@ -26,10 +26,9 @@
     />
   </div>
 
-  <!-- Hero B1 (design D6/D7): glow ambientale che respira + angoli morph + badge cinetico -->
+  <!-- Hero B1 (rifiniture-e D6): nessun glow ambientale — angoli morph + badge cinetico -->
   <div class="enter relative">
     @if (hero(); as h) {
-      <div class="hero-glow" [class]="h.tint.glow" aria-hidden="true"></div>
       <article [class]="h.tint.card + ' hero relative p-5 shadow-hero space-y-4'">
         <div class="flex items-center justify-between">
           <p [class]="h.tint.label + ' t-label font-bold uppercase tracking-[0.08em]'">Prossima scadenza</p>
@@ -93,44 +92,67 @@
     }
   </div>
 
-  <!-- In sintesi (design D10): tap → ripple + navigazione filtrata su /attivita -->
-  <div class="enter rounded-sheet bg-surfLox p-5">
-    <p class="t-body-sm font-semibold text-mut">In sintesi</p>
+  <!-- In sintesi (rifiniture-e D1): righe MD3 in un'unica card — tap → ripple + deep link filtrato -->
+  <div class="enter rounded-card bg-surfC overflow-hidden">
+    <p class="px-4 pt-4 pb-3 t-body-sm font-semibold text-mut">In sintesi</p>
 
-    <div class="mt-3 grid grid-cols-3 gap-2.5">
-      <button type="button" class="press press-tile overflow-hidden rounded-tile bg-okC px-2 py-3.5 text-center" (click)="onTile($event, 'ok')">
-        <p class="t-display leading-none text-onOkC">{{ countOk() }}</p>
-        <p class="mt-1.5 t-caption text-onOkC/80">In regola</p>
-      </button>
-      <button type="button" class="press press-tile overflow-hidden rounded-tile bg-waC px-2 py-3.5 text-center" (click)="onTile($event, 'in-scadenza')">
-        <p class="t-display leading-none text-onWaC">{{ countWa() }}</p>
-        <p class="mt-1.5 t-caption text-onWaC/80">In scadenza</p>
-      </button>
-      <button type="button" class="press press-tile overflow-hidden rounded-tile bg-errC px-2 py-3.5 text-center" (click)="onTile($event, 'scaduto')">
-        <p class="t-display leading-none text-onErrC">{{ countErr() }}</p>
-        <p class="mt-1.5 t-caption text-onErrC/80">Scadute</p>
-      </button>
-    </div>
+    <button type="button" class="press mlist overflow-hidden w-full flex items-center gap-3 px-4 py-3.5 text-left" (click)="onRow($event, 'ok')">
+      <span class="w-10 h-10 rounded-full bg-okC flex items-center justify-center shrink-0">
+        <svg class="w-5 h-5 text-onOkC" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+      </span>
+      <span class="flex-1 min-w-0">
+        <span class="block t-card-title text-onSurf">In regola</span>
+        <span class="block t-meta text-mut">interventi in tempo</span>
+      </span>
+      <span class="t-title font-black leading-none text-onSurf">{{ countOk() }}</span>
+      <svg class="w-5 h-5 text-mut shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+    </button>
+    <div class="mx-4 h-px bg-white/[0.06]"></div>
 
-    <p class="mt-3 pt-3 border-t border-white/[0.06] t-label font-medium text-mut">Orizzonte 15 anni · {{ footerKm() }} / 300k km · 1,5%</p>
+    <button type="button" class="press mlist overflow-hidden w-full flex items-center gap-3 px-4 py-3.5 text-left" (click)="onRow($event, 'in-scadenza')">
+      <span class="w-10 h-10 rounded-full bg-waC flex items-center justify-center shrink-0">
+        <svg class="w-5 h-5 text-onWaC" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v4"/><path d="M12 15.5h.01"/></svg>
+      </span>
+      <span class="flex-1 min-w-0">
+        <span class="block t-card-title text-onSurf">In scadenza</span>
+        <span class="block t-meta text-mut">in arrivo a breve</span>
+      </span>
+      <span class="t-title font-black leading-none text-onSurf">{{ countWa() }}</span>
+      <svg class="w-5 h-5 text-mut shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+    </button>
+    <div class="mx-4 h-px bg-white/[0.06]"></div>
+
+    <button type="button" class="press mlist overflow-hidden w-full flex items-center gap-3 px-4 py-3.5 text-left" (click)="onRow($event, 'scaduto')">
+      <span class="w-10 h-10 rounded-full bg-errC flex items-center justify-center shrink-0">
+        <svg class="w-5 h-5 text-onErrC" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      </span>
+      <span class="flex-1 min-w-0">
+        <span class="block t-card-title text-onSurf">Scadute</span>
+        <span class="block t-meta text-mut">da registrare</span>
+      </span>
+      <span class="t-title font-black leading-none text-onSurf">{{ countErr() }}</span>
+      <svg class="w-5 h-5 text-mut shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+    </button>
+
+    <div class="mx-4 h-px bg-white/[0.06]"></div>
+    <p class="px-4 py-3 t-label font-medium text-mut">Orizzonte 15 anni · {{ footerKm() }} / 300k km · 1,5%</p>
   </div>
 
-  <!-- Prontezza + Cicli (design D11): count-up + barre a molla all'attivazione -->
-  <div class="enter grid grid-cols-2 gap-3">
-    <div class="bg-surfC rounded-card p-4">
-      <p class="t-label font-medium text-onSurfV">Prontezza</p>
-      <p class="mt-1.5 t-display-lg leading-none tracking-tight text-onSurf">{{ prontezzaDisplay() }}<span class="t-body font-bold text-mut">%</span></p>
-      <p class="mt-1 t-meta text-mut">{{ prontezzaSubtitle() }}</p>
-      <div class="mt-3 h-1.5 rounded-pill bg-surfHiX overflow-hidden">
-        <div #prontezzaBar class="bar h-full rounded-pill bg-prim"></div>
+  <!-- Stato veicolo (rifiniture-e D3/D4): count-up + Onda M3E all'attivazione -->
+  <div class="enter rounded-card bg-surfC p-5">
+    <p class="t-eyebrow">Stato veicolo</p>
+    <div class="mt-4 grid grid-cols-2 gap-4">
+      <div>
+        <p class="t-label font-medium text-onSurfV">Prontezza</p>
+        <p class="mt-1.5 whitespace-nowrap t-display-lg leading-none tracking-tight text-onSurf">{{ prontezzaDisplay() }}<span class="ml-0.5 t-body-sm font-bold text-mut">%</span></p>
+        <p class="mt-1.5 t-meta text-mut">{{ prontezzaSubtitle() }}</p>
+        <app-wavy-progress #prontezzaWave class="mt-3" [value]="prontezzaPercent()" fill="stroke-prim" />
       </div>
-    </div>
-    <div class="bg-surfC rounded-card p-4">
-      <p class="t-label font-medium text-onSurfV">Cicli LFP</p>
-      <p class="mt-1.5 t-display-lg leading-none tracking-tight text-onSurf">{{ cicliDisplay() }}<span class="t-body font-bold text-mut">/5.000</span></p>
-      <p class="mt-1 t-meta text-mut">≈ {{ cicliLabel() }} vita utile</p>
-      <div class="mt-3 h-1.5 rounded-pill bg-surfHiX overflow-hidden">
-        <div #cicliBar class="bar h-full min-w-[4px] rounded-pill bg-prim"></div>
+      <div>
+        <p class="t-label font-medium text-onSurfV">Cicli LFP</p>
+        <p class="mt-1.5 whitespace-nowrap t-display-lg leading-none tracking-tight text-onSurf">{{ cicliDisplay() }}<span class="ml-0.5 t-body-sm font-bold text-mut">/5.000</span></p>
+        <p class="mt-1.5 t-meta text-mut">≈ {{ cicliLabel() }} vita utile</p>
+        <app-wavy-progress #cicliWave class="mt-3" [value]="cicliPercent()" fill="stroke-onTerC" />
       </div>
     </div>
   </div>

@@ -7,7 +7,9 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
    the label turning bold text-prim (250ms --e-emph, container bg 250ms --e-emph).
    The ring lives on ::before so ::after stays free for the shared .press state
    layer (specs/design-system: text fields are in the press set). Input 16px
-   `field` role font-medium with optional trailing suffix (label 12px); with
+   `field` role font-medium with optional trailing suffix (label 12px, shrink-0);
+   the value sits in a `flex-1 min-w-0` slot so long values truncate instead of
+   overflowing half-width columns (rifiniture-e D5). With
    `options` it renders a filled select with chevron — appearance-none + the global
    color-scheme: dark make the native popup dark (no dropdown lib).
    Single source of MD3 anatomy for the 3 Cruscotto vehicle fields AND the
@@ -97,7 +99,7 @@ export interface TextFieldOption {
             [value]="value()"
             (input)="emitValue($event)"
             (change)="emitValue($event)"
-            class="field-input w-full bg-transparent p-0 focus:outline-none"
+            class="field-input flex-1 min-w-0 bg-transparent p-0 focus:outline-none"
           />
           @if (suffix(); as suffix) {
             <span class="field-suffix shrink-0">{{ suffix }}</span>

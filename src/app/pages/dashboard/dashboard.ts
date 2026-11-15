@@ -4,6 +4,7 @@ import { Subscription } from 'rxjs';
 
 import { StatusChip } from '../../components/status-chip/status-chip';
 import { TextField } from '../../components/text-field/text-field';
+import { WavyProgress } from '../../components/wavy-progress/wavy-progress';
 import {
   daysFrom,
   formatCompactKm,
@@ -20,20 +21,19 @@ import {
 import { Activity } from '../../data/model';
 import { Status, deriveActivityStatus } from '../../data/status';
 import { StoreService } from '../../data/store';
-import { fillBar, playEntrance, prefersReducedMotion, runCount } from '../../shared/motion';
+import { playEntrance, prefersReducedMotion, runCount } from '../../shared/motion';
+/* Cruscotto (specs/dashboard + vehicle-data): MD3 filled vehicle fields (6.1),
+   hero B1 with corner morph + kinetic countdown badge and NO ambient glow
+   (rifiniture-e D6), "Prossime" queue with row press morphs (4.5), tappable
+   "In sintesi" MD3 rows with the ripple→deep-link choreography (rifiniture-e D1),
+   one "Stato veicolo" card with the Onda M3E wavy fills (rifiniture-e D3/D4).
+   All aggregations are computed from the store — no count is hard-coded.
 
-/* Cruscotto (specs/dashboard + vehicle-data, design D6–D11): MD3 filled vehicle
-   fields (6.1), hero B1 with the breathing status-tinted glow + corner morph +
-   kinetic countdown badge (4.1/4.2), "Prossime" queue with row press morphs (4.5),
-   tappable "In sintesi" tiles with the ripple→deep-link choreography (4.3), neutral
-   Prontezza/Cicli cards with count-up + spring bars (4.4). All aggregations are
-   computed from the store — no count is hard-coded.
-
-   Motion discipline (design D11): entrances, count-ups and bar fills fire ONLY on
-   route/pane activation (afterNextRender of this route component). Data edits snap
-   values/widths/tints through their CSS transitions and never replay an entrance,
-   count-up or digit roll; mid-session hero swaps retint the container + glow and
-   snap the badge text (the shared status-chip owns that timeline). */
+   Motion discipline (design D11): entrances, count-ups and progress fills fire
+   ONLY on route/pane activation (afterNextRender of this route component). Data
+   edits snap values/dashes/tints through their CSS transitions and never replay
+   an entrance, count-up or digit roll; mid-session hero swaps retint the container
+   and snap the badge text (the shared status-chip owns that timeline). */
 
 /** Ripple fade completes first, then the deep link (design D10). */
 const NAV_DELAY_MS = 600;
@@ -58,8 +58,6 @@ interface HeroTint {
   subtle: string;
   /** interval/duration chip text */
   chipText: string;
-  /** ambient glow fill — the bright status accent (err / onWaC amber / prim) */
-  glow: string;
   /** car SVG fills (carBody / carAccent tokens, specs/design-system) */
   carBody: string;
   carAccent: string;
@@ -72,7 +70,6 @@ const HERO_TINT: Record<Status, HeroTint> = {
     label: 'text-onErrC/60',
     subtle: 'text-onErrC/70',
     chipText: 'text-onErrC',
-    glow: 'bg-err',
     carBody: 'fill-carBodyErr',
     carAccent: 'fill-carAccentErr',
     button: 'bg-err text-onErr',
@@ -82,7 +79,6 @@ const HERO_TINT: Record<Status, HeroTint> = {
     label: 'text-onWaC/60',
     subtle: 'text-onWaC/70',
     chipText: 'text-onWaC',
-    glow: 'bg-onWaC',
     carBody: 'fill-carBody',
     carAccent: 'fill-carAccent',
     button: 'bg-prim text-onPrim',
@@ -92,7 +88,6 @@ const HERO_TINT: Record<Status, HeroTint> = {
     label: 'text-onPrimC/60',
     subtle: 'text-onPrimC/70',
     chipText: 'text-onPrimC',
-    glow: 'bg-prim',
     carBody: 'fill-carBody',
     carAccent: 'fill-carAccent',
     button: 'bg-prim text-onPrim',
@@ -115,36 +110,12 @@ const LFP_TOTAL_CYCLES = 5000;
 
 @Component({
   selector: 'app-dashboard',
-  imports: [RouterLink, StatusChip, TextField],
+  imports: [RouterLink, StatusChip, TextField, WavyProgress],
   changeDetection: ChangeDetectionStrategy.Eager,
   styles: `
-    /* ── Hero ambient glow (design D6): status-tinted blur that breathes behind the
-          card. Solid token fill + blur so mid-session retints can transition. ── */
-    .hero-glow {
-      position: absolute;
-      inset: -6px;
-      border-radius: 44px;
-      filter: blur(70px);
-      opacity: 0.45;
-      pointer-events: none;
-      transition: background-color var(--d-fade) var(--e-emph);
-      animation: glowBreathe var(--d-breathe) ease-in-out infinite;
-    }
-
-    @keyframes glowBreathe {
-      0%,
-      100% {
-        transform: scale(1);
-        opacity: 0.45;
-      }
-      50% {
-        transform: scale(1.06);
-        opacity: 0.7;
-      }
-    }
-
     /* ── Hero container (design D6): corner morph 48→32px over 600ms --e-emph on
-          entrance; tint changes retint through color transitions (design D11). ── */
+          entrance; tint changes retint through color transitions (design D11).
+          No ambient glow (rifiniture-e D6): shadow-hero is the only depth cue. ── */
     .hero {
       position: relative;
       border-radius: 48px;
@@ -158,7 +129,7 @@ const LFP_TOTAL_CYCLES = 5000;
       border-radius: var(--radius-hero);
     }
 
-    /* ── Sintesi tile ripple (design D10): 12px center-origin ring, scale 14 + fade. ── */
+    /* ── Sintesi row ripple (design D10): 12px center-origin ring, scale 14 + fade. ── */
     .ripple-ring {
       position: absolute;
       left: 50%;
@@ -177,13 +148,6 @@ const LFP_TOTAL_CYCLES = 5000;
       to {
         transform: translate(-50%, -50%) scale(14);
         opacity: 0;
-      }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .hero-glow {
-        opacity: 0.55;
-        animation: none;
       }
     }
   `,
@@ -272,7 +236,7 @@ export class Dashboard {
   /** Live km segment of the sintesi footer: Italian compact "4,5k" (resolved ND-4). */
   protected readonly footerKm = computed(() => formatCompactKm(this.vehicle().odometerKm));
 
-  /* ── Prontezza bar (specs/dashboard) ── */
+  /* ── Stato veicolo (rifiniture-e D3/D4) ── */
 
   private readonly prontezza = computed(() => {
     const vehicle = this.vehicle();
@@ -302,8 +266,8 @@ export class Dashboard {
   /* ── Motion orchestration (design D11: activation-only) ── */
 
   private readonly heroBadge = viewChild('heroBadge', { read: StatusChip });
-  private readonly prontezzaBar = viewChild('prontezzaBar', { read: ElementRef });
-  private readonly cicliBar = viewChild('cicliBar', { read: ElementRef });
+  private readonly prontezzaWave = viewChild('prontezzaWave', { read: WavyProgress });
+  private readonly cicliWave = viewChild('cicliWave', { read: WavyProgress });
 
   private readonly activated = signal(false);
   private pendingNavTimer = 0;
@@ -312,28 +276,29 @@ export class Dashboard {
 
   constructor() {
     this.routerSub = this.router.events.subscribe((event) => {
-      // Any other navigation cancels a pending tile deep-link (specs/dashboard).
+      // Any other navigation cancels a pending row deep-link (specs/dashboard).
       if (event instanceof NavigationStart) this.cancelPendingNav();
     });
 
-    // Pane activation: entrances, badge timeline, count-ups and bar fills — once.
+    // Pane activation: entrances, badge timeline, count-ups and wavy fills — once.
     afterNextRender(() => this.activate());
 
-    // Data edits: snap displays/widths through their transitions — never replay.
+    // Data edits: snap displays/dashes through their transitions — never replay.
     effect(() => {
       const counts = this.sintesi();
       const pz = this.prontezzaPercent();
       const cl = this.cicli();
-      const clPct = this.cicliPercent();
       untracked(() => {
         if (!this.activated()) return;
+        // A data edit wins over any in-flight count-up: cancel the rAF runs so
+        // their final frames can't pin pre-edit values (audit M1).
+        for (const cancel of this.countCancels) cancel();
+        this.countCancels = [];
         this.countOk.set(counts.ok);
         this.countWa.set(counts['in-scadenza']);
         this.countErr.set(counts.scaduto);
         this.prontezzaDisplay.set(pz);
         this.cicliDisplay.set(cl);
-        this.setBar(this.prontezzaBar(), pz);
-        this.setBar(this.cicliBar(), clPct);
       });
     });
 
@@ -387,10 +352,9 @@ export class Dashboard {
       runCount(this.cicli(), (value) => this.cicliDisplay.set(value)),
     );
 
-    const pzBar = this.prontezzaBar();
-    const clBar = this.cicliBar();
-    if (pzBar != null) fillBar(pzBar.nativeElement, pz);
-    if (clBar != null) fillBar(clBar.nativeElement, this.cicliPercent());
+    // Onda M3E fills: the entrance dash animation, once (rifiniture-e D4).
+    this.prontezzaWave()?.playFill();
+    this.cicliWave()?.playFill();
     this.activated.set(true);
   }
 
@@ -405,14 +369,9 @@ export class Dashboard {
     }
   }
 
-  private setBar(bar: ElementRef | undefined, widthPct: number): void {
-    if (bar == null) return;
-    (bar.nativeElement as HTMLElement).style.width = `${widthPct}%`;
-  }
+  /* ── In sintesi rows (rifiniture-e D1): ripple + deep link at 600ms ── */
 
-  /* ── In sintesi tiles (design D10): scale .95 + ripple → deep link at 600ms ── */
-
-  protected onTile(event: MouseEvent, stato: Status): void {
+  protected onRow(event: MouseEvent, stato: Status): void {
     this.cancelPendingNav();
 
     // Keyboard activation (click with detail 0) and reduced motion navigate immediately.
@@ -421,10 +380,10 @@ export class Dashboard {
       return;
     }
 
-    const tile = event.currentTarget as HTMLElement;
+    const row = event.currentTarget as HTMLElement;
     const ring = document.createElement('span');
     ring.className = 'ripple-ring';
-    tile.appendChild(ring);
+    row.appendChild(ring);
     window.setTimeout(() => ring.remove(), RIPPLE_MS);
 
     // The 500ms ripple fade completes before the jump (600ms).
