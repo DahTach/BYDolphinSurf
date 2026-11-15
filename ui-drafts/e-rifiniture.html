@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>BYD · Cruscotto — bozza e rifiniture</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..1000&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['"Roboto Flex"', 'Roboto', 'system-ui', 'sans-serif'] },
+          colors: {
+            prim: '#e3a89b', onPrim: '#402010',
+            primC: '#55291d', onPrimC: '#f3d4c8',
+            secC: '#3d3431', onSecC: '#eadcd5',
+            terC: '#463818', onTerC: '#e6cd96',
+            err: '#d98a80', onErr: '#441411',
+            errC: '#3e1d1c', onErrC: '#f2c1ba',
+            surf: '#000000', surfLox: '#0e0d0d', surfC: '#1e1c1d', surfHi: '#2a2728', surfHiX: '#353132',
+            onSurf: '#eae4e2', onSurfV: '#b9aca8', mut: '#8d817d', outline: '#463f3d',
+            okC: '#1d3326', onOkC: '#9cc7a8',
+            waC: '#363020', onWaC: '#d9c084',
+          },
+          boxShadow: {
+            fab: '0 4px 10px rgba(0,0,0,0.5), 0 14px 32px rgba(0,0,0,0.55)',
+            hero: '0 6px 24px rgba(0,0,0,0.35)',
+            nav: '0 8px 28px rgba(0,0,0,0.55)',
+            sheet: '0 -8px 32px rgba(0,0,0,0.6)',
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    html { -webkit-tap-highlight-color: transparent; }
+    body { color: #eae4e2; }
+    ::selection { background: rgba(227, 168, 155, 0.3); }
+    .caption { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; color: #8d817d; }
+
+    /* Scala tipografica rispettata: 10 caption / 11 meta / 12 label / 13 body-sm /
+       14 body / 15 card-title / 16 field / 22 title / 26–30 display font-black.
+       Raggi: pill · 20 · 24 · 32. Press: scale .97, tile .95. Stroke icone: 1.8. */
+
+    /* ── Entrance: rise 16px + fade, una volta al load (light polish) ── */
+    .enter { opacity: 0; transform: translateY(16px); transition: opacity .5s cubic-bezier(.2, 0, 0, 1), transform .5s cubic-bezier(.2, 0, 0, 1); }
+    .ready .enter { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce) {
+      .enter { opacity: 1; transform: none; transition: none; }
+    }
+
+    /* ── Press: state layer MD3 (hover 6% / active 10%) + scale .97 (tile .95) ── */
+    .press {
+      position: relative;
+      cursor: pointer;
+      transition: transform .25s cubic-bezier(.2, 0, 0, 1), border-radius .25s cubic-bezier(.2, 0, 0, 1);
+    }
+    .press::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: #fff;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s cubic-bezier(.2, 0, 0, 1);
+    }
+    .press:hover::after { opacity: .06; }
+    .press:active::after { opacity: .10; }
+    .press:active { transform: scale(.97); }
+    .press-tile:active { transform: scale(.95); }
+    .press:focus-visible { outline: 2px solid #e3a89b; outline-offset: 2px; }
+
+    /* righe lista: morph del raggio a 16px sotto pressione */
+    .press-row { border-radius: 0; }
+    .press-row:hover, .press-row:active { border-radius: 16px; }
+  </style>
+</head>
+<body class="bg-surfLox font-sans antialiased">
+
+  <main class="mx-auto w-[430px] py-10 space-y-12">
+
+    <!-- ══ STRISCIA DI ANNOTAZIONE ══ -->
+    <header class="enter rounded-[24px] border border-outline px-5 py-4">
+      <p class="caption">e · Rifiniture — sintesi, statistiche, sheet, glow</p>
+      <p class="mt-1.5 text-[10px] font-semibold text-mut">4 blocchi · 7 varianti · dati reali dal seed</p>
+    </header>
+
+    <!-- ════════════════════════════════════════════════════════════
+         1 · HERO SENZA GLOW (deciso)
+         ════════════════════════════════════════════════════════════ -->
+    <section class="space-y-4">
+      <div>
+        <h2 class="text-[15px] font-bold text-onSurf">1 · Deciso — hero senza glow</h2>
+        <p class="mt-1 text-[11px] text-mut">Il blur che respira è RIMOSSO: nessun elemento glow dietro la card. L'unica profondità resta <span class="text-onSurfV">shadow-hero</span>.</p>
+      </div>
+      <p class="caption">Hero attuale · glow rimosso · solo shadow-hero</p>
+
+      <div class="enter rounded-[32px] bg-black p-4 ring-1 ring-white/[0.06]">
+        <!-- hero "Scaduto" esattamente come oggi, senza il div .hero-glow -->
+        <!-- struttura: header (label + chip stato) · auto h-24 + badge "+5 g" ·
+             titolo + spec · chip frequenza/durata · CTA filled err -->
+        <article class="rounded-[32px] bg-errC p-5 shadow-hero space-y-4">
+          <!-- header row: eyebrow 12px + chip di stato -->
+          <div class="flex items-center justify-between">
+            <p class="text-[12px] font-bold uppercase tracking-[0.08em] text-onErrC/60">Prossima scadenza</p>
+            <span class="px-3 py-1 rounded-full bg-err text-onErr text-[11px] font-bold whitespace-nowrap">Scaduto</span>
+          </div>
+
+          <!-- auto centrata h-24 con badge "+5 g" sovrapposto, fill err-tinted -->
+          <div class="relative flex justify-center pt-1">
+            <svg viewBox="0 0 160 64" class="h-24 w-auto" aria-hidden="true">
+              <path d="M12 52 C8 52 6 49 6 45 C6 38 12 34 22 32 L38 30 L52 15 C55 11 60 9 66 9 L97 9 C104 9 110 12 114 18 L125 30 L139 32 C149 34 154 38 154 44 L154 49 C154 52 152 54 149 54 L12 54 Z" fill="#b96357"/>
+              <path d="M64 27 L70 15 C71 13 72 13 74 13 L88 13 C90 13 91 14 92 16 L98 27 Z" fill="#3e1d1c"/>
+              <circle cx="40" cy="52" r="11" fill="#2c130c"/><circle cx="40" cy="52" r="4.5" fill="#3e1d1c"/>
+              <circle cx="120" cy="52" r="11" fill="#2c130c"/><circle cx="120" cy="52" r="4.5" fill="#3e1d1c"/>
+            </svg>
+            <span class="absolute -top-1 right-2 px-2.5 py-1 rounded-full bg-err text-onErr text-[12px] font-extrabold shadow-fab">+5 g</span>
+          </div>
+
+          <!-- titolo 22px + spec 13px + chip di frequenza e durata -->
+          <div class="space-y-1.5">
+            <h3 class="text-[22px] font-black tracking-tight leading-tight text-onErrC">Bilanciamento LFP 100%</h3>
+            <p class="text-[13px] font-medium text-onErrC/70">Carica AC 100% + top-balance 1–2 h</p>
+            <div class="flex flex-wrap gap-2 pt-0.5">
+              <span class="inline-flex items-center gap-1.5 rounded-full bg-white/[0.08] border border-white/10 px-3 py-1.5 text-[12px] font-medium text-onErrC">
+                <svg class="w-3.5 h-3.5 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="16" height="10" rx="2"/>
+                <path d="M22 11v2"/>
+                <path d="M6 11v2"/></svg>
+                Ogni 1 mese
+              </span>
+              <span class="inline-flex items-center gap-1.5 rounded-full bg-white/[0.08] border border-white/10 px-3 py-1.5 text-[12px] font-medium text-onErrC">
+                <svg class="w-3.5 h-3.5 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/>
+                <path d="M12 7.5V12l2.8 1.7"/></svg>
+                1–2 h collegate
+              </span>
+            </div>
+          </div>
+
+          <button type="button" class="press w-full h-12 rounded-full bg-err text-onErr text-[15px] font-bold">Registra ora</button>
+        </article>
+      </div>
+      <p class="text-[11px] text-mut">Confronto con oggi: senza il blur che respira il bordo resta netto in ogni momento, la card non "galleggia" più sul nero.</p>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════
+         2 · SHEET FAB — RITMO VERTICALE (deciso)
+         ════════════════════════════════════════════════════════════ -->
+    <section class="space-y-4">
+      <div>
+        <h2 class="text-[15px] font-bold text-onSurf">2 · Deciso — sheet FAB con ritmo verticale</h2>
+        <p class="mt-1 text-[11px] text-mut">Campi in colonna singola, stacco costante di 16px (<span class="text-onSurfV">space-y-4</span>): niente griglie a 2 colonne. Stessa anatomia pill di text-field.</p>
+      </div>
+      <p class="caption">Nuova registrazione · campi impilati · gap 16px</p>
+
+      <div class="enter relative h-[730px] overflow-hidden rounded-[32px] bg-black ring-1 ring-white/[0.06]">
+        <!-- fantasma del cruscotto sotto lo scrim -->
+        <div class="absolute inset-x-0 top-0 p-4 space-y-3" aria-hidden="true">
+          <div class="h-14 rounded-full bg-white/[0.08]"></div>
+          <div class="h-[118px] rounded-[32px] bg-white/[0.06]"></div>
+          <div class="h-10 rounded-full bg-white/[0.05]"></div>
+        </div>
+        <div class="absolute inset-0 bg-black/60" aria-hidden="true"></div>
+
+        <!-- bottom sheet aperto: rounded-t-[28px] bg-surfC, handle, titolo 15px bold,
+             campi impilati con stacco costante 16px (space-y-4), footer con due azioni -->
+        <div class="absolute inset-x-0 bottom-0 rounded-t-[28px] bg-surfC shadow-sheet px-4 pt-3 pb-6">
+          <!-- drag handle -->
+          <div class="mx-auto w-9 h-1 rounded-full bg-outline"></div>
+          <p class="mt-4 text-[15px] font-bold text-onSurf">Nuova registrazione</p>
+
+          <!-- stack verticale: 6 campi, gap uniforme 16px — nessuna griglia a 2 colonne -->
+          <div class="mt-4 space-y-4">
+            <!-- Attività: select con chevron 16px, valore allineato a sinistra -->
+            <button type="button" class="press w-full h-14 rounded-full bg-surfHiX px-5 pt-2 text-left">
+              <p class="text-[10px] font-semibold text-onSurfV leading-none">Attività</p>
+              <span class="mt-1 flex items-center justify-between gap-2">
+                <span class="text-[16px] font-medium text-onSurf truncate">Bilanciamento LFP 100%</span>
+                <svg class="w-4 h-4 text-onSurfV shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+              </span>
+            </button>
+
+            <!-- Data: campo pill semplice, solo valore -->
+            <div class="h-14 rounded-full bg-surfHiX px-5 pt-2">
+              <p class="text-[10px] font-semibold text-onSurfV leading-none">Data</p>
+              <p class="mt-1 text-[16px] font-medium text-onSurf">14/11/2026</p>
+            </div>
+
+            <!-- Chilometraggio: suffisso 12px onSurfV allineato alla baseline del valore -->
+            <div class="h-14 rounded-full bg-surfHiX px-5 pt-2">
+              <p class="text-[10px] font-semibold text-onSurfV leading-none">Chilometraggio</p>
+              <div class="mt-1 flex items-baseline gap-2">
+                <p class="flex-1 min-w-0 text-[16px] font-medium text-onSurf">4.500</p>
+                <span class="text-[12px] text-onSurfV shrink-0">km</span>
+              </div>
+            </div>
+
+            <!-- Luogo: testo libero, nessun suffisso -->
+            <div class="h-14 rounded-full bg-surfHiX px-5 pt-2">
+              <p class="text-[10px] font-semibold text-onSurfV leading-none">Luogo</p>
+              <p class="mt-1 text-[16px] font-medium text-onSurf">Garage di casa</p>
+            </div>
+
+            <!-- Costo: suffisso € -->
+            <div class="h-14 rounded-full bg-surfHiX px-5 pt-2">
+              <p class="text-[10px] font-semibold text-onSurfV leading-none">Costo</p>
+              <div class="mt-1 flex items-baseline gap-2">
+                <p class="flex-1 min-w-0 text-[16px] font-medium text-onSurf">0</p>
+                <span class="text-[12px] text-onSurfV shrink-0">€</span>
+              </div>
+            </div>
+
+            <!-- Durata: suffisso h -->
+            <div class="h-14 rounded-full bg-surfHiX px-5 pt-2">
+              <p class="text-[10px] font-semibold text-onSurfV leading-none">Durata</p>
+              <div class="mt-1 flex items-baseline gap-2">
+                <p class="flex-1 min-w-0 text-[16px] font-medium text-onSurf">2</p>
+                <span class="text-[12px] text-onSurfV shrink-0">h</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-5 flex items-center gap-3">
+            <!-- footer: Annulla text button + Registra filled flex-1 (azione primaria più larga) -->
+            <button type="button" class="press h-12 px-6 rounded-full text-[14px] font-bold text-onSurfV">Annulla</button>
+            <button type="button" class="press h-12 flex-1 rounded-full bg-prim text-onPrim text-[15px] font-bold">Registra</button>
+          </div>
+        </div>
+      </div>
+      <p class="text-[11px] text-mut">Campo = 56px + 16px di stacco → passo costante di 72px. Il footer è fuori dal ritmo: zona di azione, non di lettura.</p>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════
+         3 · IN SINTESI — TRE VARIANTI (stessi dati: 2 / 1 / 8)
+         ════════════════════════════════════════════════════════════ -->
+    <section class="space-y-4">
+      <div>
+        <h2 class="text-[15px] font-bold text-onSurf">3 · In sintesi — tre varianti</h2>
+        <p class="mt-1 text-[11px] text-mut">Stessi dati ovunque: 2 in regola · 1 in scadenza · 8 scadute. Ogni riga o tile punta a <span class="text-onSurfV">/attivita?stato=…</span> (qui solo press feedback).</p>
+      </div>
+
+      <!-- ── A · Righe MD3 ── -->
+      <!-- Anatomia lista MD3 completa: icona tonale 40px → testo (titolo 15px + sub 11px)
+           → conteggio 22px font-black → chevron 20px. Le hairline sono elementi separati,
+           così il morph rounded-[16px] della riga sotto pressione resta pulito. -->
+      <div class="space-y-2">
+        <p class="caption">A — Righe MD3 (consigliato)</p>
+        <div class="enter rounded-[32px] bg-black p-4 ring-1 ring-white/[0.06]">
+          <p class="text-[13px] font-semibold text-mut">In sintesi</p>
+
+          <div class="mt-3 rounded-[24px] bg-surfC overflow-hidden">
+            <button type="button" class="press press-row w-full flex items-center gap-3 px-4 py-3.5 text-left">
+              <span class="w-10 h-10 rounded-full bg-okC flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5 text-onOkC" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+              </span>
+              <span class="flex-1 min-w-0">
+                <span class="block text-[15px] font-semibold text-onSurf">In regola</span>
+                <span class="block text-[11px] text-mut">2 di 11 attività</span>
+              </span>
+              <span class="text-[22px] font-black text-onSurf leading-none">2</span>
+              <svg class="w-5 h-5 text-mut shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+            <div class="mx-4 h-px bg-white/[0.06]"></div>
+            <button type="button" class="press press-row w-full flex items-center gap-3 px-4 py-3.5 text-left">
+              <span class="w-10 h-10 rounded-full bg-waC flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5 text-onWaC" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/>
+                  <path d="M12 7.5v4"/>
+                  <path d="M12 15.5h.01"/></svg>
+              </span>
+              <span class="flex-1 min-w-0">
+                <span class="block text-[15px] font-semibold text-onSurf">In scadenza</span>
+                <span class="block text-[11px] text-mut">entro 30 giorni</span>
+              </span>
+              <span class="text-[22px] font-black text-onSurf leading-none">1</span>
+              <svg class="w-5 h-5 text-mut shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+            <div class="mx-4 h-px bg-white/[0.06]"></div>
+            <button type="button" class="press press-row w-full flex items-center gap-3 px-4 py-3.5 text-left">
+              <span class="w-10 h-10 rounded-full bg-errC flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5 text-onErrC" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>
+                  <path d="M12 9v4"/>
+                  <path d="M12 17h.01"/></svg>
+              </span>
+              <span class="flex-1 min-w-0">
+                <span class="block text-[15px] font-semibold text-onSurf">Scadute</span>
+                <span class="block text-[11px] text-mut">da registrare</span>
+              </span>
+              <span class="text-[22px] font-black text-onSurf leading-none">8</span>
+              <svg class="w-5 h-5 text-mut shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+          </div>
+        </div>
+        <p class="pt-2 text-[11px] text-mut">Un solo contenitore, tre righe da lista: porta a /attivita?stato=… e il sottotitolo spiega il criterio del conteggio.</p>
+      </div>
+
+      <!-- ── B · Card segmentata ── -->
+      <!-- Compromesso compatto: una sola card, tre colonne separate da hairline verticali,
+           chip tonale 32px + numero 26px + label 10px maiuscola. Meno righe di A,
+           più densità; perde i sottotitoli ma tiene l'iconografia di stato. -->
+      <div class="space-y-2">
+        <p class="caption">B — Card segmentata</p>
+        <div class="enter rounded-[32px] bg-black p-4 ring-1 ring-white/[0.06]">
+          <p class="text-[13px] font-semibold text-mut">In sintesi</p>
+
+          <div class="mt-3 rounded-[24px] bg-surfC grid grid-cols-3 divide-x divide-white/[0.06]">
+            <button type="button" class="press press-tile flex flex-col items-center gap-2 py-5">
+              <span class="w-8 h-8 rounded-full bg-okC flex items-center justify-center">
+                <svg class="w-4 h-4 text-onOkC" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+              </span>
+              <span class="text-[26px] font-black text-onSurf leading-none">2</span>
+              <span class="text-[10px] font-bold uppercase tracking-[0.08em] text-onSurfV">In regola</span>
+            </button>
+            <button type="button" class="press press-tile flex flex-col items-center gap-2 py-5">
+              <span class="w-8 h-8 rounded-full bg-waC flex items-center justify-center">
+                <svg class="w-4 h-4 text-onWaC" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/>
+                  <path d="M12 7.5v4"/>
+                  <path d="M12 15.5h.01"/></svg>
+              </span>
+              <span class="text-[26px] font-black text-onSurf leading-none">1</span>
+              <span class="text-[10px] font-bold uppercase tracking-[0.08em] text-onSurfV">In scadenza</span>
+            </button>
+            <button type="button" class="press press-tile flex flex-col items-center gap-2 py-5">
+              <span class="w-8 h-8 rounded-full bg-errC flex items-center justify-center">
+                <svg class="w-4 h-4 text-onErrC" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>
+                  <path d="M12 9v4"/>
+                  <path d="M12 17h.01"/></svg>
+              </span>
+              <span class="text-[26px] font-black text-onSurf leading-none">8</span>
+              <span class="text-[10px] font-bold uppercase tracking-[0.08em] text-onSurfV">Scadute</span>
+            </button>
+          </div>
+        </div>
+        <p class="pt-2 text-[11px] text-mut">Metà dell'altezza di A, stesso conteggio: variante da scegliere se la sintesi deve restare riepilogo e non lista.</p>
+      </div>
+
+      <!-- ── C · Tre card tonali ── -->
+      <!-- Energia "big shape" M3E: tre forme piene, chip invertita (fill on* con glifo
+           nel tono scuro), numero 30px e label in basso a sinistra. Gioco di scala
+           e colore al posto della densità informativa: il dato si legge in un colpo d'occhio. -->
+      <div class="space-y-2">
+        <p class="caption">C — Tre card tonali</p>
+        <div class="enter rounded-[32px] bg-black p-4 ring-1 ring-white/[0.06]">
+          <p class="text-[13px] font-semibold text-mut">In sintesi</p>
+
+          <div class="mt-3 grid grid-cols-3 gap-2.5">
+            <button type="button" class="press press-tile flex flex-col justify-between min-h-[120px] rounded-[20px] bg-okC p-4 text-left">
+              <span class="w-8 h-8 rounded-full bg-onOkC flex items-center justify-center">
+                <svg class="w-4 h-4 text-okC" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+              </span>
+              <span class="block">
+                <span class="block text-[30px] font-black text-onOkC leading-none tracking-tight">2</span>
+                <span class="mt-1 block text-[12px] font-medium text-onOkC/80">In regola</span>
+              </span>
+            </button>
+            <button type="button" class="press press-tile flex flex-col justify-between min-h-[120px] rounded-[20px] bg-waC p-4 text-left">
+              <span class="w-8 h-8 rounded-full bg-onWaC flex items-center justify-center">
+                <svg class="w-4 h-4 text-waC" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/>
+                  <path d="M12 7.5v4"/>
+                  <path d="M12 15.5h.01"/></svg>
+              </span>
+              <span class="block">
+                <span class="block text-[30px] font-black text-onWaC leading-none tracking-tight">1</span>
+                <span class="mt-1 block text-[12px] font-medium text-onWaC/80">In scadenza</span>
+              </span>
+            </button>
+            <button type="button" class="press press-tile flex flex-col justify-between min-h-[120px] rounded-[20px] bg-errC p-4 text-left">
+              <span class="w-8 h-8 rounded-full bg-onErrC flex items-center justify-center">
+                <svg class="w-4 h-4 text-errC" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>
+                  <path d="M12 9v4"/>
+                  <path d="M12 17h.01"/></svg>
+              </span>
+              <span class="block">
+                <span class="block text-[30px] font-black text-onErrC leading-none tracking-tight">8</span>
+                <span class="mt-1 block text-[12px] font-medium text-onErrC/80">Scadute</span>
+              </span>
+            </button>
+          </div>
+        </div>
+        <p class="pt-2 text-[11px] text-mut">Contro-tendenza rispetto a oggi: forma piena, numero grande, zero sottotitoli — il dato si legge in un colpo d'occhio.</p>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════
+         4 · PRONTEZZA + CICLI — DUE VARIANTI (18% · 14/5.000)
+         ════════════════════════════════════════════════════════════ -->
+    <section class="space-y-4">
+      <div>
+        <h2 class="text-[15px] font-bold text-onSurf">4 · Prontezza + Cicli — due varianti</h2>
+        <p class="mt-1 text-[11px] text-mut">Stessi dati: Prontezza 18% · "2 di 11 in regola" — Cicli LFP 14/5.000 · "≈ 0,3% vita utile".</p>
+      </div>
+
+      <!-- ── A · Card stato unico ── -->
+      <!-- Una sola card = un solo "stato del veicolo": eyebrow 12px tracciato, poi due
+           blocchi statistici separati da hairline. Ogni blocco: label + supporto,
+           valore 30px con suffisso 13px mut, barra sottile 1.5 a piena larghezza.
+           Il fill cicli è onTerC (non terC: su bg-surfHiX non si leggerebbe). -->
+      <div class="space-y-2">
+        <p class="caption">A — Card stato unico</p>
+        <div class="enter rounded-[32px] bg-black p-4 ring-1 ring-white/[0.06]">
+          <div class="rounded-[24px] bg-surfC p-5">
+            <p class="text-[12px] font-bold uppercase tracking-[0.08em] text-mut">Stato veicolo</p>
+
+            <div class="mt-5 space-y-5">
+              <!-- Prontezza: 2/11 attività in regola ≈ 18% -->
+              <div>
+                <p class="text-[12px] font-medium text-onSurfV">Prontezza</p>
+                <p class="mt-0.5 text-[11px] text-mut">2 di 11 in regola</p>
+                <p class="mt-2.5 text-[30px] font-black leading-none tracking-tight text-onSurf">18<span class="ml-0.5 text-[13px] font-bold text-mut">%</span></p>
+                <div class="mt-3 h-1.5 rounded-full bg-surfHiX overflow-hidden">
+                  <div class="h-full rounded-full bg-prim" style="width:18%"></div>
+                </div>
+              </div>
+
+              <div class="h-px bg-white/[0.06]"></div>
+
+              <!-- Cicli LFP: 14 cicli su 5.000 stimati ≈ 0,3% della vita utile -->
+              <div>
+                <p class="text-[12px] font-medium text-onSurfV">Cicli LFP</p>
+                <p class="mt-0.5 text-[11px] text-mut">≈ 0,3% vita utile</p>
+                <p class="mt-2.5 text-[30px] font-black leading-none tracking-tight text-onSurf">14<span class="ml-0.5 text-[13px] font-bold text-mut">/5.000</span></p>
+                <div class="mt-3 h-1.5 rounded-full bg-surfHiX overflow-hidden">
+                  <div class="h-full min-w-[4px] rounded-full bg-onTerC" style="width:0.3%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="pt-2 text-[11px] text-mut">Un contenitore, due statistiche: meno cornici, più respiro verticale (20px di stacco) e barre a piena larghezza.</p>
+      </div>
+
+      <!-- ── B · Due card display ── -->
+      <!-- Tipografia e iconografia alzate rispetto a oggi: chip tonale 32px in alto a
+           destra (grafico gauge / ciclo), valore 30px come protagonista, barra ancorata
+           al fondo con mt-auto per allineare le due card nonostante label diverse. -->
+      <div class="space-y-2">
+        <p class="caption">B — Due card display</p>
+        <div class="enter rounded-[32px] bg-black p-4 ring-1 ring-white/[0.06]">
+          <div class="grid grid-cols-2 gap-3">
+            <!-- Prontezza: chip gauge primC + barra prim al 18% -->
+            <div class="flex flex-col rounded-[24px] bg-surfC p-4">
+              <div class="flex items-start justify-between gap-2">
+                <p class="text-[12px] font-medium text-onSurfV">Prontezza</p>
+                <span class="w-8 h-8 rounded-full bg-primC flex items-center justify-center shrink-0">
+                  <svg class="w-4 h-4 text-onPrimC" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.9 19a9 9 0 1 1 14.2 0"/>
+                  <path d="m12 13 3.5-3.5"/></svg>
+                </span>
+              </div>
+              <p class="mt-2 text-[30px] font-black leading-none tracking-tight text-onSurf">18<span class="ml-0.5 text-[13px] font-bold text-mut">%</span></p>
+              <p class="mt-1.5 text-[11px] text-mut">2 di 11 in regola</p>
+              <div class="mt-auto pt-4">
+                <div class="h-1.5 rounded-full bg-surfHiX overflow-hidden">
+                  <div class="h-full rounded-full bg-prim" style="width:18%"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Cicli LFP: chip ciclo terC + barra onTerC al 0,3% (min-w 4px) -->
+            <div class="flex flex-col rounded-[24px] bg-surfC p-4">
+              <div class="flex items-start justify-between gap-2">
+                <p class="text-[12px] font-medium text-onSurfV">Cicli LFP</p>
+                <span class="w-8 h-8 rounded-full bg-terC flex items-center justify-center shrink-0">
+                  <svg class="w-4 h-4 text-onTerC" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/>
+                  <path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+                  <path d="m7 22-4-4 4-4"/>
+                  <path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                </span>
+              </div>
+              <p class="mt-2 text-[30px] font-black leading-none tracking-tight text-onSurf">14<span class="ml-0.5 text-[13px] font-bold text-mut">/5.000</span></p>
+              <p class="mt-1.5 text-[11px] text-mut">≈ 0,3% vita utile</p>
+              <div class="mt-auto pt-4">
+                <div class="h-1.5 rounded-full bg-surfHiX overflow-hidden">
+                  <div class="h-full min-w-[4px] rounded-full bg-onTerC" style="width:0.3%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="pt-2 text-[11px] text-mut">Due card gemelle: il chip iconico risponde a "cos'è?", il numero 30px a "quanto?". Barre allineate al fondo nonostante label diverse.</p>
+      </div>
+    </section>
+
+    <p class="caption pt-2">Fine bozza e · i glow rimossi, i ritmi corretti, i conti invariati</p>
+
+  </main>
+
+  <script>
+    // Light polish: entrance rise (16px) + fade on load, stagger leggero per frame.
+    // Gli stati di pressione sono in CSS (.press / .press-row / .press-tile).
+    (function () {
+      function reveal() {
+        var items = document.querySelectorAll('.enter');
+        for (var i = 0; i < items.length; i++) {
+          items[i].style.transitionDelay = Math.min(i * 45, 450) + 'ms';
+        }
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            document.documentElement.classList.add('ready');
+          });
+        });
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', reveal);
+      } else {
+        reveal();
+      }
+    })();
+  </script>
+</body>
+</html>

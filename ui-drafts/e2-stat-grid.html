@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>BYD · Cruscotto — bozza e2 stat grid</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..1000&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['"Roboto Flex"', 'Roboto', 'system-ui', 'sans-serif'] },
+          colors: {
+            prim: '#e3a89b', onPrim: '#402010',
+            primC: '#55291d', onPrimC: '#f3d4c8',
+            secC: '#3d3431', onSecC: '#eadcd5',
+            terC: '#463818', onTerC: '#e6cd96',
+            err: '#d98a80', onErr: '#441411',
+            errC: '#3e1d1c', onErrC: '#f2c1ba',
+            surf: '#000000', surfLox: '#0e0d0d', surfC: '#1e1c1d', surfHi: '#2a2728', surfHiX: '#353132',
+            onSurf: '#eae4e2', onSurfV: '#b9aca8', mut: '#8d817d', outline: '#463f3d',
+            okC: '#1d3326', onOkC: '#9cc7a8',
+            waC: '#363020', onWaC: '#d9c084',
+          },
+          boxShadow: {
+            fab: '0 4px 10px rgba(0,0,0,0.5), 0 14px 32px rgba(0,0,0,0.55)',
+            hero: '0 6px 24px rgba(0,0,0,0.35)',
+            nav: '0 8px 28px rgba(0,0,0,0.55)',
+            sheet: '0 -8px 32px rgba(0,0,0,0.6)',
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    html { -webkit-tap-highlight-color: transparent; }
+    body { color: #eae4e2; }
+    ::selection { background: rgba(227, 168, 155, 0.3); }
+    .caption { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; color: #8d817d; }
+
+    /* Scala tipografica rispettata: 10 caption / 11 meta / 12 label / 13 body-sm /
+       14 body / 15 card-title / 16 field / 22 title / 26–30 display font-black.
+       Raggi: pill · 20 · 24 · 32. Press: scale .97, tile .95. Stroke icone: 1.8. */
+
+    /* ── Entrance: rise 16px + fade, una volta al load (light polish) ── */
+    .enter { opacity: 0; transform: translateY(16px); transition: opacity .5s cubic-bezier(.2, 0, 0, 1), transform .5s cubic-bezier(.2, 0, 0, 1); }
+    .ready .enter { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce) {
+      .enter { opacity: 1; transform: none; transition: none; }
+    }
+
+    /* ── Press: state layer MD3 (hover 6% / active 10%) + scale .97 (tile .95) ── */
+    .press {
+      position: relative;
+      cursor: pointer;
+      transition: transform .25s cubic-bezier(.2, 0, 0, 1), border-radius .25s cubic-bezier(.2, 0, 0, 1);
+    }
+    .press::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: #fff;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s cubic-bezier(.2, 0, 0, 1);
+    }
+    .press:hover::after { opacity: .06; }
+    .press:active::after { opacity: .10; }
+    .press:active { transform: scale(.97); }
+    .press-tile:active { transform: scale(.95); }
+    .press:focus-visible { outline: 2px solid #e3a89b; outline-offset: 2px; }
+
+    /* righe liste: morph del raggio a 16px sotto pressione */
+    .press-row { border-radius: 0; }
+    .press-row:hover, .press-row:active { border-radius: 16px; }
+  </style>
+</head>
+<body class="bg-surfLox font-sans antialiased">
+
+  <main class="mx-auto w-[430px] py-10 space-y-12">
+
+    <!-- ══ STRISCIA DI ANNOTAZIONE ══ -->
+    <header class="enter rounded-[24px] border border-outline px-5 py-4">
+      <p class="caption">e2 · Card stato veicolo — progressi a forma diversa</p>
+      <p class="mt-1.5 text-[10px] font-semibold text-mut">3 varianti di forma · layout a griglia</p>
+    </header>
+
+    <!-- ════════════════════════════════════════════════════════════
+         CARD CONDIVISA — griglia 2 colonne, dati reali:
+         Prontezza 18% · "2 di 11 in regola" — Cicli LFP 14/5.000 · "≈ 0,3% vita utile".
+         Cambia SOLO la forma dell'indicatore di progresso.
+         Fill cicli = onTerC (non terC: su bg-surfHiX non si leggerebbe).
+         ════════════════════════════════════════════════════════════ -->
+
+    <!-- ── A · Capsule spessa ── -->
+    <!-- Barre rounded-full h-2.5 (10px): track surfHiX, fill prim / onTerC con
+         min-w-[8px] perché lo 0,3% resti visibile. La forma "safe" per default. -->
+    <section class="space-y-2">
+      <p class="caption">A — Capsule spessa</p>
+      <div class="enter rounded-[32px] bg-black p-4 ring-1 ring-white/[0.06]">
+        <div class="rounded-[24px] bg-surfC p-5">
+          <p class="text-[10px] font-bold uppercase tracking-[0.14em] text-mut">Stato veicolo</p>
+
+          <div class="mt-4 grid grid-cols-2 gap-4">
+            <!-- Prontezza: 2/11 attività in regola ≈ 18% -->
+            <div>
+              <p class="text-[12px] font-medium text-onSurfV">Prontezza</p>
+              <p class="mt-1.5 whitespace-nowrap text-[30px] font-black leading-none tracking-tight text-onSurf">18<span class="ml-0.5 text-[13px] font-bold text-mut">%</span></p>
+              <p class="mt-1.5 text-[11px] text-mut">2 di 11 in regola</p>
+              <div class="mt-3 h-2.5 rounded-full bg-surfHiX overflow-hidden">
+                <div class="h-full rounded-full bg-prim" style="width:18%"></div>
+              </div>
+            </div>
+
+            <!-- Cicli LFP: 14 cicli su 5.000 stimati ≈ 0,3% della vita utile -->
+            <div>
+              <p class="text-[12px] font-medium text-onSurfV">Cicli LFP</p>
+              <p class="mt-1.5 whitespace-nowrap text-[30px] font-black leading-none tracking-tight text-onSurf">14<span class="ml-0.5 text-[13px] font-bold text-mut">/5.000</span></p>
+              <p class="mt-1.5 text-[11px] text-mut">≈ 0,3% vita utile</p>
+              <div class="mt-3 h-2.5 rounded-full bg-surfHiX overflow-hidden">
+                <div class="h-full min-w-[8px] rounded-full bg-onTerC" style="width:0.3%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="pt-2 text-[11px] text-mut">Capsula piena da 10px: la forma più sicura e leggibile, un gradino "MD3 slider" rispetto all'attuale hairline da 6px.</p>
+    </section>
+
+    <!-- ── B · Onda M3E ── -->
+    <!-- Indicatore ondulato Material 3 Expressive: stessa geometria per entrambe le
+         statistiche (viewBox 0 0 200 12 ·ampiezza 3.5 · lunghezza d'onda 28 ·
+         stroke-width 4 · linecap round). La curva è una catena di quadratiche Q/T:
+         controllo a ±7 sull'asse verticale → estremo a ±3.5 dal centro (y=6).
+         pathLength="1000" normalizza la lunghezza: il fill è
+         stroke-dasharray="P 1000" con P = valore% × 10 (min 45 ≈ marchio visibile),
+         così il fill "scava" l'onda fino al valore senza calcolare l'arco reale. -->
+    <section class="space-y-2">
+      <p class="caption">B — Onda M3E</p>
+      <div class="enter rounded-[32px] bg-black p-4 ring-1 ring-white/[0.06]">
+        <div class="rounded-[24px] bg-surfC p-5">
+          <p class="text-[10px] font-bold uppercase tracking-[0.14em] text-mut">Stato veicolo</p>
+
+          <div class="mt-4 grid grid-cols-2 gap-4">
+            <!-- Prontezza: onda piena surfHiX + fill prim al 18% (180/1000) -->
+            <div>
+              <p class="text-[12px] font-medium text-onSurfV">Prontezza</p>
+              <p class="mt-1.5 whitespace-nowrap text-[30px] font-black leading-none tracking-tight text-onSurf">18<span class="ml-0.5 text-[13px] font-bold text-mut">%</span></p>
+              <p class="mt-1.5 text-[11px] text-mut">2 di 11 in regola</p>
+              <svg viewBox="0 0 200 12" class="mt-3 w-full h-3" fill="none" stroke-width="4" stroke-linecap="round" aria-hidden="true">
+                <path class="stroke-surfHiX" pathLength="1000" d="M2 6 Q9 -1 16 6 T30 6 T44 6 T58 6 T72 6 T86 6 T100 6 T114 6 T128 6 T142 6 T156 6 T170 6 T184 6 T198 6"/>
+                <path class="stroke-prim" pathLength="1000" stroke-dasharray="180 1000" d="M2 6 Q9 -1 16 6 T30 6 T44 6 T58 6 T72 6 T86 6 T100 6 T114 6 T128 6 T142 6 T156 6 T170 6 T184 6 T198 6"/>
+              </svg>
+            </div>
+
+            <!-- Cicli LFP: breve "testa d'onda" onTerC al 0,3% (45/1000, min visibile) -->
+            <div>
+              <p class="text-[12px] font-medium text-onSurfV">Cicli LFP</p>
+              <p class="mt-1.5 whitespace-nowrap text-[30px] font-black leading-none tracking-tight text-onSurf">14<span class="ml-0.5 text-[13px] font-bold text-mut">/5.000</span></p>
+              <p class="mt-1.5 text-[11px] text-mut">≈ 0,3% vita utile</p>
+              <svg viewBox="0 0 200 12" class="mt-3 w-full h-3" fill="none" stroke-width="4" stroke-linecap="round" aria-hidden="true">
+                <path class="stroke-surfHiX" pathLength="1000" d="M2 6 Q9 -1 16 6 T30 6 T44 6 T58 6 T72 6 T86 6 T100 6 T114 6 T128 6 T142 6 T156 6 T170 6 T184 6 T198 6"/>
+                <path class="stroke-onTerC" pathLength="1000" stroke-dasharray="45 1000" d="M2 6 Q9 -1 16 6 T30 6 T44 6 T58 6 T72 6 T86 6 T100 6 T114 6 T128 6 T142 6 T156 6 T170 6 T184 6 T198 6"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="pt-2 text-[11px] text-mut">Onda M3E: la firma espressiva Material 3 — il fill scava l'onda fino al valore e anche lo 0,3% resta un breve tratto vivo.</p>
+    </section>
+
+    <!-- ── C · Thumb in track ── -->
+    <!-- Slider MD3 congelato: track h-2 surfHiX, tratto attivo fino al valore
+         (min-w-[8px]) e thumb tondo 16px prim / onTerC con anello surfC da 2px.
+         Il thumb è clampato al bordo sinistro (left-2 = centro a 8px) così non
+         deborda dal traccia; il marchio minimo resta sotto di esso. -->
+    <section class="space-y-2">
+      <p class="caption">C — Thumb in track</p>
+      <div class="enter rounded-[32px] bg-black p-4 ring-1 ring-white/[0.06]">
+        <div class="rounded-[24px] bg-surfC p-5">
+          <p class="text-[10px] font-bold uppercase tracking-[0.14em] text-mut">Stato veicolo</p>
+
+          <div class="mt-4 grid grid-cols-2 gap-4">
+            <!-- Prontezza: tratto attivo 18% + thumb centrato sul valore -->
+            <div>
+              <p class="text-[12px] font-medium text-onSurfV">Prontezza</p>
+              <p class="mt-1.5 whitespace-nowrap text-[30px] font-black leading-none tracking-tight text-onSurf">18<span class="ml-0.5 text-[13px] font-bold text-mut">%</span></p>
+              <p class="mt-1.5 text-[11px] text-mut">2 di 11 in regola</p>
+              <div class="relative mt-3 h-4">
+                <div class="absolute inset-x-0 top-1 h-2 rounded-full bg-surfHiX"></div>
+                <div class="absolute left-0 top-1 h-2 rounded-full bg-prim" style="width:18%"></div>
+                <div class="absolute top-0 w-4 h-4 -translate-x-1/2 rounded-full bg-prim ring-2 ring-surfC" style="left:18%"></div>
+              </div>
+            </div>
+
+            <!-- Cicli LFP: thumb al bordo sinistro + marchio minimo onTerC -->
+            <div>
+              <p class="text-[12px] font-medium text-onSurfV">Cicli LFP</p>
+              <p class="mt-1.5 whitespace-nowrap text-[30px] font-black leading-none tracking-tight text-onSurf">14<span class="ml-0.5 text-[13px] font-bold text-mut">/5.000</span></p>
+              <p class="mt-1.5 text-[11px] text-mut">≈ 0,3% vita utile</p>
+              <div class="relative mt-3 h-4">
+                <div class="absolute inset-x-0 top-1 h-2 rounded-full bg-surfHiX"></div>
+                <div class="absolute left-0 top-1 h-2 min-w-[8px] rounded-full bg-onTerC" style="width:0.3%"></div>
+                <div class="absolute left-2 top-0 w-4 h-4 -translate-x-1/2 rounded-full bg-onTerC ring-2 ring-surfC"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="pt-2 text-[11px] text-mut">Thumb in traccia: un slider MD3 congelato — il punto del valore resta leggibile anche quando il tratto attivo è minimo.</p>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════
+         4 · SHEET FAB — CAMPI PER LUNGHEZZA (1 crop)
+         ════════════════════════════════════════════════════════════ -->
+    <section class="space-y-2">
+      <p class="caption">Sheet FAB · campi per lunghezza</p>
+
+      <!-- Campi posizionati per lunghezza attesa dell'input, griglia gap-4
+           (16px costanti in entrambe le direzioni): righe piene per i testi lunghi,
+           mezze colonne per date, importi e durate. Anatomia pill identica a
+           e-rifiniture Block 2: h-14 rounded-full px-5 pt-2 bg-surfHiX,
+           label fluttuante 10px, valore 16px, suffisso 12px. -->
+      <div class="enter relative h-[560px] overflow-hidden rounded-[32px] bg-black ring-1 ring-white/[0.06]">
+        <!-- fantasma del cruscotto sotto lo scrim -->
+        <div class="absolute inset-x-0 top-0 p-4 space-y-3" aria-hidden="true">
+          <div class="h-14 rounded-full bg-white/[0.08]"></div>
+          <div class="h-[118px] rounded-[32px] bg-white/[0.06]"></div>
+          <div class="h-10 rounded-full bg-white/[0.05]"></div>
+        </div>
+        <div class="absolute inset-0 bg-black/60" aria-hidden="true"></div>
+
+        <!-- bottom sheet aperto -->
+        <div class="absolute inset-x-0 bottom-0 rounded-t-[28px] bg-surfC shadow-sheet px-4 pt-3 pb-6">
+          <!-- drag handle -->
+          <div class="mx-auto w-9 h-1 rounded-full bg-outline"></div>
+          <p class="mt-4 text-[15px] font-bold text-onSurf">Nuova registrazione</p>
+
+          <!-- griglia per lunghezza attesa: full · mezza+mezza · full · mezza+mezza -->
+          <div class="mt-4 grid grid-cols-2 gap-4">
+            <!-- Riga 1 · Attività: FULL — select con chevron, titoli lunghi -->
+            <button type="button" class="press col-span-2 h-14 rounded-full bg-surfHiX px-5 pt-2 text-left">
+              <p class="text-[10px] font-semibold text-onSurfV leading-none">Attività</p>
+              <span class="mt-1 flex items-center justify-between gap-2">
+                <span class="text-[16px] font-medium text-onSurf truncate">Bilanciamento LFP 100%</span>
+                <svg class="w-4 h-4 text-onSurfV shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+              </span>
+            </button>
+
+            <!-- Riga 2 · Data + Chilometraggio: due mezze colonne (input medi) -->
+            <div class="h-14 rounded-full bg-surfHiX px-5 pt-2">
+              <p class="text-[10px] font-semibold text-onSurfV leading-none">Data</p>
+              <p class="mt-1 text-[16px] font-medium text-onSurf">14/11/2026</p>
+            </div>
+            <div class="h-14 rounded-full bg-surfHiX px-5 pt-2">
+              <p class="text-[10px] font-semibold text-onSurfV leading-none">Chilometraggio</p>
+              <div class="mt-1 flex items-baseline gap-2">
+                <p class="flex-1 min-w-0 text-[16px] font-medium text-onSurf">4.500</p>
+                <span class="text-[12px] text-onSurfV shrink-0">km</span>
+              </div>
+            </div>
+
+            <!-- Riga 3 · Luogo: FULL — testo libero -->
+            <div class="col-span-2 h-14 rounded-full bg-surfHiX px-5 pt-2">
+              <p class="text-[10px] font-semibold text-onSurfV leading-none">Luogo</p>
+              <p class="mt-1 text-[16px] font-medium text-onSurf">Garage di casa</p>
+            </div>
+
+            <!-- Riga 4 · Costo + Durata: due mezze colonne (input corti) -->
+            <div class="h-14 rounded-full bg-surfHiX px-5 pt-2">
+              <p class="text-[10px] font-semibold text-onSurfV leading-none">Costo</p>
+              <div class="mt-1 flex items-baseline gap-2">
+                <p class="flex-1 min-w-0 text-[16px] font-medium text-onSurf">0</p>
+                <span class="text-[12px] text-onSurfV shrink-0">€</span>
+              </div>
+            </div>
+            <div class="h-14 rounded-full bg-surfHiX px-5 pt-2">
+              <p class="text-[10px] font-semibold text-onSurfV leading-none">Durata</p>
+              <div class="mt-1 flex items-baseline gap-2">
+                <p class="flex-1 min-w-0 text-[16px] font-medium text-onSurf">2</p>
+                <span class="text-[12px] text-onSurfV shrink-0">h</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-5 flex items-center gap-3">
+            <!-- footer invariato: Annulla text button + Registra filled -->
+            <button type="button" class="press h-12 px-6 rounded-full text-[14px] font-bold text-onSurfV">Annulla</button>
+            <button type="button" class="press h-12 flex-1 rounded-full bg-prim text-onPrim text-[15px] font-bold">Registra</button>
+          </div>
+        </div>
+      </div>
+      <p class="pt-2 text-[11px] text-mut">Campi posizionati per lunghezza attesa del testo: righe piene per i titoli lunghi, mezze colonne per date, importi e durate — stacco costante di 16px in entrambe le direzioni.</p>
+    </section>
+
+    <p class="caption pt-2">Fine bozza e2 · stessa card, tre forme di progresso, sheet per lunghezza</p>
+
+  </main>
+
+  <script>
+    // Light polish: entrance rise (16px) + fade on load, stagger leggero per frame.
+    // Gli stati di pressione sono in CSS (.press / .press-row / .press-tile).
+    (function () {
+      function reveal() {
+        var items = document.querySelectorAll('.enter');
+        for (var i = 0; i < items.length; i++) {
+          items[i].style.transitionDelay = Math.min(i * 45, 450) + 'ms';
+        }
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            document.documentElement.classList.add('ready');
+          });
+        });
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', reveal);
+      } else {
+        reveal();
+      }
+    })();
+  </script>
+</body>
+</html>
