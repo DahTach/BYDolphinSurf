@@ -2,8 +2,10 @@
   <!-- Rhythm: blocchi pagina 24px (space-y-6) -->
   <div class="space-y-6">
   <!-- Card veicolo (gemini vehicle maintenance card) — id="veicolo" per il salto
-       "Consegna e consumo" delle impostazioni. Card NEUTRA: nessun rosso qui,
-       lo stato vive solo nella card "Prossima scadenza" qui sotto. -->
+       "Consegna e consumo" delle impostazioni. Card NEUTRA (stato solo in chip/
+       badge/CTA) che ASSORBISCE il blocco "Prossima scadenza": sotto i 3 gauge,
+       dietro una hairline insetta — titolo · timeline con marcatore di scadenza ·
+       info a sinistra, CTA compatta a destra. -->
   <article id="veicolo" class="enter relative bg-surfC rounded-sheet p-5">
     <!-- Car breakout (firma gemini): la vettura sborda dal bordo alto a destra
          (≈⅓ superiore fuori dalla card) — la ground shadow integrata la appoggia
@@ -50,49 +52,66 @@
         (valueChange)="onDeliveryMonth($event)"
       />
     </div>
-  </article>
 
-  <!-- Hero B1 (rifiniture-e D6): nessun glow ambientale — angoli morph + badge cinetico -->
-  <div class="enter relative">
+    <!-- Blocco scadenza (assorbito nella card): hairline insetta + header/titolo ·
+         timeline M3 con marcatore · spec+chip a sinistra, CTA compatta a destra. -->
+    <div class="mt-5 h-px bg-white/[0.06]"></div>
     @if (hero(); as h) {
-      <article class="hero relative bg-surfC p-5 shadow-hero space-y-4">
-        <div class="flex items-center justify-between">
-          <p class="t-label font-bold uppercase tracking-[0.08em] text-mut">Prossima scadenza</p>
+      <div class="mt-4">
+        <div class="flex items-center justify-between gap-3">
+          <p class="t-eyebrow">Prossima scadenza</p>
           <app-status-chip [status]="h.status" variant="hero" />
         </div>
 
-        <div class="relative flex justify-center pt-1">
-          <span class="car-drive" [class.in]="carIn()">
-            <span class="car-float">
-              <img src="dolphin-surf-comfort.png" alt="BYD Dolphin Surf Comfort" class="car-shot" />
-            </span>
-          </span>
-          <app-status-chip #heroBadge class="absolute -top-1 right-2" [status]="h.status" variant="badge" [text]="h.badge" />
-        </div>
+        <h3 class="mt-2 text-[18px] font-extrabold tracking-tight leading-tight text-onSurf">{{ h.activity.title }}</h3>
 
-        <div class="space-y-1.5">
-          <h2 class="t-title font-black tracking-tight leading-tight">{{ h.activity.title }}</h2>
-          <p class="t-body-sm font-medium text-onSurfV">{{ h.activity.spec }}</p>
-          <div class="flex flex-wrap gap-2 pt-0.5">
-            <span class="inline-flex items-center gap-1.5 rounded-pill bg-white/[0.08] border border-white/10 px-3 py-1.5 t-label font-medium">
-              <svg class="w-3.5 h-3.5 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="16" height="10" rx="2"/><path d="M22 11v2"/><path d="M6 11v2"/></svg>
-              {{ heroInterval() }}
-            </span>
-            @if (h.activity.durationNote; as durationNote) {
-              <span class="inline-flex items-center gap-1.5 rounded-pill bg-white/[0.08] border border-white/10 px-3 py-1.5 t-label font-medium">
-                <svg class="w-3.5 h-3.5 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l2.8 1.7"/></svg>
-                {{ durationNote }}
-              </span>
-            }
+        <!-- Timeline (il centro M3): track + fill fino a oggi (prim, err oltre il
+             marcatore) + marcatore 2px alla scadenza; il badge countdown è centrato
+             SOPRA il marcatore (clamp orizzontale → mai fuori dalla riga). -->
+        <div class="relative mt-4 pt-7">
+          <div class="relative h-2 rounded-full bg-surfHiX">
+            <div
+              #timelineFill
+              class="bar absolute inset-y-0 left-0 rounded-full"
+              [class.bg-err]="h.status === 'scaduto'"
+              [class.bg-prim]="h.status !== 'scaduto'"
+            ></div>
+            <div class="absolute -top-1 -bottom-1 w-0.5 rounded-full bg-onSurf -translate-x-1/2" [style.left.%]="h.markerPct"></div>
           </div>
+          <app-status-chip
+            #heroBadge
+            class="absolute top-0 -translate-x-1/2"
+            [style.left.%]="h.badgePct"
+            [status]="h.status"
+            variant="badge"
+            [text]="h.badge"
+          />
         </div>
 
-        <button type="button" (click)="registraHero()" [class]="h.cta + ' btn btn-filled'">Registra ora</button>
-      </article>
+        <!-- Fondo blocco: info a sinistra · "Registra ora" compatta a destra -->
+        <div class="mt-4 flex items-end justify-between gap-3">
+          <div class="min-w-0">
+            <p class="t-body-sm font-medium text-onSurfV">{{ h.activity.spec }}</p>
+            <div class="flex flex-wrap gap-2 pt-1.5">
+              <span class="inline-flex items-center gap-1.5 rounded-pill bg-white/[0.08] border border-white/10 px-3 py-1.5 t-label font-medium">
+                <svg class="w-3.5 h-3.5 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="16" height="10" rx="2"/><path d="M22 11v2"/><path d="M6 11v2"/></svg>
+                {{ heroInterval() }}
+              </span>
+              @if (h.activity.durationNote; as durationNote) {
+                <span class="inline-flex items-center gap-1.5 rounded-pill bg-white/[0.08] border border-white/10 px-3 py-1.5 t-label font-medium">
+                  <svg class="w-3.5 h-3.5 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l2.8 1.7"/></svg>
+                  {{ durationNote }}
+                </span>
+              }
+            </div>
+          </div>
+          <button type="button" (click)="registraHero()" [class]="h.cta + ' btn h-10 px-5 t-button-lg shrink-0'">Registra ora</button>
+        </div>
+      </div>
     } @else {
-      <p class="t-body-sm text-mut">Nessuna scadenza in vista</p>
+      <p class="mt-4 t-body-sm text-mut">Nessuna scadenza in vista</p>
     }
-  </div>
+  </article>
 
   <!-- Prossime (design D9): righe pillola con press morph + chip di stato -->
   <div class="space-y-2">

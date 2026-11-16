@@ -6,6 +6,7 @@ import { GaugeField } from '../../components/gauge-field/gauge-field';
 import { StatusChip } from '../../components/status-chip/status-chip';
 import { WavyProgress } from '../../components/wavy-progress/wavy-progress';
 import {
+  addMonthsSafe,
   daysFrom,
   formatCompactKm,
   formatDecimal,
@@ -14,32 +15,37 @@ import {
   formatPercent,
   intervalBase,
   intervalHero,
+  parseIsoDate,
   parseMonthInput,
   parseMonthKey,
   parseNumber,
+  startOfDay,
   todayIso,
 } from '../../data/format';
 import { Activity } from '../../data/model';
 import { Status, deriveActivityStatus } from '../../data/status';
 import { StoreService } from '../../data/store';
-import { playEntrance, prefersReducedMotion, runCount } from '../../shared/motion';
+import { fillBar, playEntrance, prefersReducedMotion, runCount } from '../../shared/motion';
 /* Cruscotto (specs/dashboard + vehicle-data): the gemini "vehicle maintenance
    card" — neutral surfC card (28px radius) with the car breaking out of its
-   top-right edge and the 3 vehicle fields as editable Onda M3E gauge fields
-   (consumo sx / chilometraggio hero al centro / consegna dx), then the hero B1
-   "Prossima scadenza" with corner morph + kinetic countdown badge and NO
-   ambient glow (rifiniture-e D6), the "Prossime" queue with row press morphs
-   (4.5), tappable "In sintesi" MD3 rows with the ripple→deep-link choreography
-   (rifiniture-e D1), one "Stato veicolo" card with the Onda M3E wavy fills
-   (rifiniture-e D3/D4). All aggregations are computed from the store — no
-   count is hard-coded.
+   top-right edge, the 3 vehicle fields as editable Onda M3E gauge fields
+   (consumo sx / chilometraggio hero al centro / consegna dx) and the ABORBED
+   "Prossima scadenza" block under a hairline: eyebrow + status chip, activity
+   title, the M3 timeline bar (scadenza marker + elapsed fill + kinetic
+   countdown badge over the marker), spec/interval chips bottom-left and the
+   compact "Registra ora" CTA bottom-right. Then the "Prossime" queue with row
+   press morphs (4.5), tappable "In sintesi" MD3 rows with the ripple→deep-link
+   choreography (rifiniture-e D1), one "Stato veicolo" card with the Onda M3E
+   wavy fills (rifiniture-e D3/D4). All aggregations are computed from the
+   store — no count is hard-coded.
 
    Motion discipline (design D11): entrances, count-ups and progress fills fire
    ONLY on route/pane activation (afterNextRender of this route component). Data
    edits snap values/dashes through their CSS transitions and never replay an
    entrance, count-up or digit roll; mid-session hero swaps snap the badge text
-   (the shared status-chip owns that timeline) — the hero container itself stays
-   neutral (status color survives only in the chip, badge and CTA). */
+   and the timeline fill (the shared status-chip owns the badge timeline) — the
+   card itself stays neutral (status color survives only in the chips, badge,
+   fill and CTA). */
 
 /** Ripple fade completes first, then the deep link (design D10). */
 const NAV_DELAY_MS = 600;
@@ -51,8 +57,14 @@ interface HeroView {
   status: Status;
   /** Unpadded countdown: "+N g" (overdue) / "tra N g" (future) / "oggi" */
   badge: string;
-  /** CTA fill permutation (the hero container stays neutral surfC). */
+  /** CTA fill permutation (the merged card stays neutral surfC). */
   cta: string;
+  /** Scadenza marker (due) position along the timeline track (0–100). */
+  markerPct: number;
+  /** Elapsed fill to today along the track (0–100, clamped). */
+  fillPct: number;
+  /** Badge left% — the marker clamped so the chip never overflows the row. */
+  badgePct: number;
 }
 
 /** Hero CTA fill per status (specs/dashboard): red only when overdue. */
@@ -61,6 +73,61 @@ const HERO_CTA: Record<Status, string> = {
   'in-scadenza': 'bg-prim text-onPrim',
   'ok': 'bg-prim text-onPrim',
 };
+
+/* ── Scadenza timeline window (the M3 linear bar inside the vehicle card) ── */
+
+/** Overrun past the due date: 30% of the interval span (an overrun stays visible). */
+const OVERRUN = 0.3;
+/** Fallback window (km-only / no date interval): due −30d → due +10d. */
+const FALLBACK_PRE_DAYS = 30;
+/** Fallback window tail, so the marker lands at 75% (30/40) there too. */
+const FALLBACK_POST_DAYS = 10;
+/** Badge horizontal clamp (center %) so the countdown chip never overflows the row. */
+const BADGE_MIN_PCT = 12;
+const BADGE_MAX_PCT = 88;
+
+/** Local date ± days (DST-safe: day arithmetic on the date field). */
+function addDays(date: Date, days: number): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
+}
+
+/**
+ * Timeline window + positions for the hero activity:
+ * - window start = the activity's `lastDone.date`, or `due − interval months`
+ *   when never done; degenerate/absent date intervals fall back to the sane
+ *   `due −30d → due +10d` window;
+ * - window end = `due + 30%` of the interval span, so the due marker sits at
+ *   ≈76.9% (1/1.3 — 75% on the fallback window) and an overrun renders past it;
+ * - fill = elapsed to today, clamped 0–100 (err when past the marker);
+ * - badge = the marker %, clamped so the chip never overflows the row.
+ */
+function timelinePositions(
+  activity: Activity,
+  due: Date,
+  today: Date,
+): { markerPct: number; fillPct: number; badgePct: number } {
+  const months = activity.interval.months;
+  let start =
+    activity.lastDone != null
+      ? parseIsoDate(activity.lastDone.date)
+      : months != null && months > 0
+        ? addMonthsSafe(due, -months)
+        : due;
+  const fallback = start.getTime() >= due.getTime(); // km-only / no date interval / degenerate
+  if (fallback) start = addDays(due, -FALLBACK_PRE_DAYS);
+
+  const spanMs = due.getTime() - start.getTime();
+  const endMs = fallback ? addDays(due, FALLBACK_POST_DAYS).getTime() : due.getTime() + spanMs * OVERRUN;
+  const totalMs = endMs - start.getTime();
+  const markerPct = (spanMs / totalMs) * 100;
+  const elapsedMs = startOfDay(today).getTime() - start.getTime();
+  const fillPct = clampPercent((elapsedMs / totalMs) * 100);
+  return {
+    markerPct,
+    fillPct,
+    badgePct: Math.min(BADGE_MAX_PCT, Math.max(BADGE_MIN_PCT, markerPct)),
+  };
+}
 
 interface QueueItem {
   id: number;
@@ -94,20 +161,6 @@ function clampPercent(pct: number, min = 0): number {
   imports: [GaugeField, RouterLink, StatusChip, WavyProgress],
   changeDetection: ChangeDetectionStrategy.Eager,
   styles: `
-    /* ── Hero container (design D6): NEUTRAL surfC card — status color survives
-          only in the chip, badge and CTA. Corner morph 48→24px (settles on the
-          card radius) over 600ms --e-emph on entrance. No ambient glow
-          (rifiniture-e D6): shadow-hero is the only depth cue. ── */
-    .hero {
-      position: relative;
-      border-radius: 48px;
-      transition: border-radius var(--d-roll) var(--e-emph);
-    }
-
-    .hero.in {
-      border-radius: var(--radius-card);
-    }
-
     /* ── Sintesi row ripple (design D10): 12px center-origin ring, scale 14 + fade. ── */
     .ripple-ring {
       position: absolute;
@@ -128,19 +181,6 @@ function clampPercent(pct: number, min = 0): number {
         transform: translate(-50%, -50%) scale(14);
         opacity: 0;
       }
-    }
-
-    /* ── Hero car photo (specs/dashboard): the 500×500 PNG carries transparent
-          padding (visible car ≈ x 12–492, y 134–392, baked-in ground shadow
-          included) so the 176px box is cropped to the car with negative margins
-          — the car reads at the old h-24 SVG's weight (≈170×91 vs the old
-          silhouette's ≈225×85) and the badge at -top-1 right-2 still lands on
-          the car's top-right corner. ── */
-    .car-shot {
-      width: 176px;
-      height: 176px;
-      object-fit: contain;
-      margin: -47px -2px -38px -4px;
     }
 
     /* ── Car breakout (gemini vehicle maintenance card): the SAME 500×500 PNG
@@ -193,6 +233,13 @@ function clampPercent(pct: number, min = 0): number {
         transform: translateY(-4px);
       }
     }
+
+    /* ── Scadenza timeline fill: the shared ".bar" primitive plays the entrance
+          (0→target, 650ms --d-bar --e-spring); once live, width data edits ride
+          the gauge contract speed — 250ms --d-small — and never replay. ── */
+    .tl-live {
+      transition: width var(--d-small) var(--e-emph);
+    }
   `,
   templateUrl: './dashboard.html',
 })
@@ -228,13 +275,15 @@ export class Dashboard {
   protected readonly hero = computed<HeroView | null>(() => {
     const pick = this.ordered()[0];
     if (pick == null) return null;
-    const days = daysFrom(pick.derived.dueDate as Date, this.today);
+    const due = pick.derived.dueDate as Date;
+    const days = daysFrom(due, this.today);
     return {
       activity: pick.activity,
       status: pick.derived.status,
       // due-today ⇒ in-scadenza (status.ts: same day is never overdue) ⇒ "oggi", not "+0 g"
       badge: days > 0 ? `+${days} g` : days === 0 ? 'oggi' : `tra ${Math.abs(days)} g`,
       cta: HERO_CTA[pick.derived.status],
+      ...timelinePositions(pick.activity, due, this.today),
     };
   });
 
@@ -363,6 +412,7 @@ export class Dashboard {
   private readonly gaugeFields = viewChildren(GaugeField);
   private readonly prontezzaWave = viewChild('prontezzaWave', { read: WavyProgress });
   private readonly cicliWave = viewChild('cicliWave', { read: WavyProgress });
+  private readonly timelineFill = viewChild('timelineFill', { read: ElementRef });
 
   /**
    * Hero car drive-in (specs/dashboard): flipped once with the activation
@@ -376,6 +426,8 @@ export class Dashboard {
   private pendingNavTimer = 0;
   private delayClearTimer = 0;
   private countCancels: Array<() => void> = [];
+  /** Activity id behind the rendered timeline fill (hero-swap snap detection). */
+  private timelineId = -1;
 
   constructor() {
     this.routerSub = this.router.events.subscribe((event) => {
@@ -415,6 +467,28 @@ export class Dashboard {
         afterNextRender(() => this.revealMountedBlocks(), { injector: this.injector });
       });
     });
+
+    // Scadenza timeline fill data edits: 250ms width transitions, never a
+    // replay (the entrance fill stays activation-only). A mid-session hero swap
+    // snaps the fill to the new activity's window — the badge snaps with it.
+    effect(() => {
+      const hero = this.hero();
+      untracked(() => {
+        if (!this.activated()) return;
+        const el = this.timelineFill()?.nativeElement as HTMLElement | undefined;
+        if (hero == null || el == null) return;
+        el.classList.add('tl-live'); // data-edit speed from now on
+        if (hero.activity.id !== this.timelineId) {
+          el.style.transition = 'none'; // hero swap: snap, no transition
+          el.style.width = `${hero.fillPct}%`;
+          void el.offsetWidth;
+          el.style.transition = '';
+        } else {
+          el.style.width = `${hero.fillPct}%`;
+        }
+        this.timelineId = hero.activity.id;
+      });
+    });
   }
 
   ngOnDestroy(): void {
@@ -427,7 +501,7 @@ export class Dashboard {
 
   private activate(): void {
     const root = this.host.nativeElement as HTMLElement;
-    const blocks = Array.from(root.querySelectorAll<HTMLElement>('.enter, .hero'));
+    const blocks = Array.from(root.querySelectorAll<HTMLElement>('.enter'));
     playEntrance(blocks);
     // Drop the stagger delays once the entrance is over so press morphs, retints and
     // radius morphs transition at full speed later (never delayed by the entrance).
@@ -444,6 +518,15 @@ export class Dashboard {
 
     // Hero car drive-in: same activation-only trigger (specs/dashboard).
     this.carIn.set(true);
+
+    // Scadenza timeline fill: 0→target over 650ms --e-spring (the shared .bar
+    // primitive), once — later data edits ride the 250ms width transition.
+    const hero = this.hero();
+    const fillEl = this.timelineFill()?.nativeElement as HTMLElement | undefined;
+    if (hero != null && fillEl != null) {
+      fillBar(fillEl, hero.fillPct);
+      this.timelineId = hero.activity.id;
+    }
 
     const counts = this.sintesi();
     this.countCancels.push(
@@ -468,7 +551,7 @@ export class Dashboard {
 
   private revealMountedBlocks(): void {
     const root = this.host.nativeElement as HTMLElement;
-    for (const el of Array.from(root.querySelectorAll<HTMLElement>('.enter:not(.in), .hero:not(.in)'))) {
+    for (const el of Array.from(root.querySelectorAll<HTMLElement>('.enter:not(.in)'))) {
       el.style.transitionDelay = '0ms';
       el.style.transition = 'none';
       el.classList.add('in');
