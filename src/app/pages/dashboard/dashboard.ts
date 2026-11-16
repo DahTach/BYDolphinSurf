@@ -31,9 +31,10 @@ import { playEntrance, prefersReducedMotion, runCount } from '../../shared/motio
 
    Motion discipline (design D11): entrances, count-ups and progress fills fire
    ONLY on route/pane activation (afterNextRender of this route component). Data
-   edits snap values/dashes/tints through their CSS transitions and never replay
-   an entrance, count-up or digit roll; mid-session hero swaps retint the container
-   and snap the badge text (the shared status-chip owns that timeline). */
+   edits snap values/dashes through their CSS transitions and never replay an
+   entrance, count-up or digit roll; mid-session hero swaps snap the badge text
+   (the shared status-chip owns that timeline) — the hero container itself stays
+   neutral (status color survives only in the chip, badge and CTA). */
 
 /** Ripple fade completes first, then the deep link (design D10). */
 const NAV_DELAY_MS = 600;
@@ -45,44 +46,15 @@ interface HeroView {
   status: Status;
   /** Unpadded countdown: "+N g" (overdue) / "tra N g" (future) / "oggi" */
   badge: string;
-  tint: HeroTint;
+  /** CTA fill permutation (the hero container stays neutral surfC). */
+  cta: string;
 }
 
-/** Hero color permutations per status (specs/dashboard — single source of truth). */
-interface HeroTint {
-  /** container */
-  card: string;
-  /** header label at 60% opacity */
-  label: string;
-  /** spec line at 70% opacity */
-  subtle: string;
-  /** interval/duration chip text */
-  chipText: string;
-  button: string;
-}
-
-const HERO_TINT: Record<Status, HeroTint> = {
-  'scaduto': {
-    card: 'bg-errC text-onErrC',
-    label: 'text-onErrC/60',
-    subtle: 'text-onErrC/70',
-    chipText: 'text-onErrC',
-    button: 'bg-err text-onErr',
-  },
-  'in-scadenza': {
-    card: 'bg-waC text-onWaC',
-    label: 'text-onWaC/60',
-    subtle: 'text-onWaC/70',
-    chipText: 'text-onWaC',
-    button: 'bg-prim text-onPrim',
-  },
-  'ok': {
-    card: 'bg-primC text-onPrimC',
-    label: 'text-onPrimC/60',
-    subtle: 'text-onPrimC/70',
-    chipText: 'text-onPrimC',
-    button: 'bg-prim text-onPrim',
-  },
+/** Hero CTA fill per status (specs/dashboard): red only when overdue. */
+const HERO_CTA: Record<Status, string> = {
+  'scaduto': 'bg-err text-onErr',
+  'in-scadenza': 'bg-prim text-onPrim',
+  'ok': 'bg-prim text-onPrim',
 };
 
 interface QueueItem {
@@ -104,20 +76,18 @@ const LFP_TOTAL_CYCLES = 5000;
   imports: [RouterLink, StatusChip, TextField, WavyProgress],
   changeDetection: ChangeDetectionStrategy.Eager,
   styles: `
-    /* ── Hero container (design D6): corner morph 48→32px over 600ms --e-emph on
-          entrance; tint changes retint through color transitions (design D11).
-          No ambient glow (rifiniture-e D6): shadow-hero is the only depth cue. ── */
+    /* ── Hero container (design D6): NEUTRAL surfC card — status color survives
+          only in the chip, badge and CTA. Corner morph 48→24px (settles on the
+          card radius) over 600ms --e-emph on entrance. No ambient glow
+          (rifiniture-e D6): shadow-hero is the only depth cue. ── */
     .hero {
       position: relative;
       border-radius: 48px;
-      transition:
-        border-radius var(--d-roll) var(--e-emph),
-        background-color var(--d-fade) var(--e-emph),
-        color var(--d-fade) var(--e-emph);
+      transition: border-radius var(--d-roll) var(--e-emph);
     }
 
     .hero.in {
-      border-radius: var(--radius-hero);
+      border-radius: var(--radius-card);
     }
 
     /* ── Sintesi row ripple (design D10): 12px center-origin ring, scale 14 + fade. ── */
@@ -232,7 +202,7 @@ export class Dashboard {
       status: pick.derived.status,
       // due-today ⇒ in-scadenza (status.ts: same day is never overdue) ⇒ "oggi", not "+0 g"
       badge: days > 0 ? `+${days} g` : days === 0 ? 'oggi' : `tra ${Math.abs(days)} g`,
-      tint: HERO_TINT[pick.derived.status],
+      cta: HERO_CTA[pick.derived.status],
     };
   });
 
@@ -292,9 +262,6 @@ export class Dashboard {
 
   protected readonly prontezzaSubtitle = computed(() => `${this.prontezza().ok} di ${this.prontezza().total} in regola`);
 
-  /** Ring center value line — sized from the RENDERED text (count-up included). */
-  protected readonly prontezzaLine = computed(() => ringValueLine(`${this.prontezzaDisplay()}%`, 14));
-
   /* ── Cicli LFP (resolved ND-3) ── */
 
   protected readonly cicli = computed(() =>
@@ -306,9 +273,6 @@ export class Dashboard {
   protected readonly cicliPercent = computed(() => (this.cicli() / LFP_TOTAL_CYCLES) * 100);
 
   protected readonly cicliLabel = computed(() => formatPercent(this.cicliPercent()));
-
-  /** Ring center value line — sized from the RENDERED text (count-up included). */
-  protected readonly cicliLine = computed(() => ringValueLine(`${this.cicliDisplay()}/5.000`, 12));
 
   /* ── Motion orchestration (design D11: activation-only) ── */
 
@@ -492,17 +456,4 @@ export class Dashboard {
 /** "20/08" for the queue chip (dd/mm). */
 function formatDayMonth(date: Date): string {
   return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`;
-}
-
-/**
- * Ring center value line (composition A): steps DOWN instead of overflowing —
- * 26px default, 22px past 6 glyphs, 18px past 8 — with the suffix scaled along
- * (14px "%" / 12px "/5.000" at the default step). Glyphs are counted from the
- * rendered text (count-up included); the punctuation marks of the suffixes are
- * not glyphs, so the pinned state ("18%" and "14/5.000") stays at 26px/26px.
- */
-function ringValueLine(text: string, suffixBase: number): { value: number; suffix: number } {
-  const glyphs = text.replace(/[^0-9a-z]/gi, '').length;
-  const value = glyphs > 8 ? 18 : glyphs > 6 ? 22 : 26;
-  return { value, suffix: Math.round((value / 26) * suffixBase) };
 }
