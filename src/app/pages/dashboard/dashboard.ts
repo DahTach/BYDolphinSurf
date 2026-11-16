@@ -58,9 +58,6 @@ interface HeroTint {
   subtle: string;
   /** interval/duration chip text */
   chipText: string;
-  /** car SVG fills (carBody / carAccent tokens, specs/design-system) */
-  carBody: string;
-  carAccent: string;
   button: string;
 }
 
@@ -70,8 +67,6 @@ const HERO_TINT: Record<Status, HeroTint> = {
     label: 'text-onErrC/60',
     subtle: 'text-onErrC/70',
     chipText: 'text-onErrC',
-    carBody: 'fill-carBodyErr',
-    carAccent: 'fill-carAccentErr',
     button: 'bg-err text-onErr',
   },
   'in-scadenza': {
@@ -79,8 +74,6 @@ const HERO_TINT: Record<Status, HeroTint> = {
     label: 'text-onWaC/60',
     subtle: 'text-onWaC/70',
     chipText: 'text-onWaC',
-    carBody: 'fill-carBody',
-    carAccent: 'fill-carAccent',
     button: 'bg-prim text-onPrim',
   },
   'ok': {
@@ -88,8 +81,6 @@ const HERO_TINT: Record<Status, HeroTint> = {
     label: 'text-onPrimC/60',
     subtle: 'text-onPrimC/70',
     chipText: 'text-onPrimC',
-    carBody: 'fill-carBody',
-    carAccent: 'fill-carAccent',
     button: 'bg-prim text-onPrim',
   },
 };
@@ -148,6 +139,56 @@ const LFP_TOTAL_CYCLES = 5000;
       to {
         transform: translate(-50%, -50%) scale(14);
         opacity: 0;
+      }
+    }
+
+    /* ── Hero car photo (specs/dashboard): the 500×500 PNG carries transparent
+          padding (visible car ≈ x 12–492, y 134–392, baked-in ground shadow
+          included) so the 176px box is cropped to the car with negative margins
+          — the car reads at the old h-24 SVG's weight (≈170×91 vs the old
+          silhouette's ≈225×85) and the badge at -top-1 right-2 still lands on
+          the car's top-right corner. ── */
+    .car-shot {
+      width: 176px;
+      height: 176px;
+      object-fit: contain;
+      margin: -47px -2px -38px -4px;
+    }
+
+    /* ── Car motion (two transforms on nested wrappers, never both on one element
+          — the status-chip tick pattern): drive-in entrance on the OUTER wrapper,
+          idle float on the INNER one. Activation-only: carIn() flips with the
+          playEntrance trigger, so data edits never replay the drive-in and
+          mid-session hero swaps mount already "in" (instant reveal). ── */
+    .car-drive {
+      display: flex;
+      opacity: 0;
+      transform: translateX(-64px);
+      /* ≈150ms after the hero rise begins (T+55 stagger + 150 ≈ 200ms), then
+         springs to rest over --d-large with the --e-spring overshoot */
+      transition:
+        opacity var(--d-large) var(--e-spring) 200ms,
+        transform var(--d-large) var(--e-spring) 200ms;
+    }
+
+    .car-drive.in {
+      opacity: 1;
+      transform: none;
+    }
+
+    .car-float {
+      display: flex;
+      /* starts once the drive-in lands (~700ms): a delicate 0 → −4px → 0 loop */
+      animation: car-float 5s ease-in-out 700ms infinite;
+    }
+
+    @keyframes car-float {
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-4px);
       }
     }
   `,
@@ -275,6 +316,14 @@ export class Dashboard {
   private readonly prontezzaWave = viewChild('prontezzaWave', { read: WavyProgress });
   private readonly cicliWave = viewChild('cicliWave', { read: WavyProgress });
 
+  /**
+   * Hero car drive-in (specs/dashboard): flipped once with the activation
+   * trigger below. Starts already "in" under reduced motion (final state
+   * immediately; the global clamp kills the float loop) and stays "in" for
+   * mid-session hero swaps, which mount the car revealed — never a replay.
+   */
+  protected readonly carIn = signal(prefersReducedMotion());
+
   private readonly activated = signal(false);
   private pendingNavTimer = 0;
   private delayClearTimer = 0;
@@ -344,6 +393,9 @@ export class Dashboard {
     // Kinetic badge: the absolute T0 timeline (pop T+750, rolls T+800, tick) is
     // internal to the shared status-chip (design D7).
     this.heroBadge()?.playEntrance();
+
+    // Hero car drive-in: same activation-only trigger (specs/dashboard).
+    this.carIn.set(true);
 
     const counts = this.sintesi();
     this.countCancels.push(

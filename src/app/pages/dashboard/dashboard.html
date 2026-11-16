@@ -36,12 +36,11 @@
         </div>
 
         <div class="relative flex justify-center pt-1">
-          <svg viewBox="0 0 160 64" class="h-24 w-auto" aria-hidden="true">
-            <path d="M12 52 C8 52 6 49 6 45 C6 38 12 34 22 32 L38 30 L52 15 C55 11 60 9 66 9 L97 9 C104 9 110 12 114 18 L125 30 L139 32 C149 34 154 38 154 44 L154 49 C154 52 152 54 149 54 L12 54 Z" [class]="h.tint.carBody"/>
-            <path d="M64 27 L70 15 C71 13 72 13 74 13 L88 13 C90 13 91 14 92 16 L98 27 Z" [class]="h.tint.carAccent"/>
-            <circle cx="40" cy="52" r="11" class="fill-carWheel"/><circle cx="40" cy="52" r="4.5" [class]="h.tint.carAccent"/>
-            <circle cx="120" cy="52" r="11" class="fill-carWheel"/><circle cx="120" cy="52" r="4.5" [class]="h.tint.carAccent"/>
-          </svg>
+          <span class="car-drive" [class.in]="carIn()">
+            <span class="car-float">
+              <img src="dolphin-surf-comfort.png" alt="BYD Dolphin Surf Comfort" class="car-shot" />
+            </span>
+          </span>
           <app-status-chip #heroBadge class="absolute -top-1 right-2" [status]="h.status" variant="badge" [text]="h.badge" />
         </div>
 
