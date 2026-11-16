@@ -1,30 +1,56 @@
-<section class="space-y-4">
-  <p class="t-body font-medium text-mut">Cruscotto</p>
-
-  <!-- Rhythm: blocchi pagina 24px (space-y-6) — caption→contenuto resta 16px (space-y-4) -->
+<section>
+  <!-- Rhythm: blocchi pagina 24px (space-y-6) -->
   <div class="space-y-6">
-  <!-- Campi veicolo (specs/vehicle-data) — wrapper #veicolo per il salto "Consegna e consumo" -->
-  <div id="veicolo" class="enter grid grid-cols-2 gap-3">
-    <app-text-field
-      label="Chilometraggio"
-      inputmode="numeric"
-      suffix="km"
-      [value]="formatKm(vehicle().odometerKm)"
-      (valueChange)="onOdometer($event)"
-    />
-    <app-text-field
-      label="Consegna"
-      [value]="formatMonthKey(vehicle().deliveryMonth)"
-      (valueChange)="onDeliveryMonth($event)"
-    />
-    <app-text-field
-      label="Consumo medio"
-      inputmode="decimal"
-      suffix="kWh/100"
-      [value]="formatDecimal(vehicle().consumptionKwhPer100Km)"
-      (valueChange)="onConsumption($event)"
-    />
-  </div>
+  <!-- Card veicolo (gemini vehicle maintenance card) — id="veicolo" per il salto
+       "Consegna e consumo" delle impostazioni. Card NEUTRA: nessun rosso qui,
+       lo stato vive solo nella card "Prossima scadenza" qui sotto. -->
+  <article id="veicolo" class="enter relative bg-surfC rounded-sheet p-5">
+    <!-- Car breakout (firma gemini): la vettura sborda dal bordo alto a destra
+         (≈⅓ superiore fuori dalla card) — la ground shadow integrata la appoggia
+         alla card. Stessi wrapper car-drive/car-float della card sotto. -->
+    <span class="car-drive absolute -top-9 -right-2 z-20 pointer-events-none select-none" [class.in]="carIn()">
+      <span class="car-float">
+        <img src="dolphin-surf-comfort.png" alt="BYD Dolphin Surf Comfort" class="car-shot-lg" />
+      </span>
+    </span>
+
+    <!-- Identità (max ~55% — la colonna di sinistra resta libera dalla vettura) -->
+    <div class="relative z-10 max-w-[55%]">
+      <p class="t-label font-semibold uppercase tracking-[0.14em] text-mut">BYD</p>
+      <h2 class="mt-0.5 t-title font-extrabold tracking-tight leading-tight text-onSurf">Dolphin Surf</h2>
+      <p class="mt-1 t-meta font-medium text-mut">2025 EU · 43,2 kWh</p>
+    </div>
+
+    <!-- Gauges editabili: sx Consumo medio · centro Chilometraggio (hero 120px) · dx Consegna -->
+    <div class="mt-4 grid grid-cols-3 gap-2 items-start">
+      <app-gauge-field
+        label="Consumo medio"
+        inputmode="decimal"
+        [value]="formatDecimal(vehicle().consumptionKwhPer100Km)"
+        [sub]="consumoSub"
+        [percent]="consumoFill()"
+        [size]="100"
+        (valueChange)="onConsumption($event)"
+      />
+      <app-gauge-field
+        label="Chilometraggio"
+        inputmode="numeric"
+        [value]="formatKm(vehicle().odometerKm)"
+        [sub]="kmSub()"
+        [percent]="kmFill()"
+        [size]="120"
+        (valueChange)="onOdometer($event)"
+      />
+      <app-gauge-field
+        label="Consegna"
+        [value]="formatMonthKey(vehicle().deliveryMonth)"
+        [sub]="consegnaSub()"
+        [percent]="consegnaFill()"
+        [size]="100"
+        (valueChange)="onDeliveryMonth($event)"
+      />
+    </div>
+  </article>
 
   <!-- Hero B1 (rifiniture-e D6): nessun glow ambientale — angoli morph + badge cinetico -->
   <div class="enter relative">

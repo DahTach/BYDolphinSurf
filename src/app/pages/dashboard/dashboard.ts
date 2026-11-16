@@ -1,9 +1,9 @@
-import { ChangeDetectionStrategy, Component, ElementRef, Injector, afterNextRender, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, Injector, afterNextRender, computed, effect, inject, signal, untracked, viewChild, viewChildren } from '@angular/core';
 import { NavigationStart, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 
+import { GaugeField } from '../../components/gauge-field/gauge-field';
 import { StatusChip } from '../../components/status-chip/status-chip';
-import { TextField } from '../../components/text-field/text-field';
 import { WavyProgress } from '../../components/wavy-progress/wavy-progress';
 import {
   daysFrom,
@@ -15,6 +15,7 @@ import {
   intervalBase,
   intervalHero,
   parseMonthInput,
+  parseMonthKey,
   parseNumber,
   todayIso,
 } from '../../data/format';
@@ -22,12 +23,16 @@ import { Activity } from '../../data/model';
 import { Status, deriveActivityStatus } from '../../data/status';
 import { StoreService } from '../../data/store';
 import { playEntrance, prefersReducedMotion, runCount } from '../../shared/motion';
-/* Cruscotto (specs/dashboard + vehicle-data): MD3 filled vehicle fields (6.1),
-   hero B1 with corner morph + kinetic countdown badge and NO ambient glow
-   (rifiniture-e D6), "Prossime" queue with row press morphs (4.5), tappable
-   "In sintesi" MD3 rows with the ripple→deep-link choreography (rifiniture-e D1),
-   one "Stato veicolo" card with the Onda M3E wavy fills (rifiniture-e D3/D4).
-   All aggregations are computed from the store — no count is hard-coded.
+/* Cruscotto (specs/dashboard + vehicle-data): the gemini "vehicle maintenance
+   card" — neutral surfC card (28px radius) with the car breaking out of its
+   top-right edge and the 3 vehicle fields as editable Onda M3E gauge fields
+   (consumo sx / chilometraggio hero al centro / consegna dx), then the hero B1
+   "Prossima scadenza" with corner morph + kinetic countdown badge and NO
+   ambient glow (rifiniture-e D6), the "Prossime" queue with row press morphs
+   (4.5), tappable "In sintesi" MD3 rows with the ripple→deep-link choreography
+   (rifiniture-e D1), one "Stato veicolo" card with the Onda M3E wavy fills
+   (rifiniture-e D3/D4). All aggregations are computed from the store — no
+   count is hard-coded.
 
    Motion discipline (design D11): entrances, count-ups and progress fills fire
    ONLY on route/pane activation (afterNextRender of this route component). Data
@@ -71,9 +76,22 @@ interface QueueItem {
 const LFP_KWH = 43.2;
 const LFP_TOTAL_CYCLES = 5000;
 
+/** Lifetime odometer horizon (the sintesi footer "… / 300k km"): the km gauge fallback. */
+const LIFETIME_KM = 300_000;
+/** Consegna gauge horizon: the app's 15-year window (sintesi footer "Orizzonte 15 anni"). */
+const MONTHS_HORIZON = 180;
+/** Typical EV consumption band (kWh/100km) driving the consumo gauge fill. */
+const CONSUMO_MIN = 8;
+const CONSUMO_MAX = 25;
+
+/** Gauge fill percent clamped to 0–100 (or to `min`–100 for gauges with a floor). */
+function clampPercent(pct: number, min = 0): number {
+  return Math.min(100, Math.max(min, pct));
+}
+
 @Component({
   selector: 'app-dashboard',
-  imports: [RouterLink, StatusChip, TextField, WavyProgress],
+  imports: [GaugeField, RouterLink, StatusChip, WavyProgress],
   changeDetection: ChangeDetectionStrategy.Eager,
   styles: `
     /* ── Hero container (design D6): NEUTRAL surfC card — status color survives
@@ -123,6 +141,20 @@ const LFP_TOTAL_CYCLES = 5000;
       height: 176px;
       object-fit: contain;
       margin: -47px -2px -38px -4px;
+    }
+
+    /* ── Car breakout (gemini vehicle maintenance card): the SAME 500×500 PNG
+          scaled to a 208px (w-52) box and cropped to the car with negative
+          margins (visible car ≈ x 12–492, y 134–392 of the source → ≈200×107
+          here), so the drive/float wrappers' layout box IS the visible car and
+          the absolute top-right anchoring + "top third above the card edge"
+          translate speak in visible-car pixels. The baked-in ground shadow
+          grounds the car on the card — no extra filter. ── */
+    .car-shot-lg {
+      width: 208px;
+      height: 208px;
+      object-fit: contain;
+      margin: -56px -3px -45px -5px;
     }
 
     /* ── Car motion (two transforms on nested wrappers, never both on one element
@@ -274,9 +306,61 @@ export class Dashboard {
 
   protected readonly cicliLabel = computed(() => formatPercent(this.cicliPercent()));
 
+  /* ── Gemini vehicle gauges (editable vehicle fields as Onda M3E rings) —
+        honest, computed fills. The three raw handlers below stay the only
+        write path (specs/vehicle-data) ── */
+
+  /**
+   * Chilometraggio gauge target: the NEAREST km-based activity deadline ahead
+   * of the odometer (status.ts dueKm = last-done km + interval, anchored at 0
+   * when never done — e.g. "Primo controllo BYD" → 5.000 km). Falls back to the
+   * 300k lifetime horizon when nothing km-based lies ahead.
+   */
+  protected readonly kmTarget = computed(() => {
+    const vehicle = this.vehicle();
+    const upcoming = this.store
+      .activities()
+      .map((activity) => deriveActivityStatus(activity, vehicle, this.today).dueKm)
+      .filter((dueKm): dueKm is number => dueKm != null && dueKm > vehicle.odometerKm);
+    return upcoming.length > 0 ? Math.min(...upcoming) : LIFETIME_KM;
+  });
+
+  /** "/ 5.000 km" — or "/ 300.000 km" on the lifetime fallback. */
+  protected readonly kmSub = computed(() => `/ ${formatKm(this.kmTarget())} km`);
+
+  /** km / target, clamped 0–100 (the ring keeps its 2% min head / 0% empty). */
+  protected readonly kmFill = computed(() => clampPercent((this.vehicle().odometerKm / this.kmTarget()) * 100));
+
+  /** Consumo gauge sub-line (unit of the editable value). */
+  protected readonly consumoSub = 'kWh/100km';
+
+  /** clamp((v−8)/17, 2%, 100%) — the typical EV band 8–25 kWh/100km. */
+  protected readonly consumoFill = computed(() =>
+    clampPercent(((this.vehicle().consumptionKwhPer100Km - CONSUMO_MIN) / (CONSUMO_MAX - CONSUMO_MIN)) * 100, 2),
+  );
+
+  /** Whole months since delivery (the editable "08/2025" month). */
+  protected readonly mesiConsegna = computed(() => {
+    const delivery = parseMonthKey(this.vehicle().deliveryMonth);
+    return Math.max(
+      0,
+      (this.today.getFullYear() - delivery.getFullYear()) * 12 + (this.today.getMonth() - delivery.getMonth()),
+    );
+  });
+
+  /** "15 mesi" (Italian singular below 2). */
+  protected readonly consegnaSub = computed(() => {
+    const mesi = this.mesiConsegna();
+    return `${mesi} ${mesi === 1 ? 'mese' : 'mesi'}`;
+  });
+
+  /** months / 180 (the 15-year horizon), clamped 0–100. */
+  protected readonly consegnaFill = computed(() => clampPercent((this.mesiConsegna() / MONTHS_HORIZON) * 100));
+
   /* ── Motion orchestration (design D11: activation-only) ── */
 
   private readonly heroBadge = viewChild('heroBadge', { read: StatusChip });
+  private readonly gaugeFields = viewChildren(GaugeField);
   private readonly prontezzaWave = viewChild('prontezzaWave', { read: WavyProgress });
   private readonly cicliWave = viewChild('cicliWave', { read: WavyProgress });
 
@@ -374,7 +458,9 @@ export class Dashboard {
       runCount(this.cicli(), (value) => this.cicliDisplay.set(value)),
     );
 
-    // Onda M3E fills: the entrance dash animation, once (rifiniture-e D4).
+    // Onda M3E fills: the entrance dash animation, once (rifiniture-e D4) —
+    // the 3 vehicle gauges fill with the same activation-only trigger.
+    for (const gauge of this.gaugeFields()) gauge.playFill();
     this.prontezzaWave()?.playFill();
     this.cicliWave()?.playFill();
     this.activated.set(true);
@@ -431,7 +517,9 @@ export class Dashboard {
     this.store.registerActivity(activityId, { date: todayIso(), odometerKm: this.vehicle().odometerKm });
   }
 
-  /* ── Vehicle fields (specs/vehicle-data) — wiring unchanged ── */
+  /* ── Vehicle fields (specs/vehicle-data) — wiring unchanged: the gemini gauge
+        fields emit the raw string on commit, invalid input is reverted by the
+        gauge field itself and never reaches the store ── */
 
   protected onOdometer(value: string): void {
     const km = parseNumber(value);

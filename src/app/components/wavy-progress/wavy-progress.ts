@@ -20,8 +20,9 @@ import { prefersReducedMotion } from '../../shared/motion';
      (playFill(), once); later data edits transition `stroke-dasharray` over
      `--d-small` `--e-emph` and never replay the entrance.
    - `ring`: M3E CIRCULAR wavy gauge (the material_3_expressive gemini gauge
-     concepts on our pinned geometry). viewBox 0 0 120 120 rendered
-     `w-[120px] h-[120px]`, stroke 6.5 round caps AND joins on both arcs. The
+     concepts on our pinned geometry). viewBox 0 0 120 120 rendered at `size`
+     px square (120 default — smaller tiers scale the ONE geometry, never a
+     second one), stroke 6.5 round caps AND joins on both arcs. The
      ACTIVE arc is the radial sine wave `r(θ) = 52 + 3.5·sin(12θ + phase)` drawn
      ONLY along the active span — 12 o'clock, clockwise, `value% × 3.6°` — with
      the wave amplitude Hann-TAPERED near both endpoints (12% of the span ≈ the
@@ -192,7 +193,7 @@ const EASE_EMPH = cubicBezier(0.2, 0, 0, 1);
   `,
   template: `
     @if (shape() === 'ring') {
-      <svg viewBox="0 0 120 120" class="w-[120px] h-[120px]" fill="none" aria-hidden="true">
+      <svg viewBox="0 0 120 120" [style.width.px]="size()" [style.height.px]="size()" fill="none" aria-hidden="true">
         @if (ringPaths().full) {
           <circle cx="60" cy="60" r="52" class="stroke-surfHiX" stroke-width="6.5" />
         } @else {
@@ -219,6 +220,9 @@ export class WavyProgress implements OnDestroy {
   readonly fill = input<string>('');
   /** Progress form: the linear bar (default) or the M3E circular wavy ring. */
   readonly shape = input<'bar' | 'ring'>('bar');
+  /** Ring box edge in px (ignored by the bar): the 120-unit viewBox scales, so
+      stroke/wave proportions hold at every tier (gemini 120/100 sizing). */
+  readonly size = input<number>(120);
 
   protected readonly wavePath = WAVE_PATH;
 
