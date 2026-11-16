@@ -1,0 +1,693 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>BYD · Cruscotto — bozza g cluster</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..1000&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['"Roboto Flex"', 'Roboto', 'system-ui', 'sans-serif'] },
+          colors: {
+            prim: '#ede6da', onPrim: '#2a2218',
+            primC: '#54483b', onPrimC: '#ede6da',
+            secC: '#413830', onSecC: '#e9dfd2',
+            terC: '#4a3e21', onTerC: '#e8dab7',
+            err: '#d98a80', onErr: '#441411',
+            errC: '#3e1d1c', onErrC: '#f2c1ba',
+            surf: '#000000', surfLox: '#0e0d0d', surfC: '#1e1c1d', surfHi: '#2a2728', surfHiX: '#353132',
+            onSurf: '#eae4e2', onSurfV: '#b9aca8', mut: '#8d817d', outline: '#463f3d',
+            okC: '#1d3326', onOkC: '#9cc7a8',
+            waC: '#363020', onWaC: '#d9c084',
+          },
+          boxShadow: {
+            fab: '0 4px 10px rgba(0,0,0,0.5), 0 14px 32px rgba(0,0,0,0.55)',
+            hero: '0 6px 24px rgba(0,0,0,0.35)',
+            nav: '0 8px 28px rgba(0,0,0,0.55)',
+            sheet: '0 -8px 32px rgba(0,0,0,0.6)',
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    html { -webkit-tap-highlight-color: transparent; }
+    body { color: #eae4e2; }
+    ::selection { background: rgba(237, 230, 218, 0.25); }
+    .caption { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; color: #8d817d; }
+
+    /* Scala tipografica rispettata: 10 caption / 11 meta / 12 label / 13 body-sm /
+       14 body / 15 card-title / 22 title / 26 display / 28 odometer (display variant).
+       Raggi: pill · 8 (lampada) · 16 · 24 · 32. Stroke icone: 1.8. Press: scale .97.
+       Cifre tabulari ovunque (.num): Roboto Flex font-variant-numeric: tabular-nums —
+       l'unico segnale "contachilometri" che serve davvero. */
+
+    /* ── Entrance: rise 16px + fade, una volta al load (light polish) ── */
+    .enter { opacity: 0; transform: translateY(16px); transition: opacity .5s cubic-bezier(.2, 0, 0, 1), transform .5s cubic-bezier(.2, 0, 0, 1); }
+    .ready .enter { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce) {
+      .enter { opacity: 1; transform: none; transition: none; }
+    }
+
+    /* ── Press: state layer MD3 (hover 6% / active 10%) + scale .97 ── */
+    .press {
+      position: relative;
+      cursor: pointer;
+      transition: transform .25s cubic-bezier(.2, 0, 0, 1);
+    }
+    .press::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: #fff;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s cubic-bezier(.2, 0, 0, 1);
+    }
+    .press:hover::after { opacity: .06; }
+    .press:active::after { opacity: .10; }
+    .press:active { transform: scale(.97); }
+    .press:focus-visible { outline: 2px solid #ede6da; outline-offset: 2px; }
+
+    /* Cifre tabulari: allineamento verticale delle colonne di digit */
+    .num { font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+<body class="bg-surfLox font-sans antialiased">
+
+  <main class="mx-auto w-[430px] py-10 space-y-12">
+
+    <!-- ══ STRISCIA DI ANNOTAZIONE ══ -->
+    <header class="enter rounded-[24px] border border-outline px-5 py-4">
+      <p class="caption">g · Cruscotto ispirato al quadro strumenti</p>
+      <p class="mt-1.5 text-[10px] font-semibold text-mut">2 varianti · hero neutro con rosso solo in accento</p>
+    </header>
+
+    <!-- ════════════════════════════════════════════════════════════
+         CUES DA CLUSTER (entrambe le varianti)
+         · tacche da quadrante attorno agli anelli (60 tacche, ogni 5ª
+           più lunga) — generate in JS, concentriche per costruzione
+           (stesso cx/cy della track) e disegnate SOTTO track + onda;
+         · cifre tabulari ovunque (.num) con suffisso d'unità piccolo;
+         · lampade tell-tale per le icone di stato (28px rounded-8,
+           fill tonale + micro-highlight LED 2px in alto a sinistra);
+         · micro-etichette tecniche maiuscole tracciate (0.14em).
+         DECISIONE FISSA: l'hero è NEUTRO (bg-surfC come le altre card) —
+         il rosso resta solo in chip «Scaduto», badge «+7 g» e CTA.
+         ════════════════════════════════════════════════════════════ -->
+
+    <!-- ══ A · QUADRANTE — gauge-ification del layout attuale ══ -->
+    <section class="space-y-2">
+      <p class="caption">A — Quadrante</p>
+
+      <div class="enter overflow-hidden rounded-[32px] bg-black ring-1 ring-white/[0.06]">
+        <div class="relative px-4 pt-5 pb-[88px] space-y-4">
+
+          <!-- Campi veicolo — pill invariate, valori tabulari + mini-scala 3 tacche -->
+          <div class="grid grid-cols-2 gap-3">
+            <div class="press relative h-14 bg-surfHiX rounded-full px-5 pt-2">
+              <div class="flex items-center justify-between">
+                <p class="text-[10px] font-semibold text-onSurfV leading-none">Chilometraggio</p>
+                <svg class="w-3.5 h-2 text-mut opacity-50" viewBox="0 0 14 8" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" aria-hidden="true"><path d="M2 7V4M7 7V1.5M12 7V4"/></svg>
+              </div>
+              <div class="flex items-baseline gap-1.5 mt-1">
+                <p class="num text-[15px] font-medium text-onSurf leading-none">4.500</p>
+                <span class="text-[12px] text-onSurfV shrink-0">km</span>
+              </div>
+            </div>
+            <div class="press relative h-14 bg-surfHiX rounded-full px-5 pt-2">
+              <div class="flex items-center justify-between">
+                <p class="text-[10px] font-semibold text-onSurfV leading-none">Consegna</p>
+                <svg class="w-3.5 h-2 text-mut opacity-50" viewBox="0 0 14 8" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" aria-hidden="true"><path d="M2 7V4M7 7V1.5M12 7V4"/></svg>
+              </div>
+              <div class="flex items-baseline gap-1.5 mt-1">
+                <p class="num text-[15px] font-medium text-onSurf leading-none">08/2025</p>
+              </div>
+            </div>
+            <div class="press relative h-14 bg-surfHiX rounded-full px-5 pt-2">
+              <div class="flex items-center justify-between">
+                <p class="text-[10px] font-semibold text-onSurfV leading-none">Consumo medio</p>
+                <svg class="w-3.5 h-2 text-mut opacity-50" viewBox="0 0 14 8" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" aria-hidden="true"><path d="M2 7V4M7 7V1.5M12 7V4"/></svg>
+              </div>
+              <div class="flex items-baseline gap-1.5 mt-1">
+                <p class="num text-[15px] font-medium text-onSurf leading-none">13,9</p>
+                <span class="text-[12px] text-onSurfV shrink-0">kWh/100</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hero NEUTRO: bezel da tachimetro dietro l'auto, rosso solo in accento -->
+          <article class="rounded-[24px] bg-surfC p-5 shadow-hero space-y-4">
+            <div class="flex items-center justify-between">
+              <p class="text-[10px] font-bold uppercase tracking-[0.14em] text-mut">Prossima scadenza</p>
+              <span class="px-3 py-1 rounded-full bg-err text-onErr text-[11px] font-bold whitespace-nowrap">Scaduto</span>
+            </div>
+
+            <!-- Stage auto: bezel SVG (arco 200° + tacche) dietro la foto.
+                 Il badge è ancorato alla foto (come app-status-chip variant=badge):
+                 deve sbordare sull'angolo alto-dx dell'auto, non sull'angolo card. -->
+            <div class="relative flex justify-center pt-1">
+              <svg class="bezel absolute inset-0 h-full w-full" viewBox="0 0 320 180" fill="none" aria-hidden="true">
+                <path class="bezel-arc" stroke="#463f3d" stroke-width="1.5" stroke-linecap="round" opacity="0.9"></path>
+                <path class="ticks-short" stroke="#8d817d" stroke-width="1.2" stroke-linecap="round" opacity="0.28"></path>
+                <path class="ticks-long" stroke="#8d817d" stroke-width="1.2" stroke-linecap="round" opacity="0.5"></path>
+              </svg>
+              <div class="relative">
+                <img src="../public/dolphin-surf-comfort.png" alt="BYD Dolphin Surf Comfort" class="w-[180px] h-[180px] object-contain" />
+                <span class="absolute -top-1 right-1 px-2.5 py-1 rounded-full bg-err text-onErr text-[12px] font-extrabold shadow-fab num">+7 g</span>
+              </div>
+            </div>
+
+            <div class="space-y-1.5">
+              <h2 class="text-[22px] font-black tracking-tight leading-tight text-onSurf">Bilanciamento LFP 100%</h2>
+              <p class="text-[13px] font-medium text-onSurfV">Carica AC 100% + top-balance 1–2 h</p>
+              <div class="flex flex-wrap gap-2 pt-0.5">
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-white/[0.08] border border-white/10 px-3 py-1.5 text-[12px] font-medium text-onSurfV">
+                  <svg class="w-3.5 h-3.5 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="16" height="10" rx="2"/><path d="M22 11v2"/><path d="M6 11v2"/></svg>
+                  Ogni 1 mese
+                </span>
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-white/[0.08] border border-white/10 px-3 py-1.5 text-[12px] font-medium text-onSurfV">
+                  <svg class="w-3.5 h-3.5 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l2.8 1.7"/></svg>
+                  1–2 h collegate
+                </span>
+              </div>
+            </div>
+
+            <button type="button" class="press w-full h-12 rounded-full bg-err text-onErr text-[15px] font-bold">Registra ora</button>
+          </article>
+
+          <!-- Prossime — righe invariate, chip data in coda come sono -->
+          <div class="space-y-2">
+            <p class="text-[10px] font-bold uppercase tracking-[0.14em] text-mut pt-1">Prossime · dopo la prossima</p>
+            <button type="button" class="press w-full flex items-center gap-3 bg-surfC rounded-full pl-2 pr-3 py-1.5 text-left">
+              <span class="w-10 h-10 rounded-full bg-surfHi flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4 text-onSurfV" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+              </span>
+              <span class="flex-1 min-w-0">
+                <span class="block text-[14px] font-semibold text-onSurf truncate">Antiruggine sottoscocca</span>
+                <span class="block text-[11px] text-mut truncate">Una tantum · Lanoguard / Dinitrol</span>
+              </span>
+              <span class="px-2.5 py-1 rounded-full bg-errC text-onErrC text-[10px] font-bold shrink-0 num">scad. dal 20/08</span>
+            </button>
+            <button type="button" class="press w-full flex items-center gap-3 bg-surfC rounded-full pl-2 pr-3 py-1.5 text-left">
+              <span class="w-10 h-10 rounded-full bg-surfHi flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4 text-onSurfV" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+              </span>
+              <span class="flex-1 min-w-0">
+                <span class="block text-[14px] font-semibold text-onSurf truncate">Manutenzione severa</span>
+                <span class="block text-[11px] text-mut truncate">12 mesi / 15.000 km</span>
+              </span>
+              <span class="px-2.5 py-1 rounded-full bg-errC text-onErrC text-[10px] font-bold shrink-0 num">scad. dal 01/08</span>
+            </button>
+          </div>
+
+          <!-- In sintesi — lampade tell-tale in riga -->
+          <div class="rounded-[24px] bg-surfC overflow-hidden">
+            <p class="px-4 pt-4 pb-3 text-[12px] font-semibold text-mut">In sintesi</p>
+
+            <button type="button" class="press w-full flex items-center gap-3 px-4 py-3.5 text-left">
+              <span class="relative w-7 h-7 rounded-[8px] bg-okC flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4 text-onOkC" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                <span class="absolute left-1 top-1 w-0.5 h-0.5 rounded-full bg-white/50"></span>
+              </span>
+              <span class="flex-1 min-w-0">
+                <span class="block text-[15px] font-medium text-onSurf">In regola</span>
+                <span class="block text-[11px] text-mut truncate">interventi in tempo</span>
+              </span>
+              <span class="num text-[22px] font-black leading-none text-onSurf">2</span>
+              <svg class="w-5 h-5 text-mut shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+            <div class="mx-4 h-px bg-white/[0.06]"></div>
+
+            <button type="button" class="press w-full flex items-center gap-3 px-4 py-3.5 text-left">
+              <span class="relative w-7 h-7 rounded-[8px] bg-waC flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4 text-onWaC" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v4"/><path d="M12 15.5h.01"/></svg>
+                <span class="absolute left-1 top-1 w-0.5 h-0.5 rounded-full bg-white/50"></span>
+              </span>
+              <span class="flex-1 min-w-0">
+                <span class="block text-[15px] font-medium text-onSurf">In scadenza</span>
+                <span class="block text-[11px] text-mut truncate">in arrivo a breve</span>
+              </span>
+              <span class="num text-[22px] font-black leading-none text-onSurf">1</span>
+              <svg class="w-5 h-5 text-mut shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+            <div class="mx-4 h-px bg-white/[0.06]"></div>
+
+            <button type="button" class="press w-full flex items-center gap-3 px-4 py-3.5 text-left">
+              <span class="relative w-7 h-7 rounded-[8px] bg-errC flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4 text-onErrC" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                <span class="absolute left-1 top-1 w-0.5 h-0.5 rounded-full bg-white/50"></span>
+              </span>
+              <span class="flex-1 min-w-0">
+                <span class="block text-[15px] font-medium text-onSurf">Scadute</span>
+                <span class="block text-[11px] text-mut truncate">da registrare</span>
+              </span>
+              <span class="num text-[22px] font-black leading-none text-onSurf">8</span>
+              <svg class="w-5 h-5 text-mut shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+
+            <div class="mx-4 h-px bg-white/[0.06]"></div>
+            <p class="px-4 py-3 text-[11px] font-medium text-mut num">Orizzonte 15 anni · 4.500 / 300k km · 1,5%</p>
+          </div>
+
+          <!-- Stato veicolo — anelli ondulati + tacche da quadrante (60, ogni 5ª lunga)
+               disegnate SOTTO track e onda: la testa d'onda le attraversa -->
+          <div class="rounded-[24px] bg-surfC p-5">
+            <p class="text-[10px] font-bold uppercase tracking-[0.14em] text-mut">Stato veicolo</p>
+            <div class="mt-4 grid grid-cols-2 gap-4">
+              <!-- Prontezza: 2/11 attività in regola ≈ 18% → fill 180/1000 -->
+              <div class="flex flex-col items-center">
+                <div class="relative w-[120px] h-[120px]">
+                  <svg class="wavy-ring w-full h-full" viewBox="0 0 120 120" data-value="18" fill="none" aria-hidden="true">
+                    <path class="ticks-short" stroke="#8d817d" stroke-width="1" stroke-linecap="round" opacity="0.28"></path>
+                    <path class="ticks-long" stroke="#8d817d" stroke-width="1" stroke-linecap="round" opacity="0.5"></path>
+                    <circle cx="60" cy="60" r="52" class="stroke-surfHiX" stroke-width="3"></circle>
+                    <path class="wavy stroke-prim" pathLength="1000" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                  </svg>
+                  <div class="absolute inset-0 flex items-center justify-center">
+                    <p class="num whitespace-nowrap text-[26px] font-black leading-none tracking-tight text-onSurf">18<span class="ml-0.5 text-[14px] font-bold text-mut">%</span></p>
+                  </div>
+                </div>
+                <p class="mt-3 text-[12px] font-medium text-onSurfV">Prontezza</p>
+                <p class="mt-1 text-[11px] text-mut num">2 di 11 in regola</p>
+              </div>
+              <!-- Cicli LFP: 14 cicli su 5.000 ≈ 0,3% → fill 45/1000 (pavimento) -->
+              <div class="flex flex-col items-center">
+                <div class="relative w-[120px] h-[120px]">
+                  <svg class="wavy-ring w-full h-full" viewBox="0 0 120 120" data-value="0.3" fill="none" aria-hidden="true">
+                    <path class="ticks-short" stroke="#8d817d" stroke-width="1" stroke-linecap="round" opacity="0.28"></path>
+                    <path class="ticks-long" stroke="#8d817d" stroke-width="1" stroke-linecap="round" opacity="0.5"></path>
+                    <circle cx="60" cy="60" r="52" class="stroke-surfHiX" stroke-width="3"></circle>
+                    <path class="wavy stroke-onTerC" pathLength="1000" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                  </svg>
+                  <div class="absolute inset-0 flex items-center justify-center">
+                    <p class="num whitespace-nowrap text-[26px] font-black leading-none tracking-tight text-onSurf">14<span class="ml-0.5 text-[12px] font-bold text-mut">/5.000</span></p>
+                  </div>
+                </div>
+                <p class="mt-3 text-[12px] font-medium text-onSurfV">Cicli LFP</p>
+                <p class="mt-1 text-[11px] text-mut num">≈ 0,3% vita utile</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chrome statico: FAB + navbar -->
+          <div class="press absolute right-4 bottom-[84px] w-14 h-14 rounded-full bg-primC text-onPrimC shadow-fab flex items-center justify-center">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+          </div>
+          <nav class="absolute bottom-0 inset-x-0 px-4 pb-4">
+            <div class="relative bg-surfC/90 backdrop-blur-xl ring-1 ring-white/[0.06] shadow-nav rounded-full px-3 py-2 flex items-center justify-between">
+              <div class="absolute left-3 top-2 h-10 w-[52px] rounded-full bg-primC"></div>
+              <button type="button" aria-label="Cruscotto" class="press relative h-10 w-[52px] rounded-full flex items-center justify-center">
+                <svg class="w-5 h-5 text-onPrimC" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg>
+              </button>
+              <button type="button" aria-label="Attività" class="press relative h-10 w-12 rounded-full flex items-center justify-center">
+                <svg class="w-5 h-5 text-mut" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg>
+              </button>
+              <button type="button" aria-label="Storico" class="press relative h-10 w-12 rounded-full flex items-center justify-center">
+                <svg class="w-5 h-5 text-mut" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+              </button>
+              <button type="button" aria-label="Prodotti" class="press relative h-10 w-12 rounded-full flex items-center justify-center">
+                <svg class="w-5 h-5 text-mut" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/></svg>
+              </button>
+            </div>
+          </nav>
+
+        </div>
+      </div>
+
+      <p class="pt-2 text-[11px] text-mut">Quadrante: stesso ordine di oggi, ma ogni blocco prende una voce da quadro strumenti — tacche di quadrante sugli anelli, cifre tabulari, lampade tell-tale in sintesi, bezel da tachimetro dietro l'auto. Rischio basso: il contenuto non si muove.</p>
+
+      <!-- Nota · hero PRIMA / DOPO — la decisione fissa resa visibile -->
+      <div class="enter mt-6 rounded-[24px] bg-surfLox p-5">
+        <p class="caption">Nota · Hero: prima / dopo</p>
+        <div class="mt-4 flex items-stretch gap-3">
+          <!-- PRIMA: tint pieno -->
+          <div class="flex-1">
+            <div class="flex h-[132px] flex-col rounded-[16px] bg-errC p-3">
+              <div class="flex items-center justify-between">
+                <p class="text-[10px] font-bold uppercase tracking-[0.12em] text-onErrC/60">Prossima scadenza</p>
+                <span class="px-2 py-0.5 rounded-full bg-err text-onErr text-[10px] font-bold">Scaduto</span>
+              </div>
+              <p class="mt-2 text-[12px] font-black text-onErrC">Bilanciamento LFP 100%</p>
+              <p class="mt-0.5 text-[10px] text-onErrC/70">Carica AC 100% + top-balance 1–2 h</p>
+              <div class="mt-auto h-8 rounded-full bg-err text-onErr text-[10px] font-bold flex items-center justify-center">Registra ora</div>
+            </div>
+            <p class="mt-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-mut">Prima</p>
+            <p class="mt-1 text-[10px] text-mut">tint pieno — looks bad</p>
+          </div>
+          <!-- DOPO: neutro + accenti -->
+          <div class="flex-1">
+            <div class="flex h-[132px] flex-col rounded-[16px] bg-surfC p-3 ring-1 ring-white/[0.08]">
+              <div class="flex items-center justify-between">
+                <p class="text-[10px] font-bold uppercase tracking-[0.12em] text-mut">Prossima scadenza</p>
+                <span class="px-2 py-0.5 rounded-full bg-err text-onErr text-[10px] font-bold">Scaduto</span>
+              </div>
+              <p class="mt-2 text-[12px] font-black text-onSurf">Bilanciamento LFP 100%</p>
+              <p class="mt-0.5 text-[10px] text-onSurfV">Carica AC 100% + top-balance 1–2 h</p>
+              <div class="mt-auto h-8 rounded-full bg-err text-onErr text-[10px] font-bold flex items-center justify-center">Registra ora</div>
+            </div>
+            <p class="mt-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-mut">Dopo</p>
+            <p class="mt-1 text-[10px] text-mut">neutro + accenti rossi</p>
+          </div>
+        </div>
+        <p class="mt-4 text-[11px] text-mut">Decisione fissa: la card non è più tintata tutta di rosso — resta neutra bg-surfC come le altre. Il rosso sopravvive solo in chip «Scaduto», badge «+7 g» e CTA «Registra ora»: dove serve segnalare, non decorare.</p>
+      </div>
+    </section>
+
+    <!-- ══ B · BINNACLE — l'hero È il quadro strumenti ══ -->
+    <section class="space-y-2">
+      <p class="caption">B — Binnacle</p>
+
+      <div class="enter overflow-hidden rounded-[32px] bg-black ring-1 ring-white/[0.06]">
+        <div class="relative px-4 pt-5 pb-[88px] space-y-4">
+
+          <!-- Campi veicolo — compatti, restano sopra il binnacle (sono input) -->
+          <div class="grid grid-cols-2 gap-3">
+            <div class="press h-12 bg-surfHiX rounded-full px-4 pt-1.5">
+              <p class="text-[10px] font-semibold text-onSurfV leading-none">Chilometraggio</p>
+              <div class="flex items-baseline gap-1.5 mt-1">
+                <p class="num text-[15px] font-medium text-onSurf leading-none">4.500</p>
+                <span class="text-[12px] text-onSurfV shrink-0">km</span>
+              </div>
+            </div>
+            <div class="press h-12 bg-surfHiX rounded-full px-4 pt-1.5">
+              <p class="text-[10px] font-semibold text-onSurfV leading-none">Consegna</p>
+              <div class="flex items-baseline gap-1.5 mt-1">
+                <p class="num text-[15px] font-medium text-onSurf leading-none">08/2025</p>
+              </div>
+            </div>
+            <div class="press h-12 bg-surfHiX rounded-full px-4 pt-1.5">
+              <p class="text-[10px] font-semibold text-onSurfV leading-none">Consumo medio</p>
+              <div class="flex items-baseline gap-1.5 mt-1">
+                <p class="num text-[15px] font-medium text-onSurf leading-none">13,9</p>
+                <span class="text-[12px] text-onSurfV shrink-0">kWh/100</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hero = binnacle: auto al centro fiancheggiata dai due quadranti,
+               sotto il contachilometri digitale. La card "Stato veicolo" non esiste:
+               i suoi quadranti vivono qui. -->
+          <article class="rounded-[24px] bg-surfC p-5 shadow-hero space-y-4">
+            <div class="flex items-center justify-between">
+              <p class="text-[10px] font-bold uppercase tracking-[0.14em] text-mut">Prossima scadenza</p>
+              <span class="px-3 py-1 rounded-full bg-err text-onErr text-[11px] font-bold whitespace-nowrap">Scaduto</span>
+            </div>
+
+            <!-- Cluster: quadrante | auto | quadrante -->
+            <div class="flex items-start justify-center gap-2">
+              <!-- Prontezza 18% -->
+              <div class="flex w-[100px] flex-col items-center">
+                <div class="relative w-[96px] h-[96px]">
+                  <svg class="wavy-ring w-full h-full" viewBox="0 0 120 120" data-value="18" fill="none" aria-hidden="true">
+                    <path class="ticks-short" stroke="#8d817d" stroke-width="1.2" stroke-linecap="round" opacity="0.28"></path>
+                    <path class="ticks-long" stroke="#8d817d" stroke-width="1.2" stroke-linecap="round" opacity="0.5"></path>
+                    <circle cx="60" cy="60" r="52" class="stroke-surfHiX" stroke-width="3"></circle>
+                    <path class="wavy stroke-prim" pathLength="1000" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                  </svg>
+                  <div class="absolute inset-0 flex items-center justify-center">
+                    <p class="num whitespace-nowrap text-[15px] font-black leading-none tracking-tight text-onSurf">18<span class="ml-0.5 text-[10px] font-bold text-mut">%</span></p>
+                  </div>
+                </div>
+                <p class="mt-2 text-[10px] font-bold uppercase tracking-[0.14em] text-mut">Prontezza</p>
+                <p class="mt-1 text-[10px] text-mut num">2 di 11 in regola</p>
+              </div>
+
+              <!-- Auto + badge -->
+              <div class="relative flex flex-1 justify-center">
+                <img src="../public/dolphin-surf-comfort.png" alt="BYD Dolphin Surf Comfort" class="w-[142px] h-[132px] object-contain" />
+                <span class="absolute -top-1 right-0 px-2.5 py-1 rounded-full bg-err text-onErr text-[12px] font-extrabold shadow-fab num">+7 g</span>
+              </div>
+
+              <!-- Cicli LFP 14/5.000 -->
+              <div class="flex w-[100px] flex-col items-center">
+                <div class="relative w-[96px] h-[96px]">
+                  <svg class="wavy-ring w-full h-full" viewBox="0 0 120 120" data-value="0.3" fill="none" aria-hidden="true">
+                    <path class="ticks-short" stroke="#8d817d" stroke-width="1.2" stroke-linecap="round" opacity="0.28"></path>
+                    <path class="ticks-long" stroke="#8d817d" stroke-width="1.2" stroke-linecap="round" opacity="0.5"></path>
+                    <circle cx="60" cy="60" r="52" class="stroke-surfHiX" stroke-width="3"></circle>
+                    <path class="wavy stroke-onTerC" pathLength="1000" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                  </svg>
+                  <div class="absolute inset-0 flex items-center justify-center">
+                    <p class="num whitespace-nowrap text-[15px] font-black leading-none tracking-tight text-onSurf">14<span class="ml-0.5 text-[10px] font-bold text-mut">/5.000</span></p>
+                  </div>
+                </div>
+                <p class="mt-2 text-[10px] font-bold uppercase tracking-[0.14em] text-mut">Cicli LFP</p>
+                <p class="mt-1 text-[10px] text-mut num">≈ 0,3% vita utile</p>
+              </div>
+            </div>
+
+            <!-- Contachilometri digitale -->
+            <div class="flex justify-center">
+              <div class="inline-flex items-baseline gap-2 bg-surfHiX rounded-full px-6 py-2">
+                <p class="num text-[28px] font-black leading-none tracking-tight text-onSurf">4.500</p>
+                <span class="text-[12px] font-bold text-mut">km</span>
+              </div>
+            </div>
+
+            <div class="space-y-1.5">
+              <h2 class="text-[15px] font-black tracking-tight leading-tight text-onSurf">Bilanciamento LFP 100%</h2>
+              <p class="text-[11px] font-medium text-onSurfV">Carica AC 100% + top-balance 1–2 h</p>
+              <div class="flex flex-wrap gap-2 pt-0.5">
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-white/[0.08] border border-white/10 px-2.5 py-1 text-[10px] font-semibold text-onSurfV">
+                  <svg class="w-3.5 h-3.5 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="16" height="10" rx="2"/><path d="M22 11v2"/><path d="M6 11v2"/></svg>
+                  Ogni 1 mese
+                </span>
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-white/[0.08] border border-white/10 px-2.5 py-1 text-[10px] font-semibold text-onSurfV">
+                  <svg class="w-3.5 h-3.5 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l2.8 1.7"/></svg>
+                  1–2 h collegate
+                </span>
+              </div>
+            </div>
+
+            <button type="button" class="press w-full h-12 rounded-full bg-err text-onErr text-[15px] font-bold">Registra ora</button>
+          </article>
+
+          <!-- Prossime — righe invariate -->
+          <div class="space-y-2">
+            <p class="text-[10px] font-bold uppercase tracking-[0.14em] text-mut pt-1">Prossime · dopo la prossima</p>
+            <button type="button" class="press w-full flex items-center gap-3 bg-surfC rounded-full pl-2 pr-3 py-1.5 text-left">
+              <span class="w-10 h-10 rounded-full bg-surfHi flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4 text-onSurfV" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+              </span>
+              <span class="flex-1 min-w-0">
+                <span class="block text-[14px] font-semibold text-onSurf truncate">Antiruggine sottoscocca</span>
+                <span class="block text-[11px] text-mut truncate">Una tantum · Lanoguard / Dinitrol</span>
+              </span>
+              <span class="px-2.5 py-1 rounded-full bg-errC text-onErrC text-[10px] font-bold shrink-0 num">scad. dal 20/08</span>
+            </button>
+            <button type="button" class="press w-full flex items-center gap-3 bg-surfC rounded-full pl-2 pr-3 py-1.5 text-left">
+              <span class="w-10 h-10 rounded-full bg-surfHi flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4 text-onSurfV" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+              </span>
+              <span class="flex-1 min-w-0">
+                <span class="block text-[14px] font-semibold text-onSurf truncate">Manutenzione severa</span>
+                <span class="block text-[11px] text-mut truncate">12 mesi / 15.000 km</span>
+              </span>
+              <span class="px-2.5 py-1 rounded-full bg-errC text-onErrC text-[10px] font-bold shrink-0 num">scad. dal 01/08</span>
+            </button>
+          </div>
+
+          <!-- In sintesi — stessa striscia di lampade tell-tale della variante A -->
+          <div class="rounded-[24px] bg-surfC overflow-hidden">
+            <p class="px-4 pt-4 pb-3 text-[12px] font-semibold text-mut">In sintesi</p>
+
+            <button type="button" class="press w-full flex items-center gap-3 px-4 py-3.5 text-left">
+              <span class="relative w-7 h-7 rounded-[8px] bg-okC flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4 text-onOkC" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                <span class="absolute left-1 top-1 w-0.5 h-0.5 rounded-full bg-white/50"></span>
+              </span>
+              <span class="flex-1 min-w-0">
+                <span class="block text-[15px] font-medium text-onSurf">In regola</span>
+                <span class="block text-[11px] text-mut truncate">interventi in tempo</span>
+              </span>
+              <span class="num text-[22px] font-black leading-none text-onSurf">2</span>
+              <svg class="w-5 h-5 text-mut shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+            <div class="mx-4 h-px bg-white/[0.06]"></div>
+
+            <button type="button" class="press w-full flex items-center gap-3 px-4 py-3.5 text-left">
+              <span class="relative w-7 h-7 rounded-[8px] bg-waC flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4 text-onWaC" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v4"/><path d="M12 15.5h.01"/></svg>
+                <span class="absolute left-1 top-1 w-0.5 h-0.5 rounded-full bg-white/50"></span>
+              </span>
+              <span class="flex-1 min-w-0">
+                <span class="block text-[15px] font-medium text-onSurf">In scadenza</span>
+                <span class="block text-[11px] text-mut truncate">in arrivo a breve</span>
+              </span>
+              <span class="num text-[22px] font-black leading-none text-onSurf">1</span>
+              <svg class="w-5 h-5 text-mut shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+            <div class="mx-4 h-px bg-white/[0.06]"></div>
+
+            <button type="button" class="press w-full flex items-center gap-3 px-4 py-3.5 text-left">
+              <span class="relative w-7 h-7 rounded-[8px] bg-errC flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4 text-onErrC" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                <span class="absolute left-1 top-1 w-0.5 h-0.5 rounded-full bg-white/50"></span>
+              </span>
+              <span class="flex-1 min-w-0">
+                <span class="block text-[15px] font-medium text-onSurf">Scadute</span>
+                <span class="block text-[11px] text-mut truncate">da registrare</span>
+              </span>
+              <span class="num text-[22px] font-black leading-none text-onSurf">8</span>
+              <svg class="w-5 h-5 text-mut shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+
+            <div class="mx-4 h-px bg-white/[0.06]"></div>
+            <p class="px-4 py-3 text-[11px] font-medium text-mut num">Orizzonte 15 anni · 4.500 / 300k km · 1,5%</p>
+          </div>
+
+          <!-- Chrome statico: FAB + navbar -->
+          <div class="press absolute right-4 bottom-[84px] w-14 h-14 rounded-full bg-primC text-onPrimC shadow-fab flex items-center justify-center">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+          </div>
+          <nav class="absolute bottom-0 inset-x-0 px-4 pb-4">
+            <div class="relative bg-surfC/90 backdrop-blur-xl ring-1 ring-white/[0.06] shadow-nav rounded-full px-3 py-2 flex items-center justify-between">
+              <div class="absolute left-3 top-2 h-10 w-[52px] rounded-full bg-primC"></div>
+              <button type="button" aria-label="Cruscotto" class="press relative h-10 w-[52px] rounded-full flex items-center justify-center">
+                <svg class="w-5 h-5 text-onPrimC" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg>
+              </button>
+              <button type="button" aria-label="Attività" class="press relative h-10 w-12 rounded-full flex items-center justify-center">
+                <svg class="w-5 h-5 text-mut" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg>
+              </button>
+              <button type="button" aria-label="Storico" class="press relative h-10 w-12 rounded-full flex items-center justify-center">
+                <svg class="w-5 h-5 text-mut" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+              </button>
+              <button type="button" aria-label="Prodotti" class="press relative h-10 w-12 rounded-full flex items-center justify-center">
+                <svg class="w-5 h-5 text-mut" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/></svg>
+              </button>
+            </div>
+          </nav>
+
+        </div>
+      </div>
+
+      <p class="pt-2 text-[11px] text-mut">Binnacle: l'hero diventa il quadro strumenti — auto al centro, i due quadranti fianco a fianco e il contachilometri sotto. La card «Stato veicolo» sparisce (i suoi dati vivono nel binnacle): la pagina perde un blocco e guadagna un'identità.</p>
+    </section>
+
+    <p class="caption pt-2">Fine bozza g · quadro strumenti evocativo, hero neutro, rosso solo in accento</p>
+
+  </main>
+
+  <script>
+    // Generatori grafici + light polish all'ingresso.
+    // Bozza display-only: il .press è solo stato visivo, nessuna azione.
+    (function () {
+      'use strict';
+
+      /* ── Arco ondulato — geometria identica a f-wavy-ring ──
+         campionamento denso (20 campioni per onda), oscillazione sinusoidale
+         sul raggio, partenza a mezzogiorno in senso orario. */
+      function wavyRingPath(cx, cy, r, amplitude, wavelengthPx) {
+        var waves = Math.max(1, Math.round((2 * Math.PI * r) / wavelengthPx));
+        var samples = 20;                 // per onda
+        var n = waves * samples;
+        var d = '';
+        for (var i = 0; i <= n; i++) {
+          var t = i / n;
+          var angle = -Math.PI / 2 + 2 * Math.PI * t;   // 12 o'clock, senso orario
+          var radius = r + amplitude * Math.sin(2 * Math.PI * waves * t);
+          var x = cx + radius * Math.cos(angle);
+          var y = cy + radius * Math.sin(angle);
+          d += (i === 0 ? 'M' : 'L') + x.toFixed(1) + ' ' + y.toFixed(1);
+        }
+        return d;
+      }
+
+      /* ── Tacche da quadrante ──
+         count tacche con passo angolare fisso, da startAngle in senso orario
+         a schermo (θ y-down crescente); ogni 5ª è più lunga. Ritorna due
+         sub-path (corte / lunghe) — uno per <path>, così lunghezza e
+         opacità restano indipendenti. */
+      function dialTicks(cx, cy, count, step, startAngle, rIn, rOut, rInLong, rOutLong) {
+        var short = '', long = '';
+        for (var i = 0; i < count; i++) {
+          var a = startAngle + step * i;
+          var isLong = i % 5 === 0;
+          var r0 = isLong ? rInLong : rIn;
+          var r1 = isLong ? rOutLong : rOut;
+          var seg = 'M' + (cx + r0 * Math.cos(a)).toFixed(2) + ' ' + (cy + r0 * Math.sin(a)).toFixed(2) +
+                    'L' + (cx + r1 * Math.cos(a)).toFixed(2) + ' ' + (cy + r1 * Math.sin(a)).toFixed(2);
+          if (isLong) { long += seg; } else { short += seg; }
+        }
+        return { short: short, long: long };
+      }
+
+      /* Anelli ondulati: fill scava l'onda (pathLength 1000, P = max(valore×10, 45),
+         0% vuoto) + 60 tacche concentriche allo stesso cx/cy della track,
+         radialmente FUORI dall'onda ma disegnate prima: la testa d'onda
+         (raggio max 55.5) le attraversa restando sopra. */
+      function renderRings() {
+        var rings = document.querySelectorAll('svg.wavy-ring');
+        for (var i = 0; i < rings.length; i++) {
+          var svg = rings[i];
+          var path = svg.querySelector('path.wavy');
+          var value = parseFloat(svg.getAttribute('data-value')) || 0;
+          path.setAttribute('d', wavyRingPath(60, 60, 52, 3.5, 28));
+          var dash = value > 0 ? Math.round(Math.max(value * 10, 45)) : 0;
+          path.setAttribute('stroke-dasharray', dash + ' 1000');
+          var t = dialTicks(60, 60, 60, 2 * Math.PI / 60, -Math.PI / 2, 56.2, 58.2, 55, 59);
+          svg.querySelector('.ticks-short').setAttribute('d', t.short);
+          svg.querySelector('.ticks-long').setAttribute('d', t.long);
+        }
+      }
+
+      /* Bezel da tachimetro (hero A): arco ~200° (180° → 380° passando per
+         l'apice, senso orario a schermo) + tacche radiali verso l'interno,
+         una ogni 5°, ogni 5ª più lunga. viewBox 320×180, cx 160 cy 126 r 108 —
+         raggio più largo della sagoma dell'auto: l'arco la circonda da dietro. */
+      function renderBezels() {
+        var els = document.querySelectorAll('svg.bezel');
+        for (var i = 0; i < els.length; i++) {
+          var svg = els[i];
+          var cx = 160, cy = 126, r = 108;
+          var a0 = Math.PI;                       // 180°
+          var a1 = 20 * Math.PI / 180;            // 380° ≡ 20°
+          var x0 = cx + r * Math.cos(a0), y0 = cy + r * Math.sin(a0);
+          var x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
+          // sweep 1 = senso orario a schermo; large-arc 1 = 200° > 180°
+          svg.querySelector('.bezel-arc').setAttribute('d',
+            'M' + x0.toFixed(2) + ' ' + y0.toFixed(2) +
+            'A' + r + ' ' + r + ' 0 1 1 ' + x1.toFixed(2) + ' ' + y1.toFixed(2));
+          // 41 tacche ogni 5° sui 200° (passo esplicito, estremi inclusi),
+          // verso il centro (r-1.5 → r-7 / r-11)
+          var t = dialTicks(cx, cy, 41, 5 * Math.PI / 180, a0, r - 7, r - 1.5, r - 11, r - 1.5);
+          svg.querySelector('.ticks-short').setAttribute('d', t.short);
+          svg.querySelector('.ticks-long').setAttribute('d', t.long);
+        }
+      }
+
+      // Entrance: rise (16px) + fade al load, stagger leggero per frame.
+      function reveal() {
+        var items = document.querySelectorAll('.enter');
+        for (var i = 0; i < items.length; i++) {
+          items[i].style.transitionDelay = Math.min(i * 45, 450) + 'ms';
+        }
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            document.documentElement.classList.add('ready');
+          });
+        });
+      }
+
+      function init() {
+        renderRings();
+        renderBezels();
+        reveal();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    })();
+  </script>
+</body>
+</html>
