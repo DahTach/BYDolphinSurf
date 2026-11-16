@@ -36,6 +36,14 @@ ng build
 
 This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
 
+## Deploy (GitHub Pages)
+
+```bash
+bun run deploy
+```
+
+Build con `--base-href=/BYDolphinSurf/` e push di `dist/byd-dolphin/browser` sul branch `gh-pages` via `angular-cli-ghpages` (aggiunge `404.html` e `.nojekyll`). Il sito è pubblicato su <https://dahtach.github.io/BYDolphinSurf/>.
+
 ## Running unit tests
 
 To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
