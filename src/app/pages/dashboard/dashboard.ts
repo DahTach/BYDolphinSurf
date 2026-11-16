@@ -251,6 +251,9 @@ export class Dashboard {
 
   protected readonly prontezzaSubtitle = computed(() => `${this.prontezza().ok} di ${this.prontezza().total} in regola`);
 
+  /** Ring center value line — sized from the RENDERED text (count-up included). */
+  protected readonly prontezzaLine = computed(() => ringValueLine(`${this.prontezzaDisplay()}%`, 14));
+
   /* ── Cicli LFP (resolved ND-3) ── */
 
   protected readonly cicli = computed(() =>
@@ -262,6 +265,9 @@ export class Dashboard {
   protected readonly cicliPercent = computed(() => (this.cicli() / LFP_TOTAL_CYCLES) * 100);
 
   protected readonly cicliLabel = computed(() => formatPercent(this.cicliPercent()));
+
+  /** Ring center value line — sized from the RENDERED text (count-up included). */
+  protected readonly cicliLine = computed(() => ringValueLine(`${this.cicliDisplay()}/5.000`, 12));
 
   /* ── Motion orchestration (design D11: activation-only) ── */
 
@@ -434,4 +440,17 @@ export class Dashboard {
 /** "20/08" for the queue chip (dd/mm). */
 function formatDayMonth(date: Date): string {
   return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`;
+}
+
+/**
+ * Ring center value line (composition A): steps DOWN instead of overflowing —
+ * 26px default, 22px past 6 glyphs, 18px past 8 — with the suffix scaled along
+ * (14px "%" / 12px "/5.000" at the default step). Glyphs are counted from the
+ * rendered text (count-up included); the punctuation marks of the suffixes are
+ * not glyphs, so the pinned state ("18%" and "14/5.000") stays at 26px/26px.
+ */
+function ringValueLine(text: string, suffixBase: number): { value: number; suffix: number } {
+  const glyphs = text.replace(/[^0-9a-z]/gi, '').length;
+  const value = glyphs > 8 ? 18 : glyphs > 6 ? 22 : 26;
+  return { value, suffix: Math.round((value / 26) * suffixBase) };
 }
