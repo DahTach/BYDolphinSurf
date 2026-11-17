@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<title>Proposta · Material 3 Expressive — hero, effetti, icona PWA</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..1000&display=swap" rel="stylesheet" />
+<style>
+  /* ═══ Palette proposta — warm white & black (car livery) ═══ */
+  :root {
+    --bg: #000000;
+    --card: #141210;
+    --card2: #1c1917;
+    --cream: #ede6da;   /* prim — la carrozzeria */
+    --cream-hi: #f2ede4;
+    --muted: #a8a09a;
+    --dim: #6f6862;
+    --alert: #cf7d63;   /* terracotta smorzato — solo scaduto */
+    --hair: rgba(255,255,255,0.07);
+    /* M3E motion tokens (m3.material.io/styles/motion/overview/specs) */
+    --spring: cubic-bezier(0.38, 1.21, 0.22, 1);        /* expressive · spatial · default (500ms) */
+    --spring-fast: cubic-bezier(0.42, 1.67, 0.21, 0.9); /* expressive · spatial · fast (350ms) */
+    --effects: cubic-bezier(0.34, 0.8, 0.34, 1);        /* expressive · effects (200ms, no overshoot) */
+    --emph: cubic-bezier(0.2, 0, 0, 1);
+    --sans: "Roboto Flex", Roboto, system-ui, sans-serif;
+  }
+
+  .doc { font-family: var(--sans); max-width: 720px; margin: 0 auto; }
+  .kicker { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.55; margin: 26px 0 10px; }
+  .box { border-radius: var(--radius, 16px); padding: 16px; }
+
+  /* ── Phone frame ── */
+  .phone {
+    width: 100%; max-width: 430px; margin: 0 auto;
+    background: var(--bg); color: var(--cream-hi);
+    border-radius: 32px; border: 1px solid var(--hair);
+    overflow: hidden; position: relative;
+    font-family: var(--sans);
+  }
+  .phone-inner { padding: 18px 16px 22px; }
+
+  /* ═══ 1 · HERO — "car stage" ═══ */
+  .stage {
+    position: relative; height: 250px; border-radius: 28px; overflow: hidden;
+    background:
+      radial-gradient(130% 110% at 50% 125%, #262019 0%, #17130f 48%, #0b0908 100%);
+  }
+  .stage-glow {
+    position: absolute; right: 20px; bottom: 26px; width: 320px; height: 110px;
+    pointer-events: none;
+    background: radial-gradient(50% 55% at 50% 50%, rgba(237,230,218,0.22), rgba(237,230,218,0) 72%);
+    filter: blur(2px);
+  }
+  .stage-floor {
+    position: absolute; left: 10%; right: 10%; bottom: 30px; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(237,230,218,0.22), transparent);
+  }
+  .car-wrap {
+    position: absolute; right: -18px; bottom: 18px; width: 318px;
+  }
+  .car-wrap img {
+    width: 100%; display: block;
+    filter: drop-shadow(0 22px 26px rgba(0,0,0,0.6));
+  }
+  .car-in .car-wrap { animation: carDrive 900ms var(--spring) both, carFloat 5s ease-in-out 1s infinite; }
+  @keyframes carDrive {
+    from { opacity: 0; transform: translateX(72px) scale(0.96); }
+    to   { opacity: 1; transform: translateX(0) scale(1); }
+  }
+  @keyframes carFloat {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-5px); }
+  }
+  /* light sweep — "studio gloss" */
+  .sweep {
+    position: absolute; inset: -20% -60%; pointer-events: none;
+    background: linear-gradient(105deg, transparent 38%, rgba(255,255,255,0.10) 47%, rgba(255,255,255,0.16) 50%, transparent 62%);
+    transform: translateX(-70%); mix-blend-mode: screen;
+    animation: sweep 7s ease-in-out 1.6s infinite;
+  }
+  @keyframes sweep {
+    0%   { transform: translateX(-70%); }
+    38%  { transform: translateX(70%); }
+    100% { transform: translateX(70%); }
+  }
+  .stage-id { position: absolute; top: 18px; left: 20px; z-index: 3; }
+  .stage-id .brand { font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+  .stage-id h2 { margin: 3px 0 0; font-size: 22px; font-weight: 800; letter-spacing: -0.01em; color: var(--cream-hi); }
+  .stage-id .chip {
+    display: inline-block; margin-top: 8px; padding: 3px 10px; border-radius: 999px;
+    border: 1px solid rgba(237,230,218,0.25); font-size: 10px; font-weight: 600; color: var(--muted);
+  }
+  /* big-type moment: odometer over the stage */
+  .stage-odo { position: absolute; left: 20px; bottom: 16px; z-index: 3; }
+  .stage-odo .n {
+    font-size: 34px; font-weight: 900; letter-spacing: -0.02em; line-height: 1;
+    color: var(--cream-hi); font-variant-numeric: tabular-nums; display: flex; align-items: baseline;
+  }
+  .stage-odo .u { font-size: 13px; font-weight: 700; color: var(--muted); margin-left: 6px; }
+  .stage-odo .lbl { margin-top: 4px; font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); }
+
+  /* hero meta row under the stage */
+  .gauge-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+  .gauge {
+    background: var(--card2); border-radius: 18px; padding: 12px 10px; text-align: center;
+  }
+  .gauge svg { width: 64px; height: 64px; display: block; margin: 0 auto; }
+  .gauge .v { margin-top: 6px; font-size: 13px; font-weight: 800; color: var(--cream-hi); font-variant-numeric: tabular-nums; }
+  .gauge .l { margin-top: 2px; font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); }
+
+  /* ═══ 2 · WOW DEMOS ═══ */
+  .demo {
+    background: var(--card); border: 1px solid var(--hair); border-radius: 22px;
+    padding: 18px; margin-top: 14px;
+  }
+  .demo h3 { margin: 0; font-size: 15px; font-weight: 800; color: var(--cream-hi); }
+  .demo p.desc { margin: 6px 0 14px; font-size: 12px; line-height: 1.55; color: var(--muted); }
+  .demo p.desc b { color: var(--cream); font-weight: 700; }
+  .demo-stage {
+    background: var(--bg); border-radius: 16px; padding: 18px; min-height: 92px;
+    display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap;
+    position: relative; overflow: hidden;
+  }
+
+  /* press + shape morph */
+  .morph-btn {
+    border: 0; cursor: pointer; font-family: var(--sans);
+    background: var(--cream); color: #221c14;
+    font-size: 14px; font-weight: 800; padding: 13px 26px;
+    border-radius: 999px; position: relative;
+    transition: transform 140ms var(--emph), border-radius 350ms var(--spring-fast);
+  }
+  .morph-btn:hover::after {
+    content: ''; position: absolute; inset: 0; border-radius: inherit; background: #000; opacity: 0.06;
+  }
+  .morph-btn:active { transform: scale(0.94); border-radius: 14px; }
+
+  .morph-card {
+    width: 120px; height: 74px; border-radius: 22px; background: var(--card2);
+    border: 1px solid var(--hair); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: var(--muted);
+    transition: transform 140ms var(--emph), border-radius 350ms var(--spring-fast);
+  }
+  .morph-card:active { transform: scale(0.94); border-radius: 12px; }
+
+  /* celebration */
+  .celebrate-btn {
+    border: 0; cursor: pointer; font-family: var(--sans);
+    background: var(--cream); color: #221c14; height: 44px; padding: 0 22px;
+    border-radius: 999px; font-size: 14px; font-weight: 800;
+    display: inline-flex; align-items: center; gap: 8px;
+    transition: transform 140ms var(--emph), width 550ms var(--spring), background 300ms var(--effects), border-radius 350ms var(--spring-fast);
+  }
+  .celebrate-btn:active { transform: scale(0.94); }
+  .celebrate-btn.done {
+    background: transparent; border: 1px solid rgba(237,230,218,0.35); color: var(--cream);
+    transform: scale(1);
+    animation: pop 550ms var(--spring);
+  }
+  @keyframes pop {
+    0% { transform: scale(0.9); } 45% { transform: scale(1.06); } 100% { transform: scale(1); }
+  }
+  .bloom {
+    position: absolute; width: 20px; height: 20px; border-radius: 999px; pointer-events: none;
+    background: radial-gradient(circle, rgba(237,230,218,0.5), rgba(237,230,218,0) 70%);
+    transform: translate(-50%, -50%) scale(0); opacity: 0;
+  }
+  .bloom.go { animation: bloom 700ms var(--emph) forwards; }
+  @keyframes bloom {
+    0%   { transform: translate(-50%, -50%) scale(0); opacity: 0.9; }
+    100% { transform: translate(-50%, -50%) scale(11); opacity: 0; }
+  }
+  .chip-demo {
+    display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px;
+    border-radius: 999px; font-size: 11px; font-weight: 700;
+    background: var(--card2); color: var(--muted); border: 1px solid var(--hair);
+    transition: background 200ms var(--effects), color 200ms var(--effects), transform 500ms var(--spring);
+    overflow: hidden;
+  }
+  .chip-demo.ok { background: var(--cream); color: #221c14; border-color: transparent; }
+  .chip-demo .dot { width: 6px; height: 6px; border-radius: 999px; background: var(--alert); }
+  .chip-demo.ok .dot { background: #221c14; }
+
+  /* odometer */
+  .odo { display: flex; align-items: baseline; font-variant-numeric: tabular-nums; }
+  .odo .digit {
+    display: inline-block; width: 22px; height: 38px; overflow: hidden; position: relative;
+    font-size: 32px; font-weight: 900; color: var(--cream-hi); text-align: center; line-height: 38px;
+  }
+  .odo .digit .col { position: absolute; inset: 0; transition: transform 600ms var(--spring); }
+  .odo .digit .col span { display: block; height: 38px; }
+  .odo .sep { font-size: 32px; font-weight: 900; color: var(--dim); padding: 0 1px; }
+  .plus-btn {
+    border: 1px solid rgba(237,230,218,0.3); background: transparent; color: var(--cream);
+    border-radius: 999px; height: 38px; padding: 0 18px; font-size: 13px; font-weight: 800;
+    cursor: pointer; font-family: var(--sans);
+    transition: transform 140ms var(--emph), background 250ms var(--emph);
+  }
+  .plus-btn:hover { background: rgba(237,230,218,0.1); }
+  .plus-btn:active { transform: scale(0.94); }
+
+  /* wavy ring live */
+  .wave-ring { width: 120px; height: 120px; }
+  .replay-btn {
+    border: 1px solid rgba(237,230,218,0.3); background: transparent; color: var(--cream);
+    border-radius: 999px; height: 38px; padding: 0 18px; font-size: 13px; font-weight: 800;
+    cursor: pointer; font-family: var(--sans);
+    transition: transform 140ms var(--emph), background 250ms var(--emph);
+  }
+  .replay-btn:hover { background: rgba(237,230,218,0.1); }
+  .replay-btn:active { transform: scale(0.94); }
+
+  /* ═══ 3 · ICONA PWA ═══ */
+  .icon-row { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-start; }
+  .icon-cand { flex: 1 1 180px; text-align: center; }
+  .icon-tile {
+    width: 132px; height: 132px; margin: 0 auto; border-radius: 30px;
+    background: var(--bg); border: 1px solid var(--hair);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .icon-tile.round { border-radius: 999px; }
+  .icon-tile svg { width: 84px; height: 84px; }
+  .icon-cand .name { margin-top: 10px; font-size: 12px; font-weight: 800; color: var(--cream-hi); }
+  .icon-cand .sub { margin-top: 3px; font-size: 10px; color: var(--dim); line-height: 1.5; }
+  .icon-cand .pick {
+    display: inline-block; margin-top: 8px; padding: 3px 10px; border-radius: 999px;
+    background: var(--cream); color: #221c14; font-size: 9px; font-weight: 800;
+    letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .icon-mini { display: flex; gap: 12px; justify-content: center; align-items: flex-end; margin-top: 16px; }
+  .icon-mini figure { margin: 0; text-align: center; }
+  .icon-mini .t { border-radius: 22%; background: var(--bg); border: 1px solid var(--hair); display: flex; align-items: center; justify-content: center; }
+  .icon-mini figcaption { margin-top: 6px; font-size: 9px; color: var(--dim); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; }
+
+  /* update snackbar mock */
+  .snack {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--cream); color: #221c14; border-radius: 18px;
+    padding: 13px 16px; font-size: 13px; font-weight: 700; margin-top: 14px;
+  }
+  .snack .msg { flex: 1; }
+  .snack .msg small { display: block; font-weight: 500; opacity: 0.7; font-size: 11px; margin-top: 1px; }
+  .snack .act {
+    background: transparent; border: 0; font-family: var(--sans); cursor: pointer;
+    font-size: 13px; font-weight: 800; color: #221c14; padding: 8px 12px; border-radius: 999px;
+  }
+  .snack .act:hover { background: rgba(0,0,0,0.08); }
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <!-- ═══ HERO ═══ -->
+  <p class="kicker">1 · Hero — “car stage”</p>
+  <div class="box" style="background: var(--bg);">
+    <div class="phone" id="phone">
+      <div class="phone-inner">
+        <div class="stage car-in" id="stage">
+          <div class="stage-glow"></div>
+          <div class="stage-floor"></div>
+          <div class="car-wrap">
+            <img src="/Users/francescotacinelli/Downloads/DolphinSurfComfort.png" alt="BYD Dolphin Surf Comfort" />
+          </div>
+          <div class="sweep"></div>
+          <div class="stage-id">
+            <p class="brand">BYD</p>
+            <h2>Dolphin Surf</h2>
+            <span class="chip">2025 EU · 43,2 kWh</span>
+          </div>
+          <div class="stage-odo">
+            <div class="n">12.480<span class="u">km</span></div>
+            <div class="lbl">Chilometraggio</div>
+          </div>
+        </div>
+
+        <div class="gauge-strip">
+          <div class="gauge">
+            <svg viewBox="0 0 100 100" data-ring data-pct="72"></svg>
+            <div class="v">13,9</div>
+            <div class="l">kWh/100</div>
+          </div>
+          <div class="gauge">
+            <svg viewBox="0 0 100 100" data-ring data-pct="4"></svg>
+            <div class="v">12.480</div>
+            <div class="l">km totali</div>
+          </div>
+          <div class="gauge">
+            <svg viewBox="0 0 100 100" data-ring data-pct="22"></svg>
+            <div class="v">03/24</div>
+            <div class="l">Consegna</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p style="font-size: 12px; line-height: 1.6; color: var(--muted); margin: 14px 4px 4px;">
+      Il taglio senza fondo della tua foto entra in un <b style="color: var(--cream)">palcoscenico scuro</b>
+      con alone caldo (“studio light”) e ombra di appoggio: la vettura — bianco caldo — è l’unica cosa
+      luminosa della pagina. Ingresso con <b style="color: var(--cream)">molla + fluttu</b> (già presente)
+      e una <b style="color: var(--cream)">luce radente</b> che passa ogni ~7s. In basso a sinistra,
+      <b style="color: var(--cream)">odometro in grande</b> (M3E: momento tipografico).
+    </p>
+  </div>
+
+  <!-- ═══ WOW EFFECTS ═══ -->
+  <p class="kicker">2 · Effetti “wow” — Material 3 Expressive</p>
+
+  <div class="demo">
+    <h3>① Press &amp; morph a molla</h3>
+    <p class="desc">Il tocco non è solo scale(0.97): forma che <b>morfeggia</b> (pillola → squircle) e rimbalzo
+      overshoot della molla M3E. Prova a premere (tieni premuto) i due elementi.</p>
+    <div class="demo-stage">
+      <button class="morph-btn">Registra ora</button>
+      <div class="morph-card">card morph</div>
+    </div>
+  </div>
+
+  <div class="demo">
+    <h3>② Momento “Fatto!” — celebrazione</h3>
+    <p class="desc">Registrare un intervento è <b>l’azione più importante dell’app</b>: il bottone morfeggia
+      in “Fatto ✓”, un <b>bloom</b> caldo si espande dal tocco e il chip di stato cambia con rimbalzo.
+      Clicca “Registra intervento”.</p>
+    <div class="demo-stage" id="celebStage">
+      <span class="bloom" id="bloom"></span>
+      <button class="celebrate-btn" id="celebBtn">Registra intervento</button>
+      <span class="chip-demo" id="celebChip"><span class="dot"></span> In scadenza</span>
+    </div>
+  </div>
+
+  <div class="demo">
+    <h3>③ Odometer digit roll</h3>
+    <p class="desc">I numeri contano: cifre che <b>rotolano</b> con stagger (come il badge countdown già in app),
+      estese a km, consumo e contatori. Clicca “+100 km”.</p>
+    <div class="demo-stage">
+      <div class="odo" id="odo"></div>
+      <button class="plus-btn" id="odoBtn">+100 km</button>
+    </div>
+  </div>
+
+  <div class="demo">
+    <h3>④ Wavy ring “live” + count-up</h3>
+    <p class="desc">L’anello Onda (firma M3E) con l’onda che <b>ondeggia appena</b> — la barra sembra viva —
+      e il valore che sale con count-up. Clicca “Replay”.</p>
+    <div class="demo-stage">
+      <svg class="wave-ring" id="liveRing" viewBox="0 0 120 120"></svg>
+      <div style="text-align: left;">
+        <div style="font-size: 30px; font-weight: 900; color: var(--cream-hi); font-variant-numeric: tabular-nums; line-height: 1;">
+          <span id="liveVal">0</span><span style="font-size: 13px; color: var(--dim); font-weight: 700;">%</span>
+        </div>
+        <div style="font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); margin-top: 5px;">
+          Prontezza
+        </div>
+        <button class="replay-btn" id="ringBtn" style="margin-top: 12px;">Replay</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo">
+    <h3>⑤ (extra) Snackbar aggiornamento</h3>
+    <p class="desc">Self-update: ricarica <b>silenziosa</b> se il nuovo versione arriva entro 30s dall’avvio,
+      altrimenti questa snackbar (stile M3E, angoli generosi). Clicca “Ricarica” per vedere il rimbalzo.</p>
+    <div class="snack" id="snack">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+      <div class="msg">Nuova versione disponibile<small>Novità e correzioni — ricarica per aggiornare</small></div>
+      <button class="act" id="snackBtn">Ricarica</button>
+    </div>
+  </div>
+
+  <!-- ═══ ICONA PWA ═══ -->
+  <p class="kicker">3 · Icona PWA — minimal</p>
+  <div class="box" style="background: var(--bg);">
+    <div class="icon-row">
+      <div class="icon-cand">
+        <div class="icon-tile">
+          <svg viewBox="0 0 100 100"><path id="iconWaveRing" fill="none" stroke="#ede6da" stroke-width="7" stroke-linecap="round"/></svg>
+        </div>
+        <div class="name">A · Anello Onda</div>
+        <div class="sub">La firma dell’app: l’anello wavy<br/>dei gauge, in bianco caldo.</div>
+        <div class="pick">Consigliata</div>
+      </div>
+      <div class="icon-cand">
+        <div class="icon-tile">
+          <svg viewBox="0 0 100 100" fill="none" stroke="#ede6da" stroke-width="7" stroke-linecap="round">
+            <path d="M18 68 A 38 38 0 1 1 82 68" />
+            <path d="M50 60 L 68 40" stroke-width="8"/>
+            <circle cx="50" cy="62" r="5" fill="#ede6da" stroke="none"/>
+          </svg>
+        </div>
+        <div class="name">B · Contachilometri</div>
+        <div class="sub">Arco di gauge + lancetta:<br/>manutenzione e viaggio.</div>
+      </div>
+      <div class="icon-cand">
+        <div class="icon-tile">
+          <svg viewBox="0 0 100 100" fill="none" stroke="#ede6da" stroke-width="7" stroke-linecap="round">
+            <path d="M12 58 Q 23 40 34 58 T 56 58 T 78 58 T 96 50" />
+            <circle cx="56" cy="58" r="6" fill="#ede6da" stroke="none"/>
+          </svg>
+        </div>
+        <div class="name">C · Onda &amp; marcatore</div>
+        <div class="sub">La timeline a onda con<br/>il marcatore di scadenza.</div>
+      </div>
+    </div>
+
+    <div class="icon-mini" id="iconMini">
+      <figure>
+        <div class="t" style="width: 64px; height: 64px;"><svg viewBox="0 0 100 100" style="width: 42px; height: 42px;"><path class="ring-copy" fill="none" stroke="#ede6da" stroke-width="7" stroke-linecap="round"/></svg></div>
+        <figcaption>iOS 180</figcaption>
+      </figure>
+      <figure>
+        <div class="t" style="width: 52px; height: 52px; border-radius: 999px;"><svg viewBox="0 0 100 100" style="width: 30px; height: 30px;"><path class="ring-copy" fill="none" stroke="#ede6da" stroke-width="8" stroke-linecap="round"/></svg></div>
+        <figcaption>Maskable</figcaption>
+      </figure>
+      <figure>
+        <div class="t" style="width: 32px; height: 32px; border-radius: 8px;"><svg viewBox="0 0 100 100" style="width: 20px; height: 20px;"><path class="ring-copy" fill="none" stroke="#ede6da" stroke-width="9" stroke-linecap="round"/></svg></div>
+        <figcaption>Favicon 32</figcaption>
+      </figure>
+    </div>
+
+    <p style="font-size: 12px; line-height: 1.6; color: var(--muted); margin: 16px 4px 4px;">
+      Set completo come da reference smartverona: <b style="color: var(--cream)">192/512 any</b> (trasparente),
+      <b style="color: var(--cream)">512 maskable</b> (fondo nero pieno, marchio al 60%),
+      <b style="color: var(--cream)">512 monochrome</b>, <b style="color: var(--cream)">apple-touch-icon 180</b>
+      (opaco), favicon 32/64. Il manifest usa <code>start_url/scope = /BYDolphinSurf/</code> come il tuo deploy.
+    </p>
+  </div>
+
+</div>
+
+<script>
+  /* ── wavy ring generator: r(θ) = R + A·sin(waves·θ + φ) ── */
+  function waveRingPath(cx, cy, r, amp, waves, phase, samples) {
+    samples = samples || 240;
+    let d = '';
+    for (let i = 0; i <= samples; i++) {
+      const th = (i / samples) * Math.PI * 2;
+      const rr = r + amp * Math.sin(waves * th + phase);
+      const x = cx + rr * Math.cos(th - Math.PI / 2);
+      const y = cy + rr * Math.sin(th - Math.PI / 2);
+      d += (i ? 'L' : 'M') + x.toFixed(2) + ' ' + y.toFixed(2);
+    }
+    return d + 'Z';
+  }
+
+  /* gauge strip rings */
+  document.querySelectorAll('[data-ring]').forEach((svg) => {
+    const pct = Number(svg.dataset.pct || 0);
+    const track = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    track.setAttribute('d', waveRingPath(50, 50, 40, 1.8, 12, 0));
+    track.setAttribute('fill', 'none');
+    track.setAttribute('stroke', '#2c2825');
+    track.setAttribute('stroke-width', '6');
+    svg.appendChild(track);
+    const fill = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    fill.setAttribute('d', waveRingPath(50, 50, 40, 1.8, 12, 0));
+    fill.setAttribute('fill', 'none');
+    fill.setAttribute('stroke', '#ede6da');
+    fill.setAttribute('stroke-width', '6');
+    fill.setAttribute('stroke-linecap', 'round');
+    fill.setAttribute('pathLength', '1000');
+    fill.setAttribute('stroke-dasharray', (pct * 10) + ' 1000');
+    svg.appendChild(fill);
+  });
+
+  /* icon A path + copies */
+  const iconD = waveRingPath(50, 50, 34, 2.4, 12, 0, 360);
+  document.getElementById('iconWaveRing').setAttribute('d', iconD);
+  document.querySelectorAll('.ring-copy').forEach((p) => p.setAttribute('d', iconD));
+
+  /* ── ② celebration ── */
+  const celebBtn = document.getElementById('celebBtn');
+  const celebChip = document.getElementById('celebChip');
+  const bloom = document.getElementById('bloom');
+  celebBtn.addEventListener('click', () => {
+    const done = celebBtn.classList.toggle('done');
+    if (done) {
+      celebBtn.textContent = 'Fatto ✓';
+      celebChip.classList.add('ok');
+      celebChip.innerHTML = '<span class="dot"></span> In regola';
+      const r = celebBtn.getBoundingClientRect();
+      const s = document.getElementById('celebStage').getBoundingClientRect();
+      bloom.style.left = (r.left - s.left + r.width / 2) + 'px';
+      bloom.style.top = (r.top - s.top + r.height / 2) + 'px';
+      bloom.classList.remove('go'); void bloom.offsetWidth; bloom.classList.add('go');
+    } else {
+      celebBtn.textContent = 'Registra intervento';
+      celebChip.classList.remove('ok');
+      celebChip.innerHTML = '<span class="dot"></span> In scadenza';
+    }
+  });
+
+  /* ── ③ odometer ── */
+  const odoEl = document.getElementById('odo');
+  let odoVal = 12480;
+  function renderOdo(val, animate) {
+    const chars = val.toLocaleString('it-IT').split('');
+    if (odoEl.children.length !== chars.length) {
+      odoEl.innerHTML = '';
+      chars.forEach((c) => {
+        if (c === '.') {
+          const s = document.createElement('span');
+          s.className = 'sep'; s.textContent = '.';
+          odoEl.appendChild(s);
+          return;
+        }
+        const d = document.createElement('span');
+        d.className = 'digit';
+        d.innerHTML = '<span class="col">' + [0,1,2,3,4,5,6,7,8,9].map((n) => '<span>' + n + '</span>').join('') + '</span>';
+        d.dataset.v = c;
+        odoEl.appendChild(d);
+      });
+    }
+    const digits = [...odoEl.querySelectorAll('.digit')];
+    digits.forEach((d, i) => {
+      const target = chars.filter((c) => c !== '.')[i];
+      const col = d.querySelector('.col');
+      const set = () => {
+        col.style.transitionDelay = (animate ? i * 55 : 0) + 'ms';
+        col.style.transform = 'translateY(-' + (Number(target) * 38) + 'px)';
+        d.dataset.v = target;
+      };
+      if (animate) { requestAnimationFrame(set); } else { set(); }
+    });
+  }
+  renderOdo(odoVal, false);
+  document.getElementById('odoBtn').addEventListener('click', () => {
+    odoVal += 100;
+    renderOdo(odoVal, true);
+  });
+
+  /* ── ④ live wavy ring ── */
+  const liveSvg = document.getElementById('liveRing');
+  const liveTrack = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  liveTrack.setAttribute('fill', 'none');
+  liveTrack.setAttribute('stroke', '#2c2825');
+  liveTrack.setAttribute('stroke-width', '8');
+  liveSvg.appendChild(liveTrack);
+  const liveFill = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  liveFill.setAttribute('fill', 'none');
+  liveFill.setAttribute('stroke', '#ede6da');
+  liveFill.setAttribute('stroke-width', '8');
+  liveFill.setAttribute('stroke-linecap', 'round');
+  liveFill.setAttribute('pathLength', '1000');
+  liveSvg.appendChild(liveFill);
+
+  let phase = 0;
+  let livePct = 0;
+  const liveVal = document.getElementById('liveVal');
+  function frame() {
+    phase += 0.012;
+    liveTrack.setAttribute('d', waveRingPath(60, 60, 46, 3, 12, phase));
+    liveFill.setAttribute('d', waveRingPath(60, 60, 46, 3, 12, phase));
+    liveFill.setAttribute('stroke-dasharray', (livePct * 10) + ' 1000');
+    requestAnimationFrame(frame);
+  }
+  frame();
+  function runRingCount() {
+    const t0 = performance.now();
+    const dur = 700;
+    function step(now) {
+      const p = Math.min((now - t0) / dur, 1);
+      const e = 1 - Math.pow(1 - p, 3);
+      livePct = 86 * e;
+      liveVal.textContent = Math.round(livePct);
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  runRingCount();
+  document.getElementById('ringBtn').addEventListener('click', () => {
+    livePct = 0;
+    runRingCount();
+  });
+
+  /* ── ⑤ snackbar bounce ── */
+  document.getElementById('snackBtn').addEventListener('click', (e) => {
+    const b = e.currentTarget;
+    b.animate(
+      [{ transform: 'scale(1)' }, { transform: 'scale(0.88)' }, { transform: 'scale(1)' }],
+      { duration: 350, easing: 'cubic-bezier(0.34, 1.4, 0.64, 1)' }
+    );
+    b.textContent = '✓ Ricaricato';
+    setTimeout(() => { b.textContent = 'Ricarica'; }, 1600);
+  });
+</script>
+</body>
+</html>

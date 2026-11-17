@@ -30,7 +30,7 @@ export class Products {
     {
       title: 'Sicuri su EPDM',
       chip: '<1–2% rigonfiamento',
-      chipClass: 'bg-okC text-onOkC',
+      chipClass: 'bg-primC text-onPrimC',
       items: [
         { name: 'Krytox GPL 205', desc: 'lubrificante PFPE inerte' },
         { name: 'Molykote 111', desc: 'pasta PDMS pura' },
@@ -41,7 +41,7 @@ export class Products {
     {
       title: 'Antiruggine sottoscocca',
       chip: '70 kV dielettrico',
-      chipClass: 'bg-terC text-onTerC',
+      chipClass: 'bg-surfHiX text-onSurfV',
       items: [
         { name: 'Lanoguard', desc: 'lanolina senza solventi' },
         { name: 'Dinitrol 3125 / 4941', desc: 'cera sintetica elastica' },

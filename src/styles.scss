@@ -1,50 +1,38 @@
 /* Global styles — Tailwind v4 (mirror: ~/Developer/AutofficinaPindemonte/src/styles.scss).
-   Token set mapped 1:1 from the tailwind.config block of ui-drafts/b-blade.html (design D1):
-   M3E coral-on-black, dark-only, no light palette, no toggle. */
+   Token set mapped 1:1 from ui-drafts/h1-proposta-m3e.html (palette proposta):
+   warm-white-on-black quasi monocromatico — UNA tinta (terracotta, solo scaduto)
+   + un micro-accento ambra per "in scadenza". Dark-only, no light palette, no toggle. */
 
 @use "tailwindcss";
 
 @theme {
-  --font-sans: "Roboto Flex", Roboto, system-ui, sans-serif;
+  --font-sans: "Google Sans Flex", "Google Sans", Roboto, system-ui, sans-serif;
 
-  /* M3 color roles (dark scheme su nero, bianco caldo — la carrozzeria) */
+  /* M3 color roles (warm white & black — la carrozzeria: prim = il creme) */
   --color-prim: #ede6da;
-  --color-onPrim: #2a2218;
-  --color-primC: #54483b;
+  --color-onPrim: #221c14;
+  --color-primC: #26201a;
   --color-onPrimC: #ede6da;
-  --color-secC: #413830;
-  --color-onSecC: #e9dfd2;
-  --color-terC: #4a3e21;
-  --color-onTerC: #e8dab7;
-  --color-err: #d98a80;
-  --color-onErr: #441411;
-  --color-errC: #3e1d1c;
-  --color-onErrC: #f2c1ba;
+  --color-secC: #2b2620;
+  --color-onSecC: #ede6da;
+  --color-err: #cf7d63;
+  --color-onErr: #2b140c;
+  --color-errC: #2e1a13;
+  --color-onErrC: #e8a48f;
 
   /* Surface ramp su nero pieno */
   --color-surf: #000000;
-  --color-surfLox: #0e0d0d;
-  --color-surfC: #1e1c1d;
-  --color-surfHi: #2a2728;
-  --color-surfHiX: #353132;
-  --color-onSurf: #eae4e2;
-  --color-onSurfV: #b9aca8;
-  --color-mut: #8d817d;
-  --color-outline: #463f3d;
+  --color-surfC: #141210;
+  --color-surfHi: #1c1917;
+  --color-surfHiX: #2c2825;
+  --color-onSurf: #f2ede4;
+  --color-onSurfV: #a8a09a;
+  --color-mut: #6f6862;
+  --color-outline: #3a342e;
 
-  /* Stato (success/warn custom) */
-  --color-okC: #1d3326;
-  --color-onOkC: #9cc7a8;
-  --color-waC: #363020;
-  --color-onWaC: #d9c084;
-
-  /* Car-art extension (the only authorized palette extension, specs/app-shell):
-     fills for the dashboard hero car SVG */
-  --color-carBody: #c96f60;
-  --color-carBodyErr: #b96357;
-  --color-carAccent: #55291d;
-  --color-carAccentErr: #3e1d1c;
-  --color-carWheel: #2c130c;
+  /* Stato: il terracotta (err*) è l'unica tinta; "in scadenza" vive di neutro
+     + questo micro-punto ambra (dot/icona) — mai un secondo tinto di sfondo. */
+  --color-waDot: #c9a05a;
 
   /* Derived-alpha vars of existing tokens (token-hygiene whitelist case c) */
   --color-prim-a30: color-mix(in srgb, var(--color-prim) 30%, transparent);
@@ -55,22 +43,20 @@
   --radius-card: 24px;
   --radius-sheet: 28px;
   --radius-hero: 32px;
-
-  /* Ombre del draft */
-  --shadow-fab: 0 4px 10px rgba(0, 0, 0, 0.5), 0 14px 32px rgba(0, 0, 0, 0.55);
-  --shadow-hero: 0 6px 24px rgba(0, 0, 0, 0.35);
-  --shadow-nav: 0 8px 28px rgba(0, 0, 0, 0.55);
-  --shadow-sheet: 0 -8px 32px rgba(0, 0, 0, 0.6);
+  /* Niente ombre: l'unico "ombra" del sistema è il ring hairline
+     (ring-1) e l'inset focus ring di text-field. */
 }
 
 :root {
   color-scheme: dark; /* native <select> and popups render dark (design D14) */
 
-  /* ── Motion foundation (design D1, mirrors ui-drafts/d2-morfosi.html :root) ──
+  /* ── Motion foundation (design D1 + M3E specs: m3.material.io/styles/motion/overview/specs) ──
      Plain CSS custom properties: usable from component styles AND Tailwind
      arbitrary values, e.g. transition-[var(--d-fade)_var(--e-emph)]. */
   --e-emph: cubic-bezier(0.2, 0, 0, 1); /* entrances, hovers — never opens */
-  --e-spring: cubic-bezier(0.34, 1.4, 0.64, 1); /* ≈3% overshoot: opens, morphs, badge, bars */
+  --e-spring: cubic-bezier(0.38, 1.21, 0.22, 1); /* M3E expressive · spatial · default (500ms): opens, morphs, fills */
+  --e-spring-fast: cubic-bezier(0.42, 1.67, 0.21, 0.9); /* M3E expressive · spatial · fast (350ms): press shape morphs */
+  --e-fx: cubic-bezier(0.34, 0.8, 0.34, 1); /* M3E expressive · effects (200ms, no overshoot): color/opacity */
   --e-exit: cubic-bezier(0.3, 0, 1, 1); /* closes */
 
   /* Named duration scale — no ad-hoc durations anywhere */
@@ -80,7 +66,7 @@
   --d-medium: 400ms; /* scrims, icon pop, settle tick, route transition */
   --d-exit-flight: 450ms; /* every close/exit flight */
   --d-ripple: 500ms; /* ripple */
-  --d-large: 550ms; /* morph open, entrance rises, badge spring */
+  --d-large: 550ms; /* morph open, entrance rises */
   --d-roll: 600ms; /* digit rolls, hero corner morph */
   --d-bar: 650ms; /* bar fills */
   --d-count-up: 700ms; /* count-ups (JS cubic ease-out — the D1 exemption) */
@@ -100,6 +86,11 @@ body {
   color: var(--color-onSurf);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  /* The hero car overhangs the card's right edge (24-40px past it) and would
+     otherwise widen the page: clip the horizontal axis only (legal per-axis combo
+     with the default `visible` on Y — the viewport then clips horizontally while
+     vertical scrolling keeps working). Fixed-position elements are unaffected. */
+  overflow-x: clip;
 }
 
 ::selection {
@@ -176,15 +167,16 @@ body {
     min-height: 44px;
   }
 
-  /* ── Press shape morphs (D9 + rifiniture-e D1): rows pill→22px, cards 24→16px,
-        in-card list rows square→16px at 250ms --e-spring under the 140ms --e-emph
-        press scale — two speeds on one element (d2). Every morph is radius-only:
-        the press scale stays the universal scale(.97). ── */
+  /* ── Press shape morphs (D9 + rifiniture-e D1 + mockup demo ① "press & morph"):
+        rows pill→22px, cards 24→16px, in-card list rows square→16px — M3E shape
+        morph on press: 350ms (--d-fade) on the fast spring --e-spring-fast, UNDER
+        the 140ms --e-emph press scale — two speeds on one element (d2). Every
+        morph is radius-only: the press scale stays the universal scale(.97). ── */
   .mrow {
     border-radius: var(--radius-pill);
     transition:
       transform var(--d-press) var(--e-emph),
-      border-radius var(--d-small) var(--e-spring);
+      border-radius var(--d-fade) var(--e-spring-fast);
   }
 
   .mrow:active {
@@ -195,7 +187,7 @@ body {
     border-radius: var(--radius-card);
     transition:
       transform var(--d-press) var(--e-emph),
-      border-radius var(--d-small) var(--e-spring);
+      border-radius var(--d-fade) var(--e-spring-fast);
   }
 
   .mcard:active {
@@ -208,7 +200,7 @@ body {
     border-radius: 0;
     transition:
       transform var(--d-press) var(--e-emph),
-      border-radius var(--d-small) var(--e-spring);
+      border-radius var(--d-fade) var(--e-spring-fast);
   }
 
   .mlist:active {
@@ -257,29 +249,6 @@ body {
 
   .r-hero {
     border-radius: var(--radius-hero);
-  }
-
-  /* ── Car-art fills (specs/app-shell extension): SVG fills for the dashboard
-        hero car. Usage: class="fill-carBody" / "fill-carAccent" / "fill-carWheel"
-        on the SVG shapes (also exposed as Tailwind fill-* utilities). ── */
-  .fill-carBody {
-    fill: var(--color-carBody);
-  }
-
-  .fill-carBodyErr {
-    fill: var(--color-carBodyErr);
-  }
-
-  .fill-carAccent {
-    fill: var(--color-carAccent);
-  }
-
-  .fill-carAccentErr {
-    fill: var(--color-carAccentErr);
-  }
-
-  .fill-carWheel {
-    fill: var(--color-carWheel);
   }
 
   /* ── Type scale (D3/D15): named roles — no sizes outside them. Sizes mandated
@@ -363,6 +332,12 @@ body {
     border-radius: var(--radius-pill);
     font-weight: 700;
     white-space: nowrap;
+    /* Press shape morph (mockup demo ①): pill → 16px squircle while pressed,
+       350ms (--d-fade) on --e-spring-fast under the 140ms --e-emph press scale.
+       Overrides the transform-only transition of `.press, .btn` above. */
+    transition:
+      transform var(--d-press) var(--e-emph),
+      border-radius var(--d-fade) var(--e-spring-fast);
   }
 
   .btn-filled {
@@ -390,6 +365,41 @@ body {
     width: 2.5rem; /* 40px circle */
     height: 2.5rem;
     color: var(--color-onSurfV);
+  }
+
+  /* Shape morph on press: pill → 16px squircle (mockup "Registra ora").
+     `.btn-icon` is excluded — the 40px circle must stay a circle. */
+  .btn:active:not(.btn-icon) {
+    border-radius: 16px;
+  }
+
+  /* ── "Fatto!" celebration (mockup demo ②): a warm radial bloom appended at the
+        action's center by shared/motion.ts playBloom(). Scales 0 → 11 while
+        fading out over 700ms --e-emph, then the helper removes it. ── */
+  .bloom {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: var(--radius-pill);
+    pointer-events: none;
+    background: radial-gradient(circle, rgba(237, 230, 218, 0.5), rgba(237, 230, 218, 0) 70%);
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+  }
+
+  .bloom.go {
+    animation: bloom 700ms var(--e-emph) forwards;
+  }
+
+  @keyframes bloom {
+    0% {
+      transform: translate(-50%, -50%) scale(0);
+      opacity: 0.9;
+    }
+    100% {
+      transform: translate(-50%, -50%) scale(11);
+      opacity: 0;
+    }
   }
 }
 

@@ -25,15 +25,19 @@ import {
 import { Activity } from '../../data/model';
 import { Status, deriveActivityStatus } from '../../data/status';
 import { StoreService } from '../../data/store';
-import { fillBar, playEntrance, prefersReducedMotion, runCount } from '../../shared/motion';
+import { fillBar, playCelebrate, playEntrance, prefersReducedMotion, runCount } from '../../shared/motion';
 /* Cruscotto (specs/dashboard + vehicle-data): the gemini "vehicle maintenance
-   card" — neutral surfC card (28px radius) with the car breaking out of its
-   top-right edge, the 3 vehicle fields as editable Onda M3E gauge fields
+   card" — neutral surfC card (28px radius, NO overflow clipping) topped by the mockup
+   "car stage" (h1-proposta-m3e §1: flat dark studio panel, identity
+   top-left and the big odometer bottom-left — the car sits as before and spills
+   out of the card's right edge), then
+   the 3 vehicle fields as editable Onda M3E gauge fields
    (consumo sx / chilometraggio hero al centro / consegna dx) and the ABORBED
    "Prossima scadenza" block under a hairline: eyebrow + status chip, activity
-   title, the M3 timeline bar (scadenza marker + elapsed fill + kinetic
-   countdown badge over the marker), spec/interval chips bottom-left and the
-   compact "Registra ora" CTA bottom-right. Then the "Prossime" queue with row
+   title, the M3 timeline bar (scadenza tick + elapsed fill + plain countdown
+   text over the marker), spec/interval chips bottom-left and the
+   compact "Registra ora" CTA bottom-right (with the "Fatto ✓" celebration).
+   Then the "Prossime" queue with row
    press morphs (4.5), tappable "In sintesi" MD3 rows with the ripple→deep-link
    choreography (rifiniture-e D1), one "Stato veicolo" card with the Onda M3E
    wavy fills (rifiniture-e D3/D4). All aggregations are computed from the
@@ -42,10 +46,10 @@ import { fillBar, playEntrance, prefersReducedMotion, runCount } from '../../sha
    Motion discipline (design D11): entrances, count-ups and progress fills fire
    ONLY on route/pane activation (afterNextRender of this route component). Data
    edits snap values/dashes through their CSS transitions and never replay an
-   entrance, count-up or digit roll; mid-session hero swaps snap the badge text
-   and the timeline fill (the shared status-chip owns the badge timeline) — the
-   card itself stays neutral (status color survives only in the chips, badge,
-   fill and CTA). */
+   entrance or count-up; mid-session hero swaps snap the countdown text
+   and the timeline fill — the
+   card itself stays neutral (status color survives only in the chip text,
+   countdown text, fill and CTA). */
 
 /** Ripple fade completes first, then the deep link (design D10). */
 const NAV_DELAY_MS = 600;
@@ -59,11 +63,11 @@ interface HeroView {
   badge: string;
   /** CTA fill permutation (the merged card stays neutral surfC). */
   cta: string;
-  /** Scadenza marker (due) position along the timeline track (0–100). */
+  /** Scadenza tick (due) position along the timeline track (0–100). */
   markerPct: number;
   /** Elapsed fill to today along the track (0–100, clamped). */
   fillPct: number;
-  /** Badge left% — the marker clamped so the chip never overflows the row. */
+  /** Countdown left% — the marker clamped so the text never overflows the row. */
   badgePct: number;
 }
 
@@ -82,7 +86,7 @@ const OVERRUN = 0.3;
 const FALLBACK_PRE_DAYS = 30;
 /** Fallback window tail, so the marker lands at 75% (30/40) there too. */
 const FALLBACK_POST_DAYS = 10;
-/** Badge horizontal clamp (center %) so the countdown chip never overflows the row. */
+/** Countdown horizontal clamp (center %) so the text never overflows the row. */
 const BADGE_MIN_PCT = 12;
 const BADGE_MAX_PCT = 88;
 
@@ -99,7 +103,7 @@ function addDays(date: Date, days: number): Date {
  * - window end = `due + 30%` of the interval span, so the due marker sits at
  *   ≈76.9% (1/1.3 — 75% on the fallback window) and an overrun renders past it;
  * - fill = elapsed to today, clamped 0–100 (err when past the marker);
- * - badge = the marker %, clamped so the chip never overflows the row.
+ * - badge = the marker %, clamped so the countdown never overflows the row.
  */
 function timelinePositions(
   activity: Activity,
@@ -183,55 +187,55 @@ function clampPercent(pct: number, min = 0): number {
       }
     }
 
-    /* ── Car breakout (gemini vehicle maintenance card): the SAME 500×500 PNG
-          scaled to a 208px (w-52) box and cropped to the car with negative
-          margins (visible car ≈ x 12–492, y 134–392 of the source → ≈200×107
-          here), so the drive/float wrappers' layout box IS the visible car and
-          the absolute top-right anchoring + "top third above the card edge"
-          translate speak in visible-car pixels. The baked-in ground shadow
-          grounds the car on the card — no extra filter. ── */
-    .car-shot-lg {
-      width: 208px;
-      height: 208px;
-      object-fit: contain;
-      margin: -56px -3px -45px -5px;
+    /* ── Car stage (mockup h1-proposta-m3e §1): full-bleed dark studio panel at
+          the top of the #veicolo card — flat radial backdrop only (no glow, no
+          floor line, no sweep). NO overflow hidden anywhere: the panel clips its
+          own gradient with the card's top-corner radius, while the car spills out
+          of the card's right edge (the page keeps the horizontal bleed inside
+          body { overflow-x: clip }). ── */
+    .stage {
+      position: relative;
+      height: 250px;
+      border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+      background: radial-gradient(130% 110% at 50% 125%, #262019 0%, #17130f 48%, #0b0908 100%);
     }
 
-    /* ── Car motion (two transforms on nested wrappers, never both on one element
-          — the status-chip tick pattern): drive-in entrance on the OUTER wrapper,
-          idle float on the INNER one. Activation-only: carIn() flips with the
-          playEntrance trigger, so data edits never replay the drive-in and
-          mid-session hero swaps mount already "in" (instant reveal). ── */
+    /* ── Car shot: the 479×243 tight-cut PNG at 318px (no padding, no negative-margin
+          cropping). Width MUST match .car-drive below (a wider flex child would
+          overflow its positioned wrapper and shift the geometry). ── */
+    .car-shot {
+      display: block;
+      width: 318px;
+    }
+
+    /* ── Car placement: exactly where it was inside the stage — 318px wide,
+          right-anchored, bottom-anchored — but no longer clipped: the nose spills
+          ~18px outside the card's right edge (the "sbordo" the user asked for).
+          Entrance (design D11): drive-in from the RIGHT on this OUTER wrapper —
+          from translateX(72px) scale(.96) → rest, 900ms spring. Activation-only:
+          carIn() flips with the playEntrance trigger, so data edits never replay
+          the drive-in and mid-session hero swaps mount already "in". The car then
+          stays put (no idle float). ── */
     .car-drive {
+      position: absolute;
+      right: -18px;
+      bottom: 18px;
+      width: 318px;
       display: flex;
+      pointer-events: none;
+      user-select: none;
       opacity: 0;
-      transform: translateX(-64px);
+      transform: translateX(72px) scale(0.96);
       /* ≈150ms after the hero rise begins (T+55 stagger + 150 ≈ 200ms), then
-         springs to rest over --d-large with the --e-spring overshoot */
+         springs to rest over 900ms with the --e-spring overshoot */
       transition:
-        opacity var(--d-large) var(--e-spring) 200ms,
-        transform var(--d-large) var(--e-spring) 200ms;
+        opacity 900ms var(--e-spring) 200ms,
+        transform 900ms var(--e-spring) 200ms;
     }
 
     .car-drive.in {
       opacity: 1;
       transform: none;
-    }
-
-    .car-float {
-      display: flex;
-      /* starts once the drive-in lands (~700ms): a delicate 0 → −4px → 0 loop */
-      animation: car-float 5s ease-in-out 700ms infinite;
-    }
-
-    @keyframes car-float {
-      0%,
-      100% {
-        transform: translateY(0);
-      }
-      50% {
-        transform: translateY(-4px);
-      }
     }
 
     /* ── Scadenza timeline fill: the shared ".bar" primitive plays the entrance
@@ -408,7 +412,6 @@ export class Dashboard {
 
   /* ── Motion orchestration (design D11: activation-only) ── */
 
-  private readonly heroBadge = viewChild('heroBadge', { read: StatusChip });
   private readonly gaugeFields = viewChildren(GaugeField);
   private readonly prontezzaWave = viewChild('prontezzaWave', { read: WavyProgress });
   private readonly cicliWave = viewChild('cicliWave', { read: WavyProgress });
@@ -417,8 +420,8 @@ export class Dashboard {
   /**
    * Hero car drive-in (specs/dashboard): flipped once with the activation
    * trigger below. Starts already "in" under reduced motion (final state
-   * immediately; the global clamp kills the float loop) and stays "in" for
-   * mid-session hero swaps, which mount the car revealed — never a replay.
+   * immediately) and stays "in" for mid-session hero swaps, which mount the car
+   * revealed — never a replay.
    */
   protected readonly carIn = signal(prefersReducedMotion());
 
@@ -435,7 +438,7 @@ export class Dashboard {
       if (event instanceof NavigationStart) this.cancelPendingNav();
     });
 
-    // Pane activation: entrances, badge timeline, count-ups and wavy fills — once.
+    // Pane activation: entrances, count-ups and wavy fills — once.
     afterNextRender(() => this.activate());
 
     // Data edits: snap displays/dashes through their transitions — never replay.
@@ -470,7 +473,7 @@ export class Dashboard {
 
     // Scadenza timeline fill data edits: 250ms width transitions, never a
     // replay (the entrance fill stays activation-only). A mid-session hero swap
-    // snaps the fill to the new activity's window — the badge snaps with it.
+    // snaps the fill to the new activity's window — the countdown text snaps with it.
     effect(() => {
       const hero = this.hero();
       untracked(() => {
@@ -511,10 +514,6 @@ export class Dashboard {
       },
       blocks.length * 55 + 1150,
     );
-
-    // Kinetic badge: the absolute T0 timeline (pop T+750, rolls T+800, tick) is
-    // internal to the shared status-chip (design D7).
-    this.heroBadge()?.playEntrance();
 
     // Hero car drive-in: same activation-only trigger (specs/dashboard).
     this.carIn.set(true);
@@ -591,9 +590,13 @@ export class Dashboard {
 
   /* ── Registra flow (specs/activities: one-tap quick registra) ── */
 
-  protected registraHero(): void {
+  /** Hero CTA click: register + the "Fatto ✓" moment (mockup demo ②) on the button. */
+  protected registraHero(event: Event): void {
     const hero = this.hero();
-    if (hero != null) this.registra(hero.activity.id);
+    if (hero == null) return;
+    this.registra(hero.activity.id);
+    const btn = event.currentTarget as HTMLElement | null;
+    if (btn != null) playCelebrate(btn);
   }
 
   protected registra(activityId: number): void {

@@ -18,7 +18,7 @@ import { formatDate, formatKm, formatMonth, intervalLine, todayIso } from '../..
 import { Activity, Category } from '../../data/model';
 import { DerivedStatus, Status, deriveActivityStatus } from '../../data/status';
 import { StoreService } from '../../data/store';
-import { playEntrance } from '../../shared/motion';
+import { playCelebrate, playEntrance } from '../../shared/motion';
 
 /* Attività (ui-drafts/b-blade.html §3 + refine-cruscotto-md3 design D6): filter chips a
    pillola with computed counts, an optional dismissible `stato` filter chip (from the
@@ -55,14 +55,14 @@ const STATO_LABELS: Record<Status, string> = {
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './activities.html',
   styles: `
-    /* Filter-chip state transitions (d2 .fchip): 250ms --e-emph on
-       fill/border/text plus the 140ms --e-emph press transform of the shared
-       .press layer — two speeds on one element, like .mcard (design D9). */
+    /* Filter-chip state transitions (d2 .fchip): 250ms --e-fx (M3E effects, no
+       overshoot) on fill/border/text plus the 140ms --e-emph press transform of
+       the shared .press layer — two speeds on one element, like .mcard (D9). */
     .fchip {
       transition:
-        background-color var(--d-small) var(--e-emph),
-        border-color var(--d-small) var(--e-emph),
-        color var(--d-small) var(--e-emph),
+        background-color var(--d-small) var(--e-fx),
+        border-color var(--d-small) var(--e-fx),
+        color var(--d-small) var(--e-fx),
         transform var(--d-press) var(--e-emph);
     }
   `,
@@ -152,8 +152,11 @@ export class Activities {
     this.selected.set(filter);
   }
 
-  protected registra(activityId: number): void {
+  /** One-tap quick registra + the "Fatto ✓" moment on the clicked CTA (mockup demo ②). */
+  protected registra(activityId: number, event: Event): void {
     this.store.registerActivity(activityId, { date: todayIso(), odometerKm: this.store.vehicle().odometerKm });
+    const btn = event.currentTarget as HTMLElement | null;
+    if (btn != null) playCelebrate(btn);
   }
 
   protected readonly intervalLine = intervalLine;

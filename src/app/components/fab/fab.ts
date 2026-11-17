@@ -3,14 +3,14 @@ import { ChangeDetectionStrategy, Component, ElementRef, Injector, OnDestroy, af
 import { TextField, TextFieldOption } from '../text-field/text-field';
 import { parseNumber, todayIso } from '../../data/format';
 import { StoreService } from '../../data/store';
-import { prefersReducedMotion } from '../../shared/motion';
+import { playCelebrate, prefersReducedMotion } from '../../shared/motion';
 
 /* Circular FAB with the M3E press shape morph + the FAB→sheet morph (design D4/D12,
    specs/app-shell; mirrors `.morph` / `openFab` / `closeFab` of ui-drafts/d2-morfosi.html).
    Press morph: while :active the circle eases to a squircle under the shared
    scale(.97) press layer and springs back. Morph: one mounted overlay container
    starts at the FAB circle geometry and transitions left/right/bottom/height/
-   border-radius/background-color/box-shadow to the full sheet (550ms --e-spring;
+   border-radius/background-color to the full sheet (550ms --e-spring;
    close 450ms --e-exit); the inner form is pinned to its FINAL screen position
    (--morph-drift compensates the center drift), so the expanding window reveals
    planted content; the + icon rotates out; the scrim fades 400ms. Angular survival:
@@ -25,7 +25,9 @@ import { prefersReducedMotion } from '../../shared/motion';
    other pairs half/half; half values truncate in their flex-1 min-w-0 slot) with the
    mockup footer pair ("Annulla" auto-width, "Registra" flex-1). Validation and save
    are unchanged: ISO date + numeric km required, submit disabled otherwise; saving
-   creates the same history entry + lastDone update as the one-tap quick registra. */
+   creates the same history entry + lastDone update as the one-tap quick registra
+   (plus the "Fatto ✓" moment on the submit button, mockup demo ② — visible while
+   the sheet runs its exit flight). */
 
 /** Overlay stays mounted this long after close begins before unmounting (--d-exit-flight). */
 const EXIT_MS = 450;
@@ -58,7 +60,16 @@ const EXIT_MS = 450;
     }
 
     /* ── FAB→sheet morph (design D4): the container IS the FAB circle at rest and
-          the sheet when .open — geometry properties transition between the two. ── */
+          the sheet when .open — geometry properties transition between the two.
+          border-radius rests at --radius-sheet (28px): on the 56×56 rest box that IS
+          a perfect circle (the FAB button's 50%) AND it equals the sheet's top corners.
+          Per-corner interpolation then goes 28→28/0: the top corners stay constant
+          28px through BOTH the open (550ms --e-spring) and close (450ms --e-exit)
+          flights while only the bottom corners collapse 28→0 — rounded top corners
+          at every frame. Resting at 9999px instead made the browser's corner-scaling
+          algorithm divide by the huge corner sums, so the EFFECTIVE radius collapsed
+          to a few px for almost the whole transition (nearly square corners at
+          start/mid). ── */
     .overlay {
       pointer-events: none;
     }
@@ -82,19 +93,17 @@ const EXIT_MS = 450;
       right: max(1rem, 50% - 199px);
       bottom: 6rem; /* FAB bottom-24 */
       height: 56px;
-      border-radius: 9999px;
+      border-radius: var(--radius-sheet);
       background-color: var(--color-primC);
       color: var(--color-onPrimC);
       overflow: hidden;
-      box-shadow: var(--shadow-fab);
       transition:
         left var(--d-exit-flight) var(--e-exit),
         right var(--d-exit-flight) var(--e-exit),
         bottom var(--d-exit-flight) var(--e-exit),
         height var(--d-exit-flight) var(--e-exit),
         border-radius var(--d-exit-flight) var(--e-exit),
-        background-color var(--d-exit-flight) var(--e-exit),
-        box-shadow var(--d-exit-flight) var(--e-exit);
+        background-color var(--d-exit-flight) var(--e-exit);
     }
 
     .overlay.open .morph {
@@ -104,15 +113,13 @@ const EXIT_MS = 450;
       height: var(--sheet-h, 470px);
       border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
       background-color: var(--color-surfC);
-      box-shadow: var(--shadow-sheet);
       transition:
         left var(--d-large) var(--e-spring),
         right var(--d-large) var(--e-spring),
         bottom var(--d-large) var(--e-spring),
         height var(--d-large) var(--e-spring),
         border-radius var(--d-large) var(--e-spring),
-        background-color var(--d-large) var(--e-spring),
-        box-shadow var(--d-large) var(--e-spring);
+        background-color var(--d-large) var(--e-spring);
     }
 
     /* Planted content: pinned to its final screen position (the window reveals it) */
@@ -173,7 +180,7 @@ const EXIT_MS = 450;
       type="button"
       aria-label="Nuova registrazione"
       (click)="open()"
-      class="press fab-btn fixed z-40 bottom-24 w-14 h-14 bg-primC text-onPrimC shadow-fab flex items-center justify-center right-[max(1rem,calc(50%_-_199px))]"
+      class="press fab-btn fixed z-40 bottom-24 w-14 h-14 bg-primC text-onPrimC flex items-center justify-center right-[max(1rem,calc(50%_-_199px))]"
       [class.fab-hidden]="mounted()"
     >
       <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
@@ -244,7 +251,7 @@ const EXIT_MS = 450;
               <div class="mt-5 flex items-center gap-3">
                 <!-- Annulla auto-width, Registra flex-1 (rifiniture-e D5) -->
                 <button type="button" (click)="close()" class="btn btn-text h-12 px-6">Annulla</button>
-                <button type="submit" class="btn btn-filled flex-1" [disabled]="!valid()">Registra</button>
+                <button type="submit" #submitBtn class="btn btn-filled flex-1" [disabled]="!valid()">Registra</button>
               </div>
             </form>
           </div>
@@ -284,6 +291,7 @@ export class Fab implements OnDestroy {
   private readonly dialogRef = viewChild('dialog', { read: ElementRef });
   private readonly bodyRef = viewChild('morphBody', { read: ElementRef });
   private readonly overlayRef = viewChild('overlay', { read: ElementRef });
+  private readonly submitRef = viewChild('submitBtn', { read: ElementRef });
 
   private closeTimer = 0;
 
@@ -305,7 +313,7 @@ export class Fab implements OnDestroy {
     this.mounted.set(true);
 
     // Mount at the closed (FAB circle) geometry first: measuring forces that style
-    // recalc, then .open transitions left/right/bottom/height/radius/bg/shadow.
+    // recalc, then .open transitions left/right/bottom/height/radius/bg.
     afterNextRender(
       () => {
         this.measureMorph();
@@ -351,6 +359,9 @@ export class Fab implements OnDestroy {
       ...(cost != null ? { costEur: cost } : {}),
       ...(duration != null ? { durationHours: duration } : {}),
     });
+    // "Fatto ✓" on the submit button (mockup demo ②), then the sheet closes as always.
+    const submit = this.submitRef()?.nativeElement as HTMLElement | undefined;
+    if (submit != null) playCelebrate(submit);
     this.close();
   }
 

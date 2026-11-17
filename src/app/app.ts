@@ -6,6 +6,7 @@ import { Fab } from './components/fab/fab';
 import { Navbar } from './components/navbar/navbar';
 import { SettingsSheet } from './components/settings-sheet/settings-sheet';
 import { prefersReducedMotion } from './shared/motion';
+import { UpdateService } from './services/update.service';
 
 /* App shell (design D8/D11, specs/app-shell):
    - Scroll-aware header (d3 cherry-pick): `sticky top-0` inside the 430px frame,
@@ -70,6 +71,8 @@ const COND_PX = 96;
 })
 export class App implements OnDestroy {
   private readonly router = inject(Router);
+  /** Self-updating PWA: starts the ngsw update flow (update.service.ts). */
+  private readonly update = inject(UpdateService);
   private readonly routerSub: Subscription;
 
   private readonly frame = viewChild('frame', { read: ElementRef });

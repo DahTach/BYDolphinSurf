@@ -3,28 +3,42 @@
   <div class="space-y-6">
   <!-- Card veicolo (gemini vehicle maintenance card) — id="veicolo" per il salto
        "Consegna e consumo" delle impostazioni. Card NEUTRA (stato solo in chip/
-       badge/CTA) che ASSORBISCE il blocco "Prossima scadenza": sotto i 3 gauge,
-       dietro una hairline insetta — titolo · timeline con marcatore di scadenza ·
-       info a sinistra, CTA compatta a destra. -->
-  <article id="veicolo" class="enter relative bg-surfC rounded-sheet p-5">
-    <!-- Car breakout (firma gemini): la vettura sborda dal bordo alto a destra
-         (≈⅓ superiore fuori dalla card) — la ground shadow integrata la appoggia
-         alla card. Stessi wrapper car-drive/car-float della card sotto. -->
-    <span class="car-drive absolute -top-9 -right-2 z-20 pointer-events-none select-none" [class.in]="carIn()">
-      <span class="car-float">
-        <img src="dolphin-surf-comfort.png" alt="BYD Dolphin Surf Comfort" class="car-shot-lg" />
+       CTA) con in cima il "car stage" del mockup h1-proposta-m3e (fascia a tutta
+       larghezza con i top corners rounded-sheet propri) e, sotto, il blocco
+       "Prossima scadenza": i 3 gauge, hairline · timeline con marcatore
+       di scadenza · info a sinistra, CTA compatta a destra. -->
+  <!-- NOTA: nessun overflow-hidden su card/stage — la vettura sborda dal bordo
+       DESTRO della card (body ha overflow-x: clip). -->
+  <article id="veicolo" class="enter relative bg-surfC rounded-sheet">
+    <!-- Car stage (mockup §1): sfondo radiale caldo; la vettura (taglio 479×243
+         senza padding, posizione come in origine) sborda dal bordo destro della
+         card — nessun taglio, nessun alone, nessun hairline di pavimento,
+         nessuna luce radente. Un solo movimento: l'entrata drive-in del wrapper
+         car-drive (attivazione), la vettura poi resta ferma. -->
+    <div class="stage">
+      <span class="car-drive" [class.in]="carIn()">
+        <img src="dolphin-surf-comfort.png" alt="BYD Dolphin Surf Comfort" class="car-shot" />
       </span>
-    </span>
 
-    <!-- Identità (max ~55% — la colonna di sinistra resta libera dalla vettura) -->
-    <div class="relative z-10 max-w-[55%]">
-      <p class="t-label font-semibold uppercase tracking-[0.14em] text-mut">BYD</p>
-      <h2 class="mt-0.5 t-title font-extrabold tracking-tight leading-tight text-onSurf">Dolphin Surf</h2>
-      <p class="mt-1 t-meta font-medium text-mut">2025 EU · 43,2 kWh</p>
+      <!-- Identità dentro lo stage (mockup .stage-id) -->
+      <div class="absolute top-[18px] left-5 z-[3]">
+        <p class="t-caption uppercase tracking-[0.16em] text-onSurfV">BYD</p>
+        <h2 class="mt-0.5 t-title font-extrabold tracking-tight leading-tight text-onSurf">Dolphin Surf</h2>
+        <span class="mt-2 inline-block px-2.5 py-[3px] rounded-pill border border-prim/25 text-[10px] font-semibold text-onSurfV">2025 EU · 43,2 kWh</span>
+      </div>
+
+      <!-- Momento tipografico (mockup .stage-odo): odometro in grande, display-only -->
+      <div class="absolute left-5 bottom-4 z-[3]">
+        <div class="flex items-baseline text-[34px] font-black leading-none tracking-[-0.02em] tabular-nums text-onSurf">
+          {{ formatKm(vehicle().odometerKm) }}<span class="ml-1.5 text-[13px] font-bold text-onSurfV">km</span>
+        </div>
+        <p class="mt-1 t-caption uppercase tracking-[0.14em] text-mut">Chilometraggio</p>
+      </div>
     </div>
 
+    <div class="p-5">
     <!-- Gauges editabili: sx Consumo medio · centro Chilometraggio (hero 120px) · dx Consegna -->
-    <div class="mt-4 grid grid-cols-3 gap-2 items-start">
+    <div class="grid grid-cols-3 gap-2 items-start">
       <app-gauge-field
         label="Consumo medio"
         inputmode="decimal"
@@ -66,8 +80,10 @@
         <h3 class="mt-2 text-[18px] font-extrabold tracking-tight leading-tight text-onSurf">{{ h.activity.title }}</h3>
 
         <!-- Timeline (il centro M3): track + fill fino a oggi (prim, err oltre il
-             marcatore) + marcatore 2px alla scadenza; il badge countdown è centrato
-             SOPRA il marcatore (clamp orizzontale → mai fuori dalla riga). -->
+             marcatore) + tassello arrotondato 6px alla scadenza (stessa tinta del
+             fill); il countdown è testo semplice centrato SOPRA il marcatore
+             (clamp orizzontale → mai fuori dalla riga), colorato err/prim come
+             tutto il blocco. -->
         <div class="relative mt-4 pt-7">
           <div class="relative h-2 rounded-full bg-surfHiX">
             <div
@@ -76,16 +92,20 @@
               [class.bg-err]="h.status === 'scaduto'"
               [class.bg-prim]="h.status !== 'scaduto'"
             ></div>
-            <div class="absolute -top-1 -bottom-1 w-0.5 rounded-full bg-onSurf -translate-x-1/2" [style.left.%]="h.markerPct"></div>
+            <!-- Tassello spesso (6px) che sfora il track di 6px sopra/sotto -->
+            <div
+              class="absolute -top-1.5 -bottom-1.5 w-1.5 rounded-full -translate-x-1/2"
+              [style.left.%]="h.markerPct"
+              [class.bg-err]="h.status === 'scaduto'"
+              [class.bg-prim]="h.status !== 'scaduto'"
+            ></div>
           </div>
-          <app-status-chip
-            #heroBadge
-            class="absolute top-0 -translate-x-1/2"
+          <p
+            class="absolute top-0 -translate-x-1/2 t-label font-bold whitespace-nowrap"
             [style.left.%]="h.badgePct"
-            [status]="h.status"
-            variant="badge"
-            [text]="h.badge"
-          />
+            [class.text-err]="h.status === 'scaduto'"
+            [class.text-prim]="h.status !== 'scaduto'"
+          >{{ h.badge }}</p>
         </div>
 
         <!-- Fondo blocco: info a sinistra · "Registra ora" compatta a destra -->
@@ -93,24 +113,25 @@
           <div class="min-w-0">
             <p class="t-body-sm font-medium text-onSurfV">{{ h.activity.spec }}</p>
             <div class="flex flex-wrap gap-2 pt-1.5">
-              <span class="inline-flex items-center gap-1.5 rounded-pill bg-white/[0.08] border border-white/10 px-3 py-1.5 t-label font-medium">
+              <span class="inline-flex items-center gap-1.5 rounded-pill bg-white/[0.08] px-3 py-1.5 t-label font-medium">
                 <svg class="w-3.5 h-3.5 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="16" height="10" rx="2"/><path d="M22 11v2"/><path d="M6 11v2"/></svg>
                 {{ heroInterval() }}
               </span>
               @if (h.activity.durationNote; as durationNote) {
-                <span class="inline-flex items-center gap-1.5 rounded-pill bg-white/[0.08] border border-white/10 px-3 py-1.5 t-label font-medium">
+                <span class="inline-flex items-center gap-1.5 rounded-pill bg-white/[0.08] px-3 py-1.5 t-label font-medium">
                   <svg class="w-3.5 h-3.5 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l2.8 1.7"/></svg>
                   {{ durationNote }}
                 </span>
               }
             </div>
           </div>
-          <button type="button" (click)="registraHero()" [class]="h.cta + ' btn h-10 px-5 t-button-lg shrink-0'">Registra ora</button>
+          <button type="button" (click)="registraHero($event)" [class]="h.cta + ' btn h-10 px-5 t-button-lg shrink-0'">Registra ora</button>
         </div>
       </div>
     } @else {
       <p class="mt-4 t-body-sm text-mut">Nessuna scadenza in vista</p>
     }
+    </div>
   </article>
 
   <!-- Prossime (design D9): righe pillola con press morph + chip di stato -->
@@ -141,8 +162,8 @@
     <p class="px-4 pt-4 pb-3 t-body-sm font-semibold text-mut">In sintesi</p>
 
     <button type="button" class="press mlist overflow-hidden w-full flex items-center gap-3 px-4 py-3.5 text-left" (click)="onRow($event, 'ok')">
-      <span class="w-10 h-10 rounded-full bg-okC flex items-center justify-center shrink-0">
-        <svg class="w-5 h-5 text-onOkC" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+      <span class="w-10 h-10 rounded-full bg-primC flex items-center justify-center shrink-0">
+        <svg class="w-5 h-5 text-prim" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
       </span>
       <span class="flex-1 min-w-0">
         <span class="block t-card-title text-onSurf">In regola</span>
@@ -154,8 +175,8 @@
     <div class="mx-4 h-px bg-white/[0.06]"></div>
 
     <button type="button" class="press mlist overflow-hidden w-full flex items-center gap-3 px-4 py-3.5 text-left" (click)="onRow($event, 'in-scadenza')">
-      <span class="w-10 h-10 rounded-full bg-waC flex items-center justify-center shrink-0">
-        <svg class="w-5 h-5 text-onWaC" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v4"/><path d="M12 15.5h.01"/></svg>
+      <span class="w-10 h-10 rounded-full bg-primC flex items-center justify-center shrink-0">
+        <svg class="w-5 h-5 text-waDot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v4"/><path d="M12 15.5h.01"/></svg>
       </span>
       <span class="flex-1 min-w-0">
         <span class="block t-card-title text-onSurf">In scadenza</span>
@@ -199,7 +220,7 @@
       </div>
       <div class="flex flex-col items-center">
         <div class="relative w-[120px] h-[120px]">
-          <app-wavy-progress #cicliWave shape="ring" [value]="cicliPercent()" fill="stroke-onTerC" />
+          <app-wavy-progress #cicliWave shape="ring" [value]="cicliPercent()" fill="stroke-onSurfV" />
           <div class="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
             <p class="text-[26px] font-black leading-none tracking-tight tabular-nums text-onSurf">{{ cicliDisplay() }}</p>
             <p class="text-[10px] font-medium leading-none text-mut">/5.000</p>

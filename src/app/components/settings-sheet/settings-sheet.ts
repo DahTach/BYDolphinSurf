@@ -43,7 +43,13 @@ const EXIT_MS = 450;
       opacity: 1;
     }
 
+    /* The shape lives HERE (not only in the rounded-t-sheet utility): explicit CSS
+       keeps the 28px top corners even if the utility class drifts, and will-change
+       promotes the slide without re-rasterizing the whole sheet every frame. */
     .sheet {
+      border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+      overflow: hidden;
+      will-change: transform;
       transform: translateY(100%);
       transition: transform var(--d-exit-flight) var(--e-exit);
     }
@@ -61,7 +67,7 @@ const EXIT_MS = 450;
           <div class="mx-auto max-w-[430px]">
             <div
               #dialog
-              class="sheet bg-surfC rounded-t-sheet shadow-sheet px-5 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] space-y-1"
+              class="sheet bg-surfC px-5 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] space-y-1"
               tabindex="-1"
               role="dialog"
               aria-modal="true"

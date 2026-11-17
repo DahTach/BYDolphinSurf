@@ -3,8 +3,9 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
 /* Shared MD3 filled pill text field (design D14, specs/design-system + vehicle-data):
    rounded-full container — no bottom indicator, no squared corners. rest = bg-surfHiX
    + floating label 10px semibold text-onSurfV; focus-within = bg-surfHi + 2px prim
-   ring that scales in from 1.06 over 250ms --e-spring (d2 .field focus block) with
-   the label turning bold text-prim (250ms --e-emph, container bg 250ms --e-emph).
+   ring that scales in from 1.06 over 250ms --e-spring (d2 .field focus block), its
+   opacity and the container bg / label color riding the M3E effects curve --e-fx
+   (label turning bold text-prim).
    The ring lives on ::before so ::after stays free for the shared .press state
    layer (specs/design-system: text fields are in the press set). Input 16px
    `field` role font-medium with optional trailing suffix (label 12px, shrink-0);
@@ -30,7 +31,7 @@ export interface TextFieldOption {
       position: relative;
       background-color: var(--color-surfHiX);
       transition:
-        background-color var(--d-small) var(--e-emph),
+        background-color var(--d-small) var(--e-fx),
         transform var(--d-press) var(--e-emph);
     }
     .field::before {
@@ -42,7 +43,7 @@ export interface TextFieldOption {
       opacity: 0;
       transform: scale(1.06);
       transition:
-        opacity var(--d-small) var(--e-spring),
+        opacity var(--d-small) var(--e-fx),
         transform var(--d-small) var(--e-spring);
       pointer-events: none;
     }
@@ -58,7 +59,7 @@ export interface TextFieldOption {
       font-weight: 600;
       line-height: 1;
       color: var(--color-onSurfV);
-      transition: color var(--d-small) var(--e-emph);
+      transition: color var(--d-small) var(--e-fx);
     }
     .field:focus-within .field-label {
       font-weight: 700;
