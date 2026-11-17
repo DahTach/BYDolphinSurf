@@ -1,0 +1,88 @@
+{
+  "configVersion": 1,
+  "timestamp": 1794912248308,
+  "index": "/BYDolphinSurf/index.html",
+  "assetGroups": [
+    {
+      "name": "app",
+      "installMode": "prefetch",
+      "updateMode": "prefetch",
+      "cacheQueryOptions": {
+        "ignoreVary": true
+      },
+      "urls": [
+        "/BYDolphinSurf/chunk-B6I_bYcc.js",
+        "/BYDolphinSurf/chunk-B7rDJ_z-.js",
+        "/BYDolphinSurf/chunk-BHCCfe9P.js",
+        "/BYDolphinSurf/chunk-Brv-5XF6.js",
+        "/BYDolphinSurf/chunk-CD5CD-kQ.js",
+        "/BYDolphinSurf/favicon.ico",
+        "/BYDolphinSurf/favicon.png",
+        "/BYDolphinSurf/index.html",
+        "/BYDolphinSurf/main-ZJMZX7NO.js",
+        "/BYDolphinSurf/manifest.webmanifest",
+        "/BYDolphinSurf/styles-33QSPGHL.css"
+      ],
+      "patterns": []
+    },
+    {
+      "name": "assets",
+      "installMode": "lazy",
+      "updateMode": "prefetch",
+      "cacheQueryOptions": {
+        "ignoreVary": true
+      },
+      "urls": [
+        "/BYDolphinSurf/icon/apple-touch-icon.png",
+        "/BYDolphinSurf/icon/favicon-32x32.png",
+        "/BYDolphinSurf/icon/icon-192x192.png",
+        "/BYDolphinSurf/icon/icon-512x512.png",
+        "/BYDolphinSurf/icon/icon-maskable-512x512.png",
+        "/BYDolphinSurf/icon/icon-monochrome-512x512.png"
+      ],
+      "patterns": []
+    }
+  ],
+  "dataGroups": [
+    {
+      "name": "google-fonts",
+      "patterns": [
+        "https:\\/\\/fonts\\.googleapis\\.com\\/.*",
+        "https:\\/\\/fonts\\.gstatic\\.com\\/.*"
+      ],
+      "strategy": "performance",
+      "maxAge": 2592000000,
+      "timeoutMs": 10000,
+      "cacheQueryOptions": {
+        "ignoreVary": true
+      },
+      "version": 1
+    }
+  ],
+  "hashTable": {
+    "/BYDolphinSurf/chunk-B6I_bYcc.js": "d799532074cb7b3e372df68d689cb141531ef25e",
+    "/BYDolphinSurf/chunk-B7rDJ_z-.js": "842be0c36529c9e4ac80a87fb4f775d8f95e473c",
+    "/BYDolphinSurf/chunk-BHCCfe9P.js": "724a8af69192106fa498be451ef37adddc4c79e2",
+    "/BYDolphinSurf/chunk-Brv-5XF6.js": "4dac4827c1d3035a7b0949b6063f0fb6ef68e3d7",
+    "/BYDolphinSurf/chunk-CD5CD-kQ.js": "fddaf1d43535c27bb2dd1844652e222fd8019fa9",
+    "/BYDolphinSurf/favicon.ico": "9c39f434fe1261f68c5e3eefdf734630d99c5670",
+    "/BYDolphinSurf/favicon.png": "cc4d0f8a02ca932827f648fecccc9868e3cde943",
+    "/BYDolphinSurf/icon/apple-touch-icon.png": "d3328c8b90d1f66603b9f94c9ef5083485a3ee6d",
+    "/BYDolphinSurf/icon/favicon-32x32.png": "67d8a31e01a9957b7f06de94a634dc60fb89c738",
+    "/BYDolphinSurf/icon/icon-192x192.png": "1a1ab76195a22b741af6a7819a2157c82e73aa9c",
+    "/BYDolphinSurf/icon/icon-512x512.png": "86f794ba27267c203a25f6a7e336742ce60d3c8a",
+    "/BYDolphinSurf/icon/icon-maskable-512x512.png": "b17a9456ee68faa7013cdd5ee0607424231e4af4",
+    "/BYDolphinSurf/icon/icon-monochrome-512x512.png": "b8fe7f9d644aa10db8e90979fd3a46e7bbf70aba",
+    "/BYDolphinSurf/index.html": "edff48a465f28b1dcdf1e357c33159b7c870dc4a",
+    "/BYDolphinSurf/main-ZJMZX7NO.js": "4056e7988b9a7974b341b1e87e82042864c800b0",
+    "/BYDolphinSurf/manifest.webmanifest": "080eea1b45fdd8d497bc8d4f6a9b23045fede153",
+    "/BYDolphinSurf/styles-33QSPGHL.css": "61337401df6aaca055e5d9a6fabbf608b1df370d"
+  },
+  "navigationUrls": [
+    {
+      "positive": true,
+      "regex": "^\\/.*$"
+    }
+  ],
+  "navigationRequestStrategy": "performance"
+}
