@@ -1,6 +1,6 @@
 {
   "configVersion": 1,
-  "timestamp": 1794912248308,
+  "timestamp": 1795102983200,
   "index": "/BYDolphinSurf/index.html",
   "assetGroups": [
     {
@@ -11,17 +11,18 @@
         "ignoreVary": true
       },
       "urls": [
-        "/BYDolphinSurf/chunk-B6I_bYcc.js",
-        "/BYDolphinSurf/chunk-B7rDJ_z-.js",
-        "/BYDolphinSurf/chunk-BHCCfe9P.js",
-        "/BYDolphinSurf/chunk-Brv-5XF6.js",
-        "/BYDolphinSurf/chunk-CD5CD-kQ.js",
+        "/BYDolphinSurf/chunk-CuqcRUYP.js",
+        "/BYDolphinSurf/chunk-CwPH1-6O.js",
+        "/BYDolphinSurf/chunk-D6YxmJ-l.js",
+        "/BYDolphinSurf/chunk-D7CKs2sI.js",
+        "/BYDolphinSurf/chunk-DRlaTxkb.js",
+        "/BYDolphinSurf/chunk-DubFYLS-.js",
         "/BYDolphinSurf/favicon.ico",
         "/BYDolphinSurf/favicon.png",
         "/BYDolphinSurf/index.html",
-        "/BYDolphinSurf/main-ZJMZX7NO.js",
+        "/BYDolphinSurf/main-A6VV3BJO.js",
         "/BYDolphinSurf/manifest.webmanifest",
-        "/BYDolphinSurf/styles-33QSPGHL.css"
+        "/BYDolphinSurf/styles-YEJP47Z3.css"
       ],
       "patterns": []
     },
@@ -60,11 +61,12 @@
     }
   ],
   "hashTable": {
-    "/BYDolphinSurf/chunk-B6I_bYcc.js": "d799532074cb7b3e372df68d689cb141531ef25e",
-    "/BYDolphinSurf/chunk-B7rDJ_z-.js": "842be0c36529c9e4ac80a87fb4f775d8f95e473c",
-    "/BYDolphinSurf/chunk-BHCCfe9P.js": "724a8af69192106fa498be451ef37adddc4c79e2",
-    "/BYDolphinSurf/chunk-Brv-5XF6.js": "4dac4827c1d3035a7b0949b6063f0fb6ef68e3d7",
-    "/BYDolphinSurf/chunk-CD5CD-kQ.js": "fddaf1d43535c27bb2dd1844652e222fd8019fa9",
+    "/BYDolphinSurf/chunk-CuqcRUYP.js": "abc7b876b0f6b287d902010f891e4e2b2016646f",
+    "/BYDolphinSurf/chunk-CwPH1-6O.js": "44809b7568ed8780ac1f96ad2a56318b4ee7c24b",
+    "/BYDolphinSurf/chunk-D6YxmJ-l.js": "daa0ae04434237d1fc50eae7f2c21c92c34a5de5",
+    "/BYDolphinSurf/chunk-D7CKs2sI.js": "5bba9aa262566e93286671b8e53934e05e868ae8",
+    "/BYDolphinSurf/chunk-DRlaTxkb.js": "7faa8957642ded174716a83b6deb3fa00df6c029",
+    "/BYDolphinSurf/chunk-DubFYLS-.js": "19b809e2455e5244f54ef3d7bc556007167dbafd",
     "/BYDolphinSurf/favicon.ico": "9c39f434fe1261f68c5e3eefdf734630d99c5670",
     "/BYDolphinSurf/favicon.png": "cc4d0f8a02ca932827f648fecccc9868e3cde943",
     "/BYDolphinSurf/icon/apple-touch-icon.png": "d3328c8b90d1f66603b9f94c9ef5083485a3ee6d",
@@ -73,10 +75,10 @@
     "/BYDolphinSurf/icon/icon-512x512.png": "86f794ba27267c203a25f6a7e336742ce60d3c8a",
     "/BYDolphinSurf/icon/icon-maskable-512x512.png": "b17a9456ee68faa7013cdd5ee0607424231e4af4",
     "/BYDolphinSurf/icon/icon-monochrome-512x512.png": "b8fe7f9d644aa10db8e90979fd3a46e7bbf70aba",
-    "/BYDolphinSurf/index.html": "edff48a465f28b1dcdf1e357c33159b7c870dc4a",
-    "/BYDolphinSurf/main-ZJMZX7NO.js": "4056e7988b9a7974b341b1e87e82042864c800b0",
+    "/BYDolphinSurf/index.html": "2fbfbc2ebb179af5d9797a57913cabcca152a7be",
+    "/BYDolphinSurf/main-A6VV3BJO.js": "11d9ea25df988321af1a7f7f311221a4cc14c6d5",
     "/BYDolphinSurf/manifest.webmanifest": "080eea1b45fdd8d497bc8d4f6a9b23045fede153",
-    "/BYDolphinSurf/styles-33QSPGHL.css": "61337401df6aaca055e5d9a6fabbf608b1df370d"
+    "/BYDolphinSurf/styles-YEJP47Z3.css": "d8778c364558cb1c464af6274c8f885165c23d68"
   },
   "navigationUrls": [
     {
