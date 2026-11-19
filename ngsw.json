@@ -1,6 +1,6 @@
 {
   "configVersion": 1,
-  "timestamp": 1795102983200,
+  "timestamp": 1795105788107,
   "index": "/BYDolphinSurf/index.html",
   "assetGroups": [
     {
@@ -22,7 +22,7 @@
         "/BYDolphinSurf/index.html",
         "/BYDolphinSurf/main-A6VV3BJO.js",
         "/BYDolphinSurf/manifest.webmanifest",
-        "/BYDolphinSurf/styles-YEJP47Z3.css"
+        "/BYDolphinSurf/styles-MI5CMJA3.css"
       ],
       "patterns": []
     },
@@ -75,10 +75,10 @@
     "/BYDolphinSurf/icon/icon-512x512.png": "86f794ba27267c203a25f6a7e336742ce60d3c8a",
     "/BYDolphinSurf/icon/icon-maskable-512x512.png": "b17a9456ee68faa7013cdd5ee0607424231e4af4",
     "/BYDolphinSurf/icon/icon-monochrome-512x512.png": "b8fe7f9d644aa10db8e90979fd3a46e7bbf70aba",
-    "/BYDolphinSurf/index.html": "2fbfbc2ebb179af5d9797a57913cabcca152a7be",
+    "/BYDolphinSurf/index.html": "7a2c5c6238956b8046f36857331a602369481c70",
     "/BYDolphinSurf/main-A6VV3BJO.js": "11d9ea25df988321af1a7f7f311221a4cc14c6d5",
     "/BYDolphinSurf/manifest.webmanifest": "080eea1b45fdd8d497bc8d4f6a9b23045fede153",
-    "/BYDolphinSurf/styles-YEJP47Z3.css": "d8778c364558cb1c464af6274c8f885165c23d68"
+    "/BYDolphinSurf/styles-MI5CMJA3.css": "7cfc52f387862b78b5bf1b33f0ae87e6a77e3f21"
   },
   "navigationUrls": [
     {
